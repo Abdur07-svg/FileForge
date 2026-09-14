@@ -318,9 +318,10 @@ const PDFCompressor = (() => {
   async function detectPdfContent(buffer, pageCount) {
     if (!window.pdfjsLib) return 'mixed';
 
+    let pdf = null;
     try {
       const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer.slice(0)) });
-      const pdf = await loadingTask.promise;
+      pdf = await loadingTask.promise;
       const pagesToCheck = Math.min(pageCount, 5); // Check up to first 5 pages
       let totalTextChars = 0;
 
@@ -345,6 +346,10 @@ const PDFCompressor = (() => {
     } catch (err) {
       console.warn('PDF content detection fallback:', err);
       return 'mixed';
+    } finally {
+      if (pdf && typeof pdf.destroy === 'function') {
+        pdf.destroy();
+      }
     }
   }
 
@@ -478,9 +483,9 @@ const PDFCompressor = (() => {
         dom.savingsBadge.className = 'metric-badge badge-success';
         Utils.showToast(`Optimization complete! Saved ${reduction}% (${Utils.formatBytes(currentFile.size - compressedSize)} reduced)`, 'success');
       } else {
-        dom.savingsBadge.textContent = 'Structure Optimized';
+        dom.savingsBadge.textContent = 'Original Retained';
         dom.savingsBadge.className = 'metric-badge badge-neutral';
-        Utils.showToast('Document structure is fully optimized (already at maximum compression efficiency).', 'info');
+        Utils.showToast('Compression did not reduce the file size, so the original file was kept.', 'info');
       }
 
       if (dom.resultsEmpty) dom.resultsEmpty.classList.add('hidden');
@@ -501,21 +506,25 @@ const PDFCompressor = (() => {
    */
   async function compressByLevel(buffer, pct) {
     const isTextDoc = currentFile && currentFile.docType === 'text';
+    const isMixedDoc = currentFile && currentFile.docType === 'mixed';
 
-    // 1. For Low (30%) and Medium (50%) or Text/Vector documents:
+    // 1. For Low (30%), Medium (50%), Balanced (60%), or Text/Mixed documents:
     // Strictly preserve selectable text and vector graphics via lossless structural optimization
-    if (pct <= 55 || isTextDoc) {
+    if (pct <= 60 || isTextDoc || isMixedDoc) {
       showProgress(35, 'Performing structural & object stream optimization (preserving text/vectors)...');
       const lossless = await losslessStructuralOptimization(buffer);
-      if (lossless && (lossless.byteLength < currentFile.size || pct <= 55)) {
+      if (lossless && lossless.byteLength < currentFile.size) {
         return lossless;
+      }
+      if (pct <= 60 || isTextDoc) {
+        return lossless || new Uint8Array(buffer);
       }
     }
 
-    // 2. For Higher intensity on scanned/image/mixed documents:
+    // 2. For High (70%) and Maximum (85%) intensity on scanned or photo-heavy documents:
     // Apply tuned high-clarity re-encoding without aggressive downsampling
-    const scale = pct >= 80 ? 1.15 : (pct >= 65 ? 1.35 : 1.55);
-    const quality = pct >= 80 ? 0.65 : (pct >= 65 ? 0.76 : 0.84);
+    const scale = pct >= 80 ? 1.25 : 1.55;
+    const quality = pct >= 80 ? 0.70 : 0.82;
 
     return await highFidelityReencode(buffer, scale, quality);
   }
@@ -537,24 +546,24 @@ const PDFCompressor = (() => {
       return lossless;
     }
 
-    // Pass 2: High Clarity Pass (Scale 1.50, Quality 0.82)
+    // Pass 2: High Clarity Pass (Scale 1.55, Quality 0.82)
     showProgress(50, 'Pass 2: High-clarity optimization...');
-    let bestResult = await highFidelityReencode(buffer, 1.50, 0.82);
+    let bestResult = await highFidelityReencode(buffer, 1.55, 0.82);
     if (bestResult && bestResult.byteLength <= targetBytes) {
       return bestResult;
     }
 
-    // Pass 3: Balanced Pass (Scale 1.25, Quality 0.74)
+    // Pass 3: Balanced Pass (Scale 1.30, Quality 0.74)
     showProgress(75, 'Pass 3: Fine-tuning compression to meet target...');
-    const pass3 = await highFidelityReencode(buffer, 1.25, 0.74);
+    const pass3 = await highFidelityReencode(buffer, 1.30, 0.74);
     if (pass3 && pass3.byteLength < (bestResult ? bestResult.byteLength : originalSize)) {
       bestResult = pass3;
       if (bestResult.byteLength <= targetBytes) return bestResult;
     }
 
-    // Pass 4: Maximum Safe Reduction (Scale 1.0, Quality 0.62)
+    // Pass 4: Maximum Safe Reduction (Scale 1.10, Quality 0.65)
     showProgress(90, 'Pass 4: Safe maximum reduction...');
-    const pass4 = await highFidelityReencode(buffer, 1.0, 0.62);
+    const pass4 = await highFidelityReencode(buffer, 1.10, 0.65);
     if (pass4 && pass4.byteLength < (bestResult ? bestResult.byteLength : originalSize)) {
       bestResult = pass4;
     }
@@ -572,56 +581,63 @@ const PDFCompressor = (() => {
       throw new Error('PDF.js library is not available');
     }
 
-    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer.slice(0)) });
-    const pdf = await loadingTask.promise;
-    const numPages = pdf.numPages;
+    let pdf = null;
+    try {
+      const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer.slice(0)) });
+      pdf = await loadingTask.promise;
+      const numPages = pdf.numPages;
 
-    const newDoc = await PDFLib.PDFDocument.create();
+      const newDoc = await PDFLib.PDFDocument.create();
 
-    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-      const progressPct = 20 + Math.round((pageNum / numPages) * 70);
-      showProgress(progressPct, `Processing page ${pageNum} of ${numPages}...`);
-      await yieldToUI();
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const progressPct = 20 + Math.round((pageNum / numPages) * 70);
+        showProgress(progressPct, `Processing page ${pageNum} of ${numPages}...`);
+        await yieldToUI();
 
-      const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale });
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale });
 
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(viewport.width);
-      canvas.height = Math.round(viewport.height);
-      const ctx = canvas.getContext('2d', { alpha: false });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(viewport.width);
+        canvas.height = Math.round(viewport.height);
+        const ctx = canvas.getContext('2d', { alpha: false });
 
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-      await page.render({
-        canvasContext: ctx,
-        viewport: viewport
-      }).promise;
+        await page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        }).promise;
 
-      const pageBlob = await Utils.canvasToBlob(canvas, 'image/jpeg', quality);
-      const pageBytes = await pageBlob.arrayBuffer();
-      const embeddedImage = await newDoc.embedJpg(pageBytes);
+        const pageBlob = await Utils.canvasToBlob(canvas, 'image/jpeg', quality);
+        const pageBytes = await pageBlob.arrayBuffer();
+        const embeddedImage = await newDoc.embedJpg(pageBytes);
 
-      // Clean up memory
-      canvas.width = 1;
-      canvas.height = 1;
+        // Clean up memory
+        canvas.width = 1;
+        canvas.height = 1;
 
-      // Preserve exact original page dimensions and orientation
-      const origViewport = page.getViewport({ scale: 1.0 });
-      const newPage = newDoc.addPage([origViewport.width, origViewport.height]);
-      newPage.drawImage(embeddedImage, {
-        x: 0,
-        y: 0,
-        width: origViewport.width,
-        height: origViewport.height
-      });
+        // Preserve exact original page dimensions and orientation
+        const origViewport = page.getViewport({ scale: 1.0 });
+        const newPage = newDoc.addPage([origViewport.width, origViewport.height]);
+        newPage.drawImage(embeddedImage, {
+          x: 0,
+          y: 0,
+          width: origViewport.width,
+          height: origViewport.height
+        });
+      }
+
+      showProgress(95, 'Finalizing optimized PDF...');
+      return await newDoc.save({ useObjectStreams: true });
+    } finally {
+      if (pdf && typeof pdf.destroy === 'function') {
+        pdf.destroy();
+      }
     }
-
-    showProgress(95, 'Finalizing optimized PDF...');
-    return await newDoc.save({ useObjectStreams: true });
   }
 
   /**

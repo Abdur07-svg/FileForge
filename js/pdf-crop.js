@@ -312,6 +312,9 @@ const PDFCrop = (() => {
   }
 
   function resetTool() {
+    if (currentFile && currentFile.pdf && typeof currentFile.pdf.destroy === 'function') {
+      try { currentFile.pdf.destroy(); } catch (e) {}
+    }
     currentFile = null;
     page1CanvasCache = null;
     generatedPdfBlob = null;

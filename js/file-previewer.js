@@ -219,6 +219,9 @@ const FilePreviewer = (() => {
   }
 
   function resetTool() {
+    if (pdfDoc && typeof pdfDoc.destroy === 'function') {
+      try { pdfDoc.destroy(); } catch (e) {}
+    }
     currentFile = null;
     pdfDoc = null;
     hideAllPreviewPanels();
