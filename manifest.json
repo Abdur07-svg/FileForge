@@ -1,0 +1,80 @@
+{
+  "name": "FileForge - Private Client-Side File Suite",
+  "short_name": "FileForge",
+  "description": "100% private, client-side file utilities. Compress PDFs, optimize images, convert formats, merge, split, and edit files directly on your device with zero server uploads.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#080c14",
+  "background_color": "#080c14",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": [
+    "utilities",
+    "productivity",
+    "photo"
+  ],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "PDF Compressor",
+      "short_name": "Compress PDF",
+      "description": "Compress PDF documents with quality-first optimization",
+      "url": "./#pdf-compressor",
+      "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Image Compressor",
+      "short_name": "Compress Images",
+      "description": "Compress JPG, PNG & WebP images with live preview",
+      "url": "./#image-compressor",
+      "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "PDF to JPG",
+      "short_name": "PDF to JPG",
+      "description": "Convert PDF pages to high-res JPG images",
+      "url": "./#pdf-to-jpg",
+      "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Batch Processor",
+      "short_name": "Batch Tool",
+      "description": "Batch convert and package files as ZIP",
+      "url": "./#batch-processor",
+      "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -5,7 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FileForge - All Your File Tools in One Place | 100% Private Client-Side Utilities</title>
   <meta name="description" content="Free, secure, and private browser-based file tools. Compress PDFs, optimize images, convert formats, merge, split, and resize files directly on your device. Zero server uploads.">
-  <meta name="keywords" content="pdf compressor, image compressor, pdf to jpg, pdf to png, jpg to pdf, merge pdf, split pdf, image resizer, convert image, client-side, private file tools">
+  <!-- PWA & Mobile Web App Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#080c14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FileForge">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 
   <!-- Fonts: Plus Jakarta Sans -->
@@ -295,6 +303,16 @@
 
       <!-- Right Actions: Theme Toggle & Mobile Button -->
       <div class="nav-actions">
+        <!-- PWA Install Button (Shown on PWA install-ready browsers) -->
+        <button id="pwa-install-btn" class="pwa-install-btn hidden" aria-label="Install FileForge App" title="Install FileForge on your device">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Install App</span>
+        </button>
+
         <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle dark/light theme" title="Toggle theme">
           <!-- Sun Icon (for dark mode) -->
           <svg id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -345,6 +363,10 @@
         <a href="#" class="mobile-nav-item nav-home-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           <span>Home (50 Tools)</span>
+        </a>
+        <a href="#" id="mobile-pwa-install-btn" class="mobile-nav-item hidden" style="color: var(--color-primary-light); font-weight: 700;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Install FileForge App</span>
         </a>
         <a href="#" class="mobile-nav-item" data-nav-filter="pdf">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>

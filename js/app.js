@@ -1243,4 +1243,75 @@ document.addEventListener('DOMContentLoaded', () => {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
   App.init();
+
+  // Register Progressive Web App (PWA) Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js', { scope: './' })
+        .then((registration) => {
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  if (window.Utils && typeof window.Utils.showToast === 'function') {
+                    window.Utils.showToast('FileForge update available! Refresh to load new features.', 'info', 5000);
+                  }
+                }
+              });
+            }
+          });
+        })
+        .catch((err) => {
+          console.warn('[PWA] Service Worker registration note:', err);
+        });
+    });
+  }
+
+  // Handle Progressive Web App (PWA) Installation
+  let deferredInstallPrompt = null;
+  const pwaInstallBtn = document.getElementById('pwa-install-btn');
+  const mobilePwaInstallBtn = document.getElementById('mobile-pwa-install-btn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+
+    if (pwaInstallBtn) pwaInstallBtn.classList.remove('hidden');
+    if (mobilePwaInstallBtn) mobilePwaInstallBtn.classList.remove('hidden');
+  });
+
+  const triggerPwaInstall = async (e) => {
+    if (e) e.preventDefault();
+    if (!deferredInstallPrompt) {
+      if (window.Utils && typeof window.Utils.showToast === 'function') {
+        window.Utils.showToast('To install FileForge, use your browser menu (Install app) or address bar icon.', 'info');
+      }
+      return;
+    }
+
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    if (outcome === 'accepted') {
+      if (window.Utils && typeof window.Utils.showToast === 'function') {
+        window.Utils.showToast('Thank you for installing FileForge! 🚀', 'success');
+      }
+    }
+    deferredInstallPrompt = null;
+    if (pwaInstallBtn) pwaInstallBtn.classList.add('hidden');
+    if (mobilePwaInstallBtn) mobilePwaInstallBtn.classList.add('hidden');
+  };
+
+  if (pwaInstallBtn) pwaInstallBtn.addEventListener('click', triggerPwaInstall);
+  if (mobilePwaInstallBtn) mobilePwaInstallBtn.addEventListener('click', triggerPwaInstall);
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    if (pwaInstallBtn) pwaInstallBtn.classList.add('hidden');
+    if (mobilePwaInstallBtn) mobilePwaInstallBtn.classList.add('hidden');
+    if (window.Utils && typeof window.Utils.showToast === 'function') {
+      window.Utils.showToast('FileForge successfully installed on your device!', 'success');
+    }
+  });
 });
+
