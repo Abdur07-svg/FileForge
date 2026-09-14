@@ -563,7 +563,7 @@ const App = (() => {
   }
 
   function closeAllDropdowns() {
-    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    if (document.activeElement && document.activeElement.closest('.nav-item-dropdown') && typeof document.activeElement.blur === 'function') {
       document.activeElement.blur();
     }
     document.querySelectorAll('.nav-item-dropdown').forEach(dropdown => {

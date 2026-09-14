@@ -2963,6 +2963,12 @@ input.form-control.input-success {
     margin-bottom: 16px;
   }
 
+  .tool-search-input {
+    height: 50px;
+    padding: 0 16px 0 46px;
+    font-size: 16px;
+  }
+
   .search-shortcut-badge {
     display: none;
   }
