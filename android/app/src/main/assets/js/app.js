@@ -1244,8 +1244,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   App.init();
 
-  // Official FileForge Android APK Release URL (Configurable)
-  const APK_DOWNLOAD_URL = "https://github.com/Abdur07-svg/FileForge/releases/latest/download/FileForge.apk";
+  // Official FileForge Android APK Release URL (Direct repo & GitHub Pages path)
+  const APK_DOWNLOAD_URL = "./dist/FileForge.apk";
 
   const apkDownloadBtn = document.getElementById('apk-download-btn');
   const mobileApkDownloadBtn = document.getElementById('mobile-apk-download-btn');
@@ -1259,19 +1259,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const isAndroid = /android/i.test(navigator.userAgent || '');
-    if (isAndroid) {
-      if (window.Utils && typeof window.Utils.showToast === 'function') {
-        window.Utils.showToast('Starting FileForge APK download...', 'info');
-      }
-      window.location.href = APK_DOWNLOAD_URL;
-    } else {
-      // Desktop or iOS browser notice
-      if (window.Utils && typeof window.Utils.showToast === 'function') {
-        window.Utils.showToast('FileForge APK is for Android devices. Starting download...', 'info');
-      }
-      window.open(APK_DOWNLOAD_URL, '_blank');
+    if (window.Utils && typeof window.Utils.showToast === 'function') {
+      window.Utils.showToast('Downloading FileForge.apk...', 'info', 3000);
     }
+
+    // Trigger direct APK download
+    const link = document.createElement('a');
+    link.href = APK_DOWNLOAD_URL;
+    link.download = 'FileForge.apk';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (link.parentElement) link.parentElement.removeChild(link);
+    }, 500);
   }
 
   if (apkDownloadBtn) {
