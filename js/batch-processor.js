@@ -1,10 +1,17 @@
 /**
  * FileForge - Batch File Processor & Bundler
- * Multi-file batch queue for converting, compressing, renaming, and bundling all documents as ZIP.
+ * 
+ * Production-grade batch execution engine:
+ * 1. Controlled concurrency (limited to 2 concurrent tasks) to prevent mobile browser memory crashes.
+ * 2. Per-item status tracking: Pending, Processing, Completed, Failed.
+ * 3. Fault-tolerant: One failed/corrupted file does not abort the batch; remaining items continue processing.
+ * 4. Filename sanitization & deduplication to prevent path traversal and collision.
+ * 5. Memory safety: Immediate canvas and object cleanup after each item.
+ * 6. ZIP packaging of successfully processed files only with comprehensive summary metrics.
  */
 
 const BatchProcessor = (() => {
-  let batchQueue = []; // { file, name, size, type, status, resultBlob }
+  let batchQueue = []; // { id, file, name, size, type, status, errorMsg, resultBlob, resultName }
   let dom = {};
 
   function init() {
@@ -75,12 +82,15 @@ const BatchProcessor = (() => {
     if (!files || files.length === 0) return;
 
     for (const file of files) {
+      const safeName = Utils.sanitizeFilename(file.name);
       batchQueue.push({
+        id: 'bitem_' + Math.random().toString(36).substring(2, 9),
         file,
-        name: file.name,
+        name: safeName,
         size: file.size,
         type: file.type || 'application/octet-stream',
         status: 'pending',
+        errorMsg: null,
         resultBlob: null,
         resultName: null
       });
@@ -104,23 +114,31 @@ const BatchProcessor = (() => {
       const row = document.createElement('div');
       row.className = 'reorder-item';
 
-      const statusBadge = item.status === 'done'
-        ? '<span class="badge badge-success">Processed</span>'
-        : (item.status === 'processing'
-          ? '<span class="badge badge-info">Processing...</span>'
-          : '<span class="badge badge-neutral">Queued</span>');
+      let statusBadge = '<span class="badge badge-neutral">Queued</span>';
+      if (item.status === 'done') {
+        statusBadge = '<span class="badge badge-success">Completed</span>';
+      } else if (item.status === 'processing') {
+        statusBadge = '<span class="badge badge-info">Processing...</span>';
+      } else if (item.status === 'failed') {
+        statusBadge = `<span class="badge badge-error" title="${Utils.escapeHtml(item.errorMsg || 'Failed')}">Failed</span>`;
+      }
+
+      const escapedName = Utils.escapeHtml(item.name);
+      const subInfo = item.status === 'failed' && item.errorMsg
+        ? `<span style="color: var(--color-danger, #ef4444); font-size: 0.78rem;">${Utils.escapeHtml(item.errorMsg)}</span>`
+        : `${Utils.formatBytes(item.size)} &bull; ${statusBadge}`;
 
       row.innerHTML = `
         <div class="reorder-item-left">
           <span class="reorder-index-badge">${index + 1}</span>
           <div class="reorder-item-info">
-            <span class="reorder-item-title" title="${item.name}">${item.name}</span>
-            <span class="reorder-item-sub">${Utils.formatBytes(item.size)} &bull; ${statusBadge}</span>
+            <span class="reorder-item-title" title="${escapedName}">${escapedName}</span>
+            <span class="reorder-item-sub">${subInfo}</span>
           </div>
         </div>
         <div class="reorder-item-actions">
-          ${item.resultBlob ? `<button type="button" class="btn btn-xs btn-primary bprc-dl-single" data-index="${index}">Download</button>` : ''}
-          <button type="button" class="reorder-action-btn delete bprc-del-btn" data-index="${index}" title="Remove">&times;</button>
+          ${item.resultBlob ? `<button type="button" class="btn btn-xs btn-primary bprc-dl-single" data-id="${item.id}">Download</button>` : ''}
+          <button type="button" class="reorder-action-btn delete bprc-del-btn" data-id="${item.id}" title="Remove">&times;</button>
         </div>
       `;
 
@@ -132,9 +150,12 @@ const BatchProcessor = (() => {
       }
 
       row.querySelector('.bprc-del-btn').addEventListener('click', () => {
-        batchQueue.splice(index, 1);
-        if (batchQueue.length === 0) resetTool();
-        else renderQueue();
+        const itemIdx = batchQueue.findIndex(q => q.id === item.id);
+        if (itemIdx !== -1) {
+          batchQueue.splice(itemIdx, 1);
+          if (batchQueue.length === 0) resetTool();
+          else renderQueue();
+        }
       });
 
       dom.queueList.appendChild(row);
@@ -144,6 +165,9 @@ const BatchProcessor = (() => {
     if (dom.totalSizeBadge) dom.totalSizeBadge.textContent = Utils.formatBytes(totalBytes);
   }
 
+  /**
+   * Process batch with concurrency = 2 to balance speed and mobile memory constraints
+   */
   async function processBatch() {
     if (batchQueue.length === 0) return;
 
@@ -151,120 +175,171 @@ const BatchProcessor = (() => {
     const quality = dom.qualitySlider ? parseInt(dom.qualitySlider.value, 10) / 100 : 0.8;
 
     Utils.setProcessing(true);
-    showProgress(10, 'Processing batch items...');
+    if (dom.processBtn) dom.processBtn.disabled = true;
+    showProgress(5, 'Starting batch processing...');
 
-    try {
-      if (action === 'zip') {
-        // Direct ZIP packaging
-        for (let i = 0; i < batchQueue.length; i++) {
-          batchQueue[i].status = 'done';
-          batchQueue[i].resultBlob = batchQueue[i].file;
-          batchQueue[i].resultName = batchQueue[i].name;
-        }
-        await downloadAllAsZip();
-      } else if (action === 'compress-images') {
-        for (let i = 0; i < batchQueue.length; i++) {
-          const item = batchQueue[i];
-          const pct = Math.round(((i + 1) / batchQueue.length) * 90);
-          showProgress(pct, `Compressing image (${i + 1}/${batchQueue.length}): ${item.name}`);
+    let completedCount = 0;
+    let failedCount = 0;
+    const total = batchQueue.length;
 
-          if (item.file.type.startsWith('image/')) {
-            try {
-              const dataUrl = await Utils.readFileAsDataURL(item.file);
-              const img = await Utils.loadImage(dataUrl);
-              const canvas = document.createElement('canvas');
-              canvas.width = img.naturalWidth;
-              canvas.height = img.naturalHeight;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0);
+    // Concurrency limit
+    const CONCURRENCY = 2;
+    let nextIdx = 0;
 
-              const blob = await Utils.canvasToBlob(canvas, 'image/jpeg', quality);
-              item.status = 'done';
-              item.resultBlob = blob;
-              item.resultName = `${Utils.getBaseName(item.name)}-compressed.jpg`;
-            } catch (err) {
-              item.status = 'done';
-              item.resultBlob = item.file;
-              item.resultName = item.name;
-            }
-          } else {
+    async function processNext() {
+      while (nextIdx < total) {
+        const i = nextIdx++;
+        const item = batchQueue[i];
+        item.status = 'processing';
+        renderQueue();
+
+        const progressPct = Math.round(((completedCount + failedCount + 1) / total) * 90);
+        showProgress(progressPct, `Processing (${completedCount + failedCount + 1}/${total}): ${item.name}`);
+
+        try {
+          if (action === 'zip') {
             item.status = 'done';
             item.resultBlob = item.file;
             item.resultName = item.name;
-          }
-        }
-      } else if (action === 'to-png') {
-        for (let i = 0; i < batchQueue.length; i++) {
-          const item = batchQueue[i];
-          if (item.file.type.startsWith('image/')) {
-            try {
-              const dataUrl = await Utils.readFileAsDataURL(item.file);
-              const img = await Utils.loadImage(dataUrl);
-              const canvas = document.createElement('canvas');
-              canvas.width = img.naturalWidth;
-              canvas.height = img.naturalHeight;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0);
-              const blob = await Utils.canvasToBlob(canvas, 'image/png');
-              item.status = 'done';
-              item.resultBlob = blob;
-              item.resultName = `${Utils.getBaseName(item.name)}.png`;
-            } catch (err) {
-              item.status = 'done';
-              item.resultBlob = item.file;
-              item.resultName = item.name;
+            completedCount++;
+          } else if (action === 'compress-images') {
+            if (!item.file.type.startsWith('image/') && !/\.(jpg|jpeg|png|webp|bmp)$/i.test(item.name)) {
+              throw new Error('Not a supported image file for compression');
             }
-          } else {
+            const blob = await compressSingleImage(item.file, quality);
             item.status = 'done';
-            item.resultBlob = item.file;
-            item.resultName = item.name;
+            item.resultBlob = blob;
+            item.resultName = `${Utils.getBaseName(item.name)}-compressed.jpg`;
+            completedCount++;
+          } else if (action === 'to-png') {
+            if (!item.file.type.startsWith('image/') && !/\.(jpg|jpeg|png|webp|bmp|svg)$/i.test(item.name)) {
+              throw new Error('Not a supported image file for PNG conversion');
+            }
+            const blob = await convertToPng(item.file);
+            item.status = 'done';
+            item.resultBlob = blob;
+            item.resultName = `${Utils.getBaseName(item.name)}.png`;
+            completedCount++;
           }
+        } catch (err) {
+          console.warn(`Batch item error (${item.name}):`, err);
+          item.status = 'failed';
+          item.errorMsg = err.message || 'Processing failed';
+          item.resultBlob = null;
+          failedCount++;
         }
+
+        await yieldToUI();
       }
+    }
 
-      renderQueue();
-      if (dom.downloadZipBtn) dom.downloadZipBtn.classList.remove('hidden');
-      showProgress(100, 'Batch processing complete!');
-      setTimeout(hideProgress, 800);
-      Utils.showToast(`Batch completed ${batchQueue.length} file(s)!`, 'success');
-    } catch (err) {
-      console.error(err);
-      Utils.showToast('Batch error: ' + err.message, 'error');
-      hideProgress();
-    } finally {
-      Utils.setProcessing(false);
+    const workers = [];
+    for (let w = 0; w < Math.min(CONCURRENCY, total); w++) {
+      workers.push(processNext());
+    }
+    await Promise.all(workers);
+
+    renderQueue();
+    if (dom.processBtn) dom.processBtn.disabled = false;
+    Utils.setProcessing(false);
+
+    const hasSuccessful = batchQueue.some(item => item.status === 'done' && item.resultBlob);
+    if (dom.downloadZipBtn) {
+      dom.downloadZipBtn.classList.toggle('hidden', !hasSuccessful);
+    }
+
+    showProgress(100, `Batch completed: ${completedCount} successful, ${failedCount} failed.`);
+    setTimeout(hideProgress, 1200);
+
+    if (failedCount === 0) {
+      Utils.showToast(`Batch completed successfully! All ${completedCount} file(s) ready.`, 'success');
+    } else if (completedCount > 0) {
+      Utils.showToast(`Batch finished with ${completedCount} success and ${failedCount} failed item(s).`, 'warning');
+    } else {
+      Utils.showToast(`Batch processing failed for all ${failedCount} item(s). Please verify file formats.`, 'error');
     }
   }
 
+  async function compressSingleImage(file, quality) {
+    const dataUrl = await Utils.readFileAsDataURL(file);
+    const img = await Utils.loadImage(dataUrl);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+
+    const blob = await Utils.canvasToBlob(canvas, 'image/jpeg', quality);
+    canvas.width = 1;
+    canvas.height = 1;
+    return blob;
+  }
+
+  async function convertToPng(file) {
+    const dataUrl = await Utils.readFileAsDataURL(file);
+    const img = await Utils.loadImage(dataUrl);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    const blob = await Utils.canvasToBlob(canvas, 'image/png');
+    canvas.width = 1;
+    canvas.height = 1;
+    return blob;
+  }
+
   async function downloadAllAsZip() {
-    if (batchQueue.length === 0) return;
+    const successfulItems = batchQueue.filter(item => item.status === 'done' && item.resultBlob);
+    if (successfulItems.length === 0) {
+      Utils.showToast('No successfully processed files to download.', 'warning');
+      return;
+    }
+
     if (typeof JSZip === 'undefined') {
       Utils.showToast('JSZip engine not loaded.', 'error');
       return;
     }
 
     Utils.setProcessing(true);
-    showProgress(30, 'Packaging all files into ZIP archive...');
+    showProgress(30, 'Packaging successfully processed files into ZIP...');
 
     try {
       const zip = new JSZip();
-      batchQueue.forEach(item => {
-        const blob = item.resultBlob || item.file;
-        const name = item.resultName || item.name;
-        zip.file(name, blob);
+      const usedNames = new Set();
+
+      successfulItems.forEach((item, index) => {
+        let name = Utils.sanitizeFilename(item.resultName || item.name);
+        
+        // Handle name collision
+        if (usedNames.has(name.toLowerCase())) {
+          const base = Utils.getBaseName(name);
+          const ext = Utils.getExtension(name);
+          name = `${base}_${index + 1}.${ext}`;
+        }
+        usedNames.add(name.toLowerCase());
+
+        zip.file(name, item.resultBlob);
       });
 
-      const zipBlob = await zip.generateAsync({ type: 'blob' }, (meta) => {
-        showProgress(Math.round(30 + meta.percent * 0.65), `Packaging: ${Math.round(meta.percent)}%`);
+      const zipBlob = await zip.generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 }
+      }, (meta) => {
+        showProgress(Math.round(30 + meta.percent * 0.65), `Packaging ZIP: ${Math.round(meta.percent)}%`);
       });
 
       Utils.downloadBlob(zipBlob, 'fileforge-batch-bundle.zip');
-      showProgress(100, 'Downloaded ZIP!');
+      showProgress(100, 'Downloaded ZIP package!');
       setTimeout(hideProgress, 800);
-      Utils.showToast(`Downloaded batch bundle (${Utils.formatBytes(zipBlob.size)})!`, 'success');
+      Utils.showToast(`Downloaded ${successfulItems.length} file(s) in ZIP (${Utils.formatBytes(zipBlob.size)})!`, 'success');
     } catch (err) {
       console.error(err);
-      Utils.showToast('ZIP generation failed: ' + err.message, 'error');
+      Utils.showToast('ZIP packaging error: ' + err.message, 'error');
       hideProgress();
     } finally {
       Utils.setProcessing(false);
@@ -276,6 +351,7 @@ const BatchProcessor = (() => {
     if (dom.emptyState) dom.emptyState.classList.remove('hidden');
     if (dom.workspace) dom.workspace.classList.add('hidden');
     if (dom.downloadZipBtn) dom.downloadZipBtn.classList.add('hidden');
+    if (dom.processBtn) dom.processBtn.disabled = false;
     hideProgress();
   }
 
@@ -289,6 +365,10 @@ const BatchProcessor = (() => {
     if (dom.progressContainer) dom.progressContainer.classList.add('hidden');
   }
 
+  function yieldToUI() {
+    return new Promise(resolve => setTimeout(resolve, 0));
+  }
+
   return {
     init,
     handleFiles,
@@ -296,4 +376,5 @@ const BatchProcessor = (() => {
   };
 })();
 
+// Export globally
 window.BatchProcessor = BatchProcessor;

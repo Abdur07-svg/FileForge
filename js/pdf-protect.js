@@ -130,14 +130,28 @@ const PDFProtect = (() => {
     return out;
   }
 
+  function stringToUtf8Bytes(str) {
+    if (typeof TextEncoder !== 'undefined') {
+      return new TextEncoder().encode(str || '');
+    }
+    const bytes = [];
+    for (let i = 0; i < (str || '').length; i++) {
+      let code = str.charCodeAt(i);
+      if (code < 0x80) bytes.push(code);
+      else if (code < 0x800) bytes.push(0xc0 | (code >> 6), 0x80 | (code & 0x3f));
+      else bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+    }
+    return new Uint8Array(bytes);
+  }
+
   function padPassword(pwdStr) {
     const out = new Uint8Array(32);
-    const str = pwdStr || '';
+    const pwdBytes = typeof pwdStr === 'string' ? stringToUtf8Bytes(pwdStr) : (pwdStr || new Uint8Array(0));
     for (let i = 0; i < 32; i++) {
-      if (i < str.length) {
-        out[i] = str.charCodeAt(i) & 0xff;
+      if (i < pwdBytes.length) {
+        out[i] = pwdBytes[i];
       } else {
-        out[i] = PADDING[i - str.length];
+        out[i] = PADDING[i - pwdBytes.length];
       }
     }
     return out;
@@ -646,6 +660,10 @@ const PDFProtect = (() => {
 
       protectedPdfBlob = new Blob([encryptedBytes], { type: 'application/pdf' });
 
+      // Wipe passwords from UI and memory
+      dom.passwordInput.value = '';
+      dom.confirmPasswordInput.value = '';
+
       dom.protectBtn.classList.add('hidden');
       dom.downloadBtn.classList.remove('hidden');
       dom.downloadBtn.disabled = false;
@@ -653,7 +671,7 @@ const PDFProtect = (() => {
       Utils.showToast('PDF encrypted successfully! Password protection is active. 🔒', 'success');
     } catch (err) {
       console.error(err);
-      Utils.showToast('Failed to encrypt PDF: ' + err.message, 'error');
+      Utils.showToast('Failed to encrypt PDF: ' + (err.message || 'Processing error'), 'error');
     } finally {
       Utils.setProcessing(false);
       hideProgress();

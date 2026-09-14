@@ -174,7 +174,7 @@ const App = (() => {
       category: ['pdf', 'security'],
       desc: 'Encrypt PDF files with strong password protection and optional permission restrictions.',
       icon: 'protect-pdf',
-      badge: 'AES 256',
+      badge: '128-bit',
       accepts: ['.pdf', 'application/pdf']
     },
     {

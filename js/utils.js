@@ -266,6 +266,56 @@ const Utils = (() => {
     return (filename.split('.').pop() || '').toLowerCase();
   }
 
+  /**
+   * Read file as Text string
+   */
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result || '');
+      reader.onerror = () => reject(new Error('Failed to read file as text: ' + (reader.error ? reader.error.message : 'Unknown error')));
+      reader.readAsText(file);
+    });
+  }
+
+  /**
+   * Sanitize a filename to prevent path traversal, reserved names, and dangerous characters
+   */
+  function sanitizeFilename(filename, fallbackName = 'downloaded_file') {
+    if (!filename || typeof filename !== 'string') return fallbackName;
+    
+    // Normalize unicode
+    let safe = filename.normalize('NFC');
+
+    // Strip path traversal prefixes and directories (../, ..\, /, \)
+    safe = safe.replace(/^.*[\\\/]/, '');
+
+    // Remove null bytes and control characters (0x00-0x1F, 0x7F)
+    safe = safe.replace(/[\x00-\x1f\x7f]/g, '');
+
+    // Remove invalid filename characters (< > : " / \ | ? *)
+    safe = safe.replace(/[<>:"/\\|?*]/g, '_');
+
+    // Strip leading/trailing dots and spaces
+    safe = safe.trim().replace(/^\.+/, '').replace(/\.+$/, '');
+
+    // Check against Windows reserved device names (CON, PRN, AUX, NUL, COM1-9, LPT1-9)
+    const baseNameWithoutExt = getBaseName(safe);
+    const reservedNames = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
+    if (reservedNames.test(baseNameWithoutExt)) {
+      safe = `safe_${safe}`;
+    }
+
+    // Limit maximum filename length
+    if (safe.length > 200) {
+      const ext = getExtension(safe);
+      const extPart = ext ? `.${ext}` : '';
+      safe = safe.substring(0, 195 - extPart.length) + extPart;
+    }
+
+    return safe || fallbackName;
+  }
+
   return {
     formatBytes,
     calculateReduction,
@@ -275,6 +325,8 @@ const Utils = (() => {
     downloadAsZip,
     readFileAsArrayBuffer,
     readFileAsDataURL,
+    readFileAsText,
+    sanitizeFilename,
     loadImage,
     canvasToBlob,
     setupDropZone,
