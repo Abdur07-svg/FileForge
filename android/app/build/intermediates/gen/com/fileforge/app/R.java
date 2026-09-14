@@ -41,7 +41,6 @@ public final class R {
   public static final class style {
     /**
      * Base application theme (Dark / FileForge Dark Style)
-     * Base application theme (Dark / FileForge Dark Style)
      */
     public static final int AppTheme=0x7f070000;
   }

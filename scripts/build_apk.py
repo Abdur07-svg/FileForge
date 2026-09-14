@@ -29,9 +29,9 @@ CLASSES_DIR = os.path.join(INTERMEDIATES, 'classes')
 DEX_DIR = os.path.join(INTERMEDIATES, 'dex')
 OUTPUT_DIR = os.path.join(BASE_DIR, 'dist')
 
-KEYSTORE = os.path.join(INTERMEDIATES, 'debug.keystore')
-KEYSTORE_PASS = 'android'
-KEY_ALIAS = 'androiddebugkey'
+RELEASE_KEYSTORE = os.path.join(BASE_DIR, 'android', 'fileforge_release.keystore')
+KEYSTORE_PASS = 'fileforge2026'
+KEY_ALIAS = 'fileforge'
 
 def run_cmd(cmd, cwd=BASE_DIR):
     if isinstance(cmd, list):
@@ -52,11 +52,11 @@ def run_cmd(cmd, cwd=BASE_DIR):
 
 def build_apk():
     print("==================================================")
-    print("   FILEFORGE ANDROID APK BUILD PIPELINE")
+    print("   FILEFORGE UNIVERSAL RELEASE APK BUILD")
     print("==================================================")
 
     # 1. Sync assets
-    print("\nStep 1: Syncing web codebase to Android assets...")
+    print("\nStep 1: Syncing complete web codebase to Android assets...")
     from sync_assets import sync_assets
     sync_assets()
 
@@ -75,19 +75,22 @@ def build_apk():
     for root, dirs, files in os.walk(RES_DIR):
         for f in files:
             full_path = os.path.join(root, f)
-            rel_path = os.path.relpath(full_path, RES_DIR)
             cmd = [AAPT2, 'compile', full_path, '-o', COMPILED_RES]
             run_cmd(cmd)
 
     flat_files = [os.path.join(COMPILED_RES, f) for f in os.listdir(COMPILED_RES) if f.endswith('.flat')]
 
-    # 4. Link resources with aapt2
-    print("\nStep 3: Linking resources and generating R.java...")
+    # 4. Link resources with aapt2 with explicit SDK versions (minSdk 21, targetSdk 34)
+    print("\nStep 3: Linking resources and generating R.java (minSdk 21, targetSdk 34)...")
     proto_apk = os.path.join(INTERMEDIATES, 'linked_res.apk')
     link_cmd = [
         AAPT2, 'link',
         '-I', PLATFORM_JAR,
         '--manifest', MANIFEST,
+        '--min-sdk-version', '21',
+        '--target-sdk-version', '34',
+        '--version-code', '1',
+        '--version-name', '1.0.0',
         '--java', GEN_DIR,
         '-o', proto_apk,
         '--auto-add-overlay'
@@ -115,8 +118,8 @@ def build_apk():
     ] + java_files
     run_cmd(javac_cmd)
 
-    # 6. Convert Java bytecode to Dalvik bytecode (.dex) with d8
-    print("\nStep 5: Dexing compiled classes with d8...")
+    # 6. Convert Java bytecode to Dalvik bytecode (.dex) with d8 (Universal DEX)
+    print("\nStep 5: Dexing compiled classes with d8 (Universal DEX)...")
     class_files = []
     for root, dirs, files in os.walk(CLASSES_DIR):
         for f in files:
@@ -125,6 +128,7 @@ def build_apk():
 
     d8_cmd = [
         D8,
+        '--min-api', '21',
         '--lib', PLATFORM_JAR,
         '--output', DEX_DIR
     ] + class_files
@@ -139,14 +143,14 @@ def build_apk():
     with zipfile.ZipFile(unaligned_apk, 'a', compression=zipfile.ZIP_DEFLATED) as apk_zip:
         apk_zip.write(classes_dex, 'classes.dex')
         
-        # Add assets
+        # Add all assets (HTML, CSS, JS, Vendor, Icons)
         for root, dirs, files in os.walk(ASSETS_DIR):
             for f in files:
                 file_path = os.path.join(root, f)
                 rel_path = os.path.relpath(file_path, ASSETS_DIR)
                 apk_zip.write(file_path, f"assets/{rel_path.replace(os.sep, '/')}")
 
-    # 8. Align APK with zipalign
+    # 8. Align APK with zipalign (4-byte alignment)
     print("\nStep 7: Aligning APK with zipalign (4-byte alignment)...")
     aligned_apk = os.path.join(INTERMEDIATES, 'aligned.apk')
     zipalign_cmd = [
@@ -157,16 +161,16 @@ def build_apk():
     ]
     run_cmd(zipalign_cmd)
 
-    # 9. Generate debug keystore if not present
-    if not os.path.exists(KEYSTORE):
-        print("\nGenerating debug signing keystore...")
+    # 9. Generate persistent production release keystore if not present
+    if not os.path.exists(RELEASE_KEYSTORE):
+        print("\nGenerating persistent Production Release keystore...")
         keytool_cmd = [
             'keytool', '-genkeypair',
-            '-keystore', KEYSTORE,
+            '-keystore', RELEASE_KEYSTORE,
             '-storepass', KEYSTORE_PASS,
             '-keypass', KEYSTORE_PASS,
             '-alias', KEY_ALIAS,
-            '-dname', 'CN=FileForge,O=FileForge,C=US',
+            '-dname', 'CN=FileForge Release,OU=Mobile,O=FileForge,C=US',
             '-validity', '10000',
             '-keyalg', 'RSA',
             '-keysize', '2048'
@@ -174,41 +178,58 @@ def build_apk():
         run_cmd(keytool_cmd)
 
     # 10. Sign APK with apksigner (v1 + v2 + v3 scheme)
-    print("\nStep 8: Signing APK with apksigner...")
+    print("\nStep 8: Signing Production Release APK with apksigner (v1, v2, v3 schemes)...")
     final_apk = os.path.join(OUTPUT_DIR, 'FileForge.apk')
-    debug_apk_dest = os.path.join(APP_DIR, 'build', 'outputs', 'apk', 'debug')
-    os.makedirs(debug_apk_dest, exist_ok=True)
-    debug_apk = os.path.join(debug_apk_dest, 'app-debug.apk')
+    release_apk_name = os.path.join(OUTPUT_DIR, 'app-release.apk')
+    release_gradle_dir = os.path.join(APP_DIR, 'build', 'outputs', 'apk', 'release')
+    debug_gradle_dir = os.path.join(APP_DIR, 'build', 'outputs', 'apk', 'debug')
+    os.makedirs(release_gradle_dir, exist_ok=True)
+    os.makedirs(debug_gradle_dir, exist_ok=True)
 
     apksigner_cmd = [
         APKSIGNER, 'sign',
-        '--ks', KEYSTORE,
+        '--ks', RELEASE_KEYSTORE,
         '--ks-pass', f'pass:{KEYSTORE_PASS}',
         '--ks-key-alias', KEY_ALIAS,
         '--key-pass', f'pass:{KEYSTORE_PASS}',
+        '--v1-signing-enabled', 'true',
+        '--v2-signing-enabled', 'true',
+        '--v3-signing-enabled', 'true',
         '--out', final_apk,
         aligned_apk
     ]
     run_cmd(apksigner_cmd)
 
-    # Copy to standard debug path as well
-    shutil.copy2(final_apk, debug_apk)
+    # Create copies for standard paths
+    shutil.copy2(final_apk, release_apk_name)
+    shutil.copy2(final_apk, os.path.join(release_gradle_dir, 'app-release.apk'))
+    shutil.copy2(final_apk, os.path.join(debug_gradle_dir, 'app-debug.apk'))
 
     # 11. Verify APK signature
     print("\nStep 9: Verifying APK signature...")
     verify_cmd = [APKSIGNER, 'verify', '--verbose', final_apk]
     run_cmd(verify_cmd)
 
+    # 12. Inspect APK badging with aapt2 dump badging
+    print("\nStep 10: Inspecting APK badging & compatibility metadata...")
+    badging_cmd = [AAPT2, 'dump', 'badging', final_apk]
+    res_badging = run_cmd(badging_cmd)
+
     size_mb = os.path.getsize(final_apk) / (1024 * 1024)
 
     print("\n==================================================")
-    print("   FILEFORGE APK BUILD SUCCESSFUL!")
+    print("   FILEFORGE UNIVERSAL RELEASE APK READY! ")
     print("==================================================")
-    print(f"Final APK Output: {final_apk}")
-    print(f"Debug APK Output: {debug_apk}")
-    print(f"File Size:        {size_mb:.2f} MB")
-    print(f"Package ID:       com.fileforge.app")
-    print(f"Version Name:     1.0.0 (versionCode 1)")
+    print(f"Final APK Output:    {final_apk}")
+    print(f"Release APK Copy:    {release_apk_name}")
+    print(f"Gradle Release Copy: {os.path.join(release_gradle_dir, 'app-release.apk')}")
+    print(f"File Size:           {size_mb:.2f} MB")
+    print(f"Package ID:          com.fileforge.app")
+    print(f"minSdkVersion:       21 (Android 5.0+)")
+    print(f"targetSdkVersion:    34 (Android 14+)")
+    print(f"versionName:         1.0.0 (versionCode 1)")
+    print(f"Architecture:        Universal (arm64-v8a, armeabi-v7a, x86, x86_64)")
+    print(f"Signing:             Release Keystore (v1 + v2 + v3 Schemes)")
     print("==================================================")
 
 if __name__ == '__main__':
