@@ -1056,6 +1056,82 @@ const App = (() => {
     }
   }
 
+  const TOOL_MODULE_GETTERS = [
+    () => window.ImageCompressor,
+    () => window.ImageConverter,
+    () => window.ImageResizer,
+    () => window.PDFCompressor,
+    () => window.PDFToImage,
+    () => window.ImageToPDF,
+    () => window.PDFMerger,
+    () => window.PDFSplitter,
+    () => window.PDFExtractor,
+    () => window.PDFRotator,
+    () => window.PDFDeletePages,
+    () => window.PDFReorderPages,
+    () => window.PDFWatermark,
+    () => window.PDFPageNumber,
+    () => window.PDFProtect,
+    () => window.PDFMetadataEditor,
+    () => window.PDFToText,
+    () => window.PDFCrop,
+    () => window.PDFGrayscale,
+    () => window.ImageCropper,
+    () => window.ImageRotator,
+    () => window.ImageFlip,
+    () => window.ImageWatermark,
+    () => window.ImageMetadataRemover,
+    () => window.ImageGrayscale,
+    () => window.ImageToBase64,
+    () => window.Base64ToImage,
+    () => window.ImageColorPicker,
+    () => window.ImagePreviewTool,
+    () => window.ZipCreator,
+    () => window.ZipExtractor,
+    () => window.FileAnalyzer,
+    () => window.FilePreviewer,
+    () => window.FileRenamer,
+    () => window.BatchProcessor
+  ];
+
+  /**
+   * Completely reset all temporary tool state, uploaded files, previews,
+   * object URLs, canvas memory, and file input values.
+   */
+  function resetAllToolStates() {
+    // 1. Call reset() on every registered tool module
+    TOOL_MODULE_GETTERS.forEach(getMod => {
+      try {
+        const mod = getMod();
+        if (mod && typeof mod.reset === 'function') {
+          mod.reset();
+        }
+      } catch (err) {
+        console.warn('Tool reset notice:', err);
+      }
+    });
+
+    // 2. Clear all file input elements across the DOM
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+      try {
+        input.value = '';
+      } catch (e) {}
+    });
+
+    // 3. Hide all progress bars, spinners, and reset drag states
+    document.querySelectorAll('.progress-container').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.drag-active').forEach(el => el.classList.remove('drag-active'));
+
+    // 4. Unlock global processing state
+    if (window.Utils && typeof window.Utils.setProcessing === 'function') {
+      window.Utils.setProcessing(false);
+    }
+  }
+
+  function resetToolState(toolId) {
+    resetAllToolStates();
+  }
+
   function handleInitialRoute() {
     const hash = window.location.hash.replace('#', '');
     if (hash && TOOLS_DATA.some(t => t.id === hash)) {
@@ -1066,6 +1142,8 @@ const App = (() => {
   }
 
   function showHomeView(updateHash = true) {
+    // Complete reset of previous tool state when returning to homepage
+    resetAllToolStates();
     activeToolId = null;
     if (updateHash) history.pushState(null, '', window.location.pathname);
 
@@ -1090,6 +1168,9 @@ const App = (() => {
   }
 
   function openTool(toolId, preloadedFiles = null) {
+    // Always start with a completely fresh state before opening the tool
+    resetAllToolStates();
+
     activeToolId = toolId;
     window.location.hash = toolId;
 
@@ -1233,7 +1314,9 @@ const App = (() => {
     init,
     openTool,
     showHomeView,
-    setFilter
+    setFilter,
+    resetAllToolStates,
+    resetToolState
   };
 })();
 
