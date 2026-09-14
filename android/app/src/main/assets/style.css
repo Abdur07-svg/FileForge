@@ -413,6 +413,12 @@ button {
   flex-shrink: 0;
 }
 
+body.is-native-app .apk-download-btn,
+body.is-native-app #mobile-apk-download-btn,
+body.is-native-app #apk-download-btn {
+  display: none !important;
+}
+
 .theme-toggle-btn {
   width: 40px;
   height: 40px;

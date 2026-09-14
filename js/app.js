@@ -1250,6 +1250,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const apkDownloadBtn = document.getElementById('apk-download-btn');
   const mobileApkDownloadBtn = document.getElementById('mobile-apk-download-btn');
 
+  // Hide APK download buttons if running inside the native Android App
+  if (window.FileForgeAndroid) {
+    document.body.classList.add('is-native-app');
+    if (apkDownloadBtn) apkDownloadBtn.style.display = 'none';
+    if (mobileApkDownloadBtn) mobileApkDownloadBtn.style.display = 'none';
+  }
+
   function handleApkDownload(e) {
     if (e) e.preventDefault();
     if (window.FileForgeAndroid) {

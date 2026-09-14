@@ -126,8 +126,21 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Navigation Security: Keep local files inside WebView, send external URLs to browser
+        // Navigation Security & Native App Configuration
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.evaluateJavascript(
+                    "(function() {" +
+                    "  document.body.classList.add('is-native-app');" +
+                    "  var b1 = document.getElementById('apk-download-btn'); if (b1) b1.style.display = 'none';" +
+                    "  var b2 = document.getElementById('mobile-apk-download-btn'); if (b2) b2.style.display = 'none';" +
+                    "})();",
+                    null
+                );
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
