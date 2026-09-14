@@ -4522,6 +4522,25 @@
     </div>
   </div>
 
+  <!-- PWA Update Notification Banner -->
+  <div id="pwa-update-banner" class="pwa-update-banner hidden" role="alert" aria-live="assertive">
+    <div class="pwa-update-content">
+      <div class="pwa-update-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+        </svg>
+      </div>
+      <div class="pwa-update-text">
+        <div class="pwa-update-title">New version available</div>
+        <div class="pwa-update-desc">FileForge has been updated.</div>
+      </div>
+    </div>
+    <div class="pwa-update-actions">
+      <button type="button" id="pwa-update-now-btn" class="btn btn-sm btn-primary pwa-update-btn">Update Now</button>
+      <button type="button" id="pwa-update-dismiss-btn" class="pwa-update-close" aria-label="Dismiss">&times;</button>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 

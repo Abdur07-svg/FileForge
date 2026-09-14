@@ -1244,19 +1244,66 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   App.init();
 
-  // Register Progressive Web App (PWA) Service Worker
+  // Register Progressive Web App (PWA) Service Worker & Update Strategy
+  const updateBanner = document.getElementById('pwa-update-banner');
+  const updateNowBtn = document.getElementById('pwa-update-now-btn');
+  const updateDismissBtn = document.getElementById('pwa-update-dismiss-btn');
+  let waitingWorker = null;
+  let refreshing = false;
+
+  function showUpdateBanner(worker) {
+    waitingWorker = worker;
+    if (updateBanner) {
+      updateBanner.classList.remove('hidden');
+    }
+  }
+
+  if (updateNowBtn) {
+    updateNowBtn.addEventListener('click', () => {
+      if (waitingWorker) {
+        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        navigator.serviceWorker.getRegistration().then((reg) => {
+          if (reg && reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          } else {
+            window.location.reload();
+          }
+        });
+      }
+      if (updateBanner) updateBanner.classList.add('hidden');
+    });
+  }
+
+  if (updateDismissBtn) {
+    updateDismissBtn.addEventListener('click', () => {
+      if (updateBanner) updateBanner.classList.add('hidden');
+    });
+  }
+
   if ('serviceWorker' in navigator) {
+    // When the new service worker takes over, reload to apply updates immediately
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
+
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./service-worker.js', { scope: './' })
         .then((registration) => {
+          // If a worker is already installed and waiting, show banner immediately
+          if (registration.waiting) {
+            showUpdateBanner(registration.waiting);
+          }
+
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  if (window.Utils && typeof window.Utils.showToast === 'function') {
-                    window.Utils.showToast('FileForge update available! Refresh to load new features.', 'info', 5000);
-                  }
+                  showUpdateBanner(newWorker);
                 }
               });
             }
