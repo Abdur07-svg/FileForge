@@ -1313,5 +1313,82 @@ document.addEventListener('DOMContentLoaded', () => {
       window.Utils.showToast('FileForge successfully installed on your device!', 'success');
     }
   });
+
+  // Handle Offline Status & Offline Popup Modal
+  const offlineModal = document.getElementById('offline-modal');
+  const offlineContinueBtn = document.getElementById('offline-continue-btn');
+  const offlineRetryBtn = document.getElementById('offline-retry-btn');
+  let offlineDismissed = false;
+
+  function showOfflineModal() {
+    if (offlineModal && !offlineDismissed) {
+      offlineModal.classList.remove('hidden');
+    }
+  }
+
+  function hideOfflineModal() {
+    if (offlineModal) {
+      offlineModal.classList.add('hidden');
+    }
+  }
+
+  // Check initial offline status on startup
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    // Show offline popup if the app is opened without an internet connection
+    setTimeout(showOfflineModal, 350);
+  }
+
+  // Listen to live connectivity changes
+  window.addEventListener('offline', () => {
+    offlineDismissed = false;
+    showOfflineModal();
+    if (window.Utils && typeof window.Utils.showToast === 'function') {
+      window.Utils.showToast('You are currently offline. On-device tools are ready.', 'warning', 4000);
+    }
+  });
+
+  window.addEventListener('online', () => {
+    hideOfflineModal();
+    offlineDismissed = false;
+    if (window.Utils && typeof window.Utils.showToast === 'function') {
+      window.Utils.showToast('You are back online! 🟢', 'success', 3500);
+    }
+  });
+
+  if (offlineContinueBtn) {
+    offlineContinueBtn.addEventListener('click', () => {
+      offlineDismissed = true;
+      hideOfflineModal();
+      if (window.Utils && typeof window.Utils.showToast === 'function') {
+        window.Utils.showToast('Working in offline on-device mode ⚡', 'info', 3000);
+      }
+    });
+  }
+
+  if (offlineRetryBtn) {
+    offlineRetryBtn.addEventListener('click', () => {
+      if (navigator.onLine) {
+        hideOfflineModal();
+        offlineDismissed = false;
+        if (window.Utils && typeof window.Utils.showToast === 'function') {
+          window.Utils.showToast('Connected! You are online 🟢', 'success', 3500);
+        }
+      } else {
+        if (window.Utils && typeof window.Utils.showToast === 'function') {
+          window.Utils.showToast('Still offline. FileForge can still process files on-device.', 'warning', 3500);
+        }
+      }
+    });
+  }
+
+  if (offlineModal) {
+    const backdrop = offlineModal.querySelector('.modal-backdrop');
+    if (backdrop) {
+      backdrop.addEventListener('click', () => {
+        offlineDismissed = true;
+        hideOfflineModal();
+      });
+    }
+  }
 });
 
