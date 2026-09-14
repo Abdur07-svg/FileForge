@@ -2781,9 +2781,12 @@
               </div>
 
               <div class="panel-card">
-                <h3 class="panel-title">Crop Box Preview (Page 1)</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <h3 class="panel-title" style="margin-bottom: 0;">Interactive Crop Preview (Page 1)</h3>
+                  <span id="pcrop-size-badge" class="badge badge-info" style="font-weight: 600;">Drag to crop</span>
+                </div>
                 <div class="preview-stage-wrap" style="display: flex; justify-content: center; align-items: center; background: var(--bg-tertiary); padding: 16px; border-radius: 8px;">
-                  <canvas id="pcrop-preview-canvas" style="max-width: 100%; height: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border-radius: 4px;"></canvas>
+                  <canvas id="pcrop-preview-canvas" style="max-width: 100%; height: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border-radius: 4px; touch-action: none; cursor: crosshair;"></canvas>
                 </div>
               </div>
             </div>
