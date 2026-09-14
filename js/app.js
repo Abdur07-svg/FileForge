@@ -1288,6 +1288,80 @@ document.addEventListener('DOMContentLoaded', () => {
     mobileApkDownloadBtn.addEventListener('click', handleApkDownload);
   }
 
+  // Website Update Strategy: Detect new Service Worker & Show Update Banner
+  const updateBanner = document.getElementById('update-banner');
+  const updateNowBtn = document.getElementById('update-now-btn');
+  const updateDismissBtn = document.getElementById('update-dismiss-btn');
+  let waitingWorker = null;
+  let refreshing = false;
+
+  function showUpdateBanner(worker) {
+    waitingWorker = worker;
+    if (updateBanner) {
+      updateBanner.classList.remove('hidden');
+    }
+  }
+
+  if (updateNowBtn) {
+    updateNowBtn.addEventListener('click', () => {
+      if (waitingWorker) {
+        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistration().then((reg) => {
+            if (reg && reg.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            } else {
+              window.location.reload();
+            }
+          });
+        } else {
+          window.location.reload();
+        }
+      }
+      if (updateBanner) updateBanner.classList.add('hidden');
+    });
+  }
+
+  if (updateDismissBtn) {
+    updateDismissBtn.addEventListener('click', () => {
+      if (updateBanner) updateBanner.classList.add('hidden');
+    });
+  }
+
+  // Only register Service Worker on HTTP/HTTPS web browsers (not inside native Android APK)
+  if ('serviceWorker' in navigator && !window.FileForgeAndroid && window.location.protocol.startsWith('http')) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
+
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js', { scope: './' })
+        .then((registration) => {
+          if (registration.waiting) {
+            showUpdateBanner(registration.waiting);
+          }
+
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  showUpdateBanner(newWorker);
+                }
+              });
+            }
+          });
+        })
+        .catch((err) => {
+          console.warn('[SW] Service Worker note:', err);
+        });
+    });
+  }
+
   // System Android Back Button & Gesture Navigation Handler
   window.handleAndroidBack = function() {
     try {
