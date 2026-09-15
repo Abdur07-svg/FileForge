@@ -3637,6 +3637,55 @@ input.form-control.input-success {
   color: var(--text-secondary);
 }
 
+/* Per-Page Orientation Controls inside Image Cards */
+.i2p-item-orient-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.i2p-orient-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.i2p-orient-pill-group {
+  display: inline-flex;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.i2p-orient-pill {
+  padding: 2px 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  line-height: 1.2;
+}
+
+.i2p-orient-pill:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+}
+
+.i2p-orient-pill.active {
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(99, 102, 241, 0.35);
+}
+
 .i2p-item-actions {
   display: flex;
   align-items: center;

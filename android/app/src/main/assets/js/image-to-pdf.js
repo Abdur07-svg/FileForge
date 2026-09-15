@@ -203,7 +203,16 @@ const ImageToPDF = (() => {
     }
     if (dom.customWidthInput) dom.customWidthInput.addEventListener('input', updatePDFPreview);
     if (dom.customHeightInput) dom.customHeightInput.addEventListener('input', updatePDFPreview);
-    if (dom.orientationSelect) dom.orientationSelect.addEventListener('change', updatePDFPreview);
+    if (dom.orientationSelect) {
+      dom.orientationSelect.addEventListener('change', () => {
+        const val = dom.orientationSelect.value;
+        imageList.forEach(item => {
+          item.orientation = val;
+        });
+        renderList();
+        updatePDFPreview();
+      });
+    }
     if (dom.marginSelect) {
       dom.marginSelect.addEventListener('change', () => {
         if (dom.customMarginRow) dom.customMarginRow.classList.toggle('hidden', dom.marginSelect.value !== 'custom');
@@ -307,6 +316,7 @@ const ImageToPDF = (() => {
           height: img.naturalHeight,
           originalWidth: img.naturalWidth,
           originalHeight: img.naturalHeight,
+          orientation: (dom.orientationSelect ? dom.orientationSelect.value : 'auto'),
           editState: {
             crop: null,
             rotate: 0,
@@ -361,6 +371,8 @@ const ImageToPDF = (() => {
                        item.editState.flipV ||
                        item.editState.filter !== 'original';
 
+      const orient = item.orientation || 'auto';
+
       card.innerHTML = `
         <div class="i2p-drag-handle" title="Drag to reorder page">
           <svg viewBox="0 0 20 20" fill="currentColor">
@@ -375,6 +387,14 @@ const ImageToPDF = (() => {
         <div class="i2p-item-info">
           <p class="i2p-item-name" title="${Utils.escapeHtml(item.name)}">${Utils.escapeHtml(item.name)}</p>
           <span class="i2p-item-dims">${item.width} × ${item.height} px ${item.editState.filter !== 'original' ? '• ' + getFilterName(item.editState.filter) : ''}</span>
+          <div class="i2p-item-orient-row">
+            <span class="i2p-orient-label">Orientation:</span>
+            <div class="i2p-orient-pill-group">
+              <button type="button" class="i2p-orient-pill ${orient === 'auto' ? 'active' : ''}" data-orient="auto" title="Auto: Detect aspect ratio">Auto</button>
+              <button type="button" class="i2p-orient-pill ${orient === 'portrait' ? 'active' : ''}" data-orient="portrait" title="Force Portrait page">Portrait</button>
+              <button type="button" class="i2p-orient-pill ${orient === 'landscape' ? 'active' : ''}" data-orient="landscape" title="Force Landscape page">Landscape</button>
+            </div>
+          </div>
         </div>
         <div class="i2p-item-actions">
           <button type="button" class="btn btn-xs btn-secondary i2p-edit-btn" title="Edit image (Crop, Rotate, Filters)">
@@ -414,6 +434,17 @@ const ImageToPDF = (() => {
           renderList();
           updatePDFPreview();
         }
+      });
+
+      // Per-Page Orientation Buttons
+      card.querySelectorAll('.i2p-orient-pill').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const newOrient = btn.dataset.orient;
+          item.orientation = newOrient;
+          renderList();
+          updatePDFPreview();
+        });
       });
 
       // Actions
@@ -1388,13 +1419,49 @@ const ImageToPDF = (() => {
   }
 
   // =========================================================================
+  // PER-IMAGE ORIENTATION & DIMENSIONS HELPERS
+  // =========================================================================
+
+  function getItemEffectiveDimensions(item) {
+    if (!item) return { width: 100, height: 100 };
+    let w = item.originalWidth || item.width || 100;
+    let h = item.originalHeight || item.height || 100;
+
+    if (item.editState && item.editState.crop) {
+      w = item.editState.crop.w;
+      h = item.editState.crop.h;
+    }
+
+    if (item.editState && (item.editState.rotate === 90 || item.editState.rotate === 270)) {
+      const temp = w;
+      w = h;
+      h = temp;
+    }
+
+    return { width: Math.max(1, w), height: Math.max(1, h) };
+  }
+
+  function getEffectiveOrientation(item) {
+    if (!item) return 'portrait';
+    const orient = item.orientation || 'auto';
+    if (orient === 'portrait') return 'portrait';
+    if (orient === 'landscape') return 'landscape';
+
+    // Auto orientation based on current effective aspect ratio
+    const dims = getItemEffectiveDimensions(item);
+    return dims.width > dims.height ? 'landscape' : 'portrait';
+  }
+
+  // =========================================================================
   // PDF PAGE PREVIEW ENGINE
   // =========================================================================
 
-  function getPageDimensions() {
+  function getPageDimensions(pageIndex = previewPageIndex) {
     const size = dom.pageSizeSelect ? dom.pageSizeSelect.value : 'a4';
     let w = 595.28;
     let h = 841.89;
+
+    const item = (imageList.length > 0 && pageIndex >= 0 && pageIndex < imageList.length) ? imageList[pageIndex] : null;
 
     if (size === 'a5') {
       w = 419.53;
@@ -1413,22 +1480,15 @@ const ImageToPDF = (() => {
         h = customH;
       }
     } else if (size === 'original') {
-      if (imageList.length > 0 && imageList[previewPageIndex]) {
-        w = imageList[previewPageIndex].width;
-        h = imageList[previewPageIndex].height;
+      if (item) {
+        const dims = getItemEffectiveDimensions(item);
+        w = dims.width;
+        h = dims.height;
       }
     }
 
-    const orientation = dom.orientationSelect ? dom.orientationSelect.value : 'auto';
-    let isLandscape = false;
-
-    if (orientation === 'landscape') {
-      isLandscape = true;
-    } else if (orientation === 'auto') {
-      if (imageList.length > 0 && imageList[previewPageIndex]) {
-        isLandscape = imageList[previewPageIndex].width > imageList[previewPageIndex].height;
-      }
-    }
+    // Determine per-page orientation
+    const isLandscape = getEffectiveOrientation(item) === 'landscape';
 
     if (size !== 'original') {
       if (isLandscape && w < h) {
@@ -1466,7 +1526,7 @@ const ImageToPDF = (() => {
     if (dom.previewPrevBtn) dom.previewPrevBtn.disabled = previewPageIndex === 0;
     if (dom.previewNextBtn) dom.previewNextBtn.disabled = previewPageIndex === imageList.length - 1;
 
-    const pageDim = getPageDimensions();
+    const pageDim = getPageDimensions(previewPageIndex);
     const margin = getMarginPoints();
     const placement = dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'fit';
 
@@ -1547,8 +1607,6 @@ const ImageToPDF = (() => {
     Utils.setProcessing(true);
     showProgress(5, 'Initializing PDF Document...');
 
-    const pageSizeSetting = dom.pageSizeSelect ? dom.pageSizeSelect.value : 'a4';
-    const orientationSetting = dom.orientationSelect ? dom.orientationSelect.value : 'auto';
     const margin = getMarginPoints();
     const placement = dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'fit';
 
@@ -1611,50 +1669,10 @@ const ImageToPDF = (() => {
           embeddedImage = await pdfDoc.embedJpg(jpgBytes);
         }
 
-        // Page Dimensions
-        let pageWidth = 595.28;
-        let pageHeight = 841.89;
-
-        if (pageSizeSetting === 'a5') {
-          pageWidth = 419.53;
-          pageHeight = 595.28;
-        } else if (pageSizeSetting === 'letter') {
-          pageWidth = 612;
-          pageHeight = 792;
-        } else if (pageSizeSetting === 'legal') {
-          pageWidth = 612;
-          pageHeight = 1008;
-        } else if (pageSizeSetting === 'custom') {
-          const cw = parseFloat(dom.customWidthInput ? dom.customWidthInput.value : 0);
-          const ch = parseFloat(dom.customHeightInput ? dom.customHeightInput.value : 0);
-          if (cw > 10 && ch > 10) {
-            pageWidth = cw;
-            pageHeight = ch;
-          }
-        } else if (pageSizeSetting === 'original') {
-          pageWidth = renderCanvas.width;
-          pageHeight = renderCanvas.height;
-        }
-
-        // Orientation
-        let isLandscape = false;
-        if (orientationSetting === 'landscape') {
-          isLandscape = true;
-        } else if (orientationSetting === 'auto') {
-          isLandscape = renderCanvas.width > renderCanvas.height;
-        }
-
-        if (pageSizeSetting !== 'original') {
-          if (isLandscape && pageWidth < pageHeight) {
-            const temp = pageWidth;
-            pageWidth = pageHeight;
-            pageHeight = temp;
-          } else if (!isLandscape && pageWidth > pageHeight) {
-            const temp = pageWidth;
-            pageWidth = pageHeight;
-            pageHeight = temp;
-          }
-        }
+        // Per-Page Dimensions & Orientation
+        const pageDim = getPageDimensions(i);
+        const pageWidth = pageDim.width;
+        const pageHeight = pageDim.height;
 
         const page = pdfDoc.addPage([pageWidth, pageHeight]);
 
@@ -1674,6 +1692,9 @@ const ImageToPDF = (() => {
             drawHeight = usableHeight;
             drawWidth = usableHeight * imgRatio;
           }
+        } else if (placement === 'fill') {
+          drawWidth = usableWidth;
+          drawHeight = usableHeight;
         } else if (placement === 'original') {
           drawWidth = Math.min(usableWidth, renderCanvas.width);
           drawHeight = Math.min(usableHeight, renderCanvas.height);
