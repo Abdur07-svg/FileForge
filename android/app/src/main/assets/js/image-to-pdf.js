@@ -1,31 +1,72 @@
 /**
- * FileForge - Tool 51: Image to PDF (with Full-Featured Image Editor & PDF Preview)
- * Pure Client-Side Implementation with zero server upload.
+ * FileForge - Tool 51: Image to PDF
+ * Features:
+ * - Non-Destructive Visual Filter Preset Cards (Original, Vibrant, Soft Tone, Color, Sharp Black, Grayscale, High Contrast, Clean Document)
+ * - Intelligent Client-Side Signature Background Removal & Transparent Overlay
+ * - Interactive Signature Placement (Move, Resize, Rotate, Position Presets, Multi-Page)
+ * - Complete PDF Layout Engine & Client-Side PDF Generation via pdf-lib
+ * - 100% Private, Zero Server Uploads, Clean State Reset Lifecycle
  */
 
 const ImageToPDF = (() => {
-  // State
-  let imageList = []; 
+  // Main State
+  let imageList = [];
   // Each item: { id, file, name, originalDataUrl, previewDataUrl, width, height, originalWidth, originalHeight, editState }
-  // editState: { crop: {x,y,w,h} | null, rotate: 0, flipH: false, flipV: false, brightness: 100, contrast: 100, saturate: 100, blur: 0, grayscale: 0, filter: 'original' }
-  
+  // editState: { crop: {x,y,w,h} | null, rotate: 0, flipH: false, flipV: false, filter: 'original' }
+
   let currentEditingIndex = -1;
+  let previewPageIndex = 0;
   let generatedPdfBlob = null;
   let currentPreset = 'general'; // 'general' | 'jpg-to-pdf' | 'png-to-pdf'
-  let previewPageIndex = 0;
+
+  // Signature State
+  let signatureRawImage = null; // Image object
+  let signatureDataUrl = null; // Transparent PNG data URL
+  let signatureSettings = {
+    sensitivity: 45, // 0 - 100
+    inkColor: 'original', // 'original' | 'black' | 'blue'
+    autoCrop: true,
+    smooth: true
+  };
+  let signaturePlacement = {
+    active: false,
+    applyToAll: true,
+    // Relative to page (0.0 to 1.0)
+    relX: 0.65, // top-left X ratio
+    relY: 0.75, // top-left Y ratio
+    relW: 0.25, // width ratio relative to usable page width
+    aspectRatio: 1, // width / height
+    rotation: 0 // degrees
+  };
+
+  // Editor State
+  let editorCropActive = false;
+  let editorCropRatio = 'free'; // 'free' | '1:1' | '4:3' | '16:9' | 'a4'
+  let editorCropRect = { x: 0, y: 0, w: 100, h: 100 };
+  let editorTempState = {};
+  let isDraggingCrop = false;
+  let cropDragMode = null;
+  let cropDragStart = { x: 0, y: 0, rectX: 0, rectY: 0, rectW: 0, rectH: 0 };
+  let editorImgObj = null;
+
+  // Signature Drag / Transform on Preview State
+  let isDraggingSig = false;
+  let isResizingSig = false;
+  let sigDragStart = { mouseX: 0, mouseY: 0, origX: 0, origY: 0, origW: 0 };
 
   // DOM Elements
   let dom = {};
 
-  // Editor State
-  let editorCropActive = false;
-  let editorCropRatio = 'free'; // 'free' | '1:1' | '4:3' | '16:9' | 'a4' | 'custom'
-  let editorCropRect = { x: 0, y: 0, w: 100, h: 100 }; // in canvas space
-  let editorTempState = {};
-  let isDraggingCrop = false;
-  let cropDragMode = null; // 'move' | 'nw' | 'ne' | 'se' | 'sw' | 'n' | 's' | 'e' | 'w'
-  let cropDragStart = { x: 0, y: 0, rectX: 0, rectY: 0, rectW: 0, rectH: 0 };
-  let editorImgObj = null;
+  const FILTER_PRESETS = [
+    { id: 'original', name: 'Original', desc: 'No modification' },
+    { id: 'vibrant', name: 'Vibrant', desc: 'Vivid & clear' },
+    { id: 'soft-tone', name: 'Soft Tone', desc: 'Balanced & gentle' },
+    { id: 'color', name: 'Color', desc: 'Color enhanced' },
+    { id: 'sharp-black', name: 'Sharp Black', desc: 'Deep black text' },
+    { id: 'grayscale', name: 'Grayscale', desc: 'Clean B&W' },
+    { id: 'high-contrast', name: 'High Contrast', desc: 'Enhanced contrast' },
+    { id: 'clean-document', name: 'Clean Document', desc: 'Document white' }
+  ];
 
   function init() {
     dom = {
@@ -40,7 +81,7 @@ const ImageToPDF = (() => {
       imageListContainer: document.getElementById('i2p-image-list'),
       imageCountBadge: document.getElementById('i2p-image-count-badge'),
 
-      // Settings
+      // PDF Settings
       pageSizeSelect: document.getElementById('i2p-page-size'),
       customSizeRow: document.getElementById('i2p-custom-size-row'),
       customWidthInput: document.getElementById('i2p-custom-width'),
@@ -51,7 +92,7 @@ const ImageToPDF = (() => {
       customMarginInput: document.getElementById('i2p-custom-margin'),
       imagePlacementSelect: document.getElementById('i2p-image-placement'),
 
-      // Actions & Progress
+      // Action Buttons
       generateBtn: document.getElementById('i2p-generate-btn'),
       downloadBtn: document.getElementById('i2p-download-btn'),
       resetBtn: document.getElementById('i2p-reset-btn'),
@@ -63,15 +104,23 @@ const ImageToPDF = (() => {
       progressContainer: document.getElementById('i2p-progress-container'),
       progressText: document.getElementById('i2p-progress-text'),
 
-      // PDF Preview
-      previewContainer: document.getElementById('i2p-pdf-preview-container'),
+      // PDF Live Preview & Signature Overlay
+      previewStage: document.getElementById('i2p-preview-stage'),
       previewCanvas: document.getElementById('i2p-preview-canvas'),
       previewPageNum: document.getElementById('i2p-preview-page-num'),
       previewPrevBtn: document.getElementById('i2p-preview-prev-btn'),
       previewNextBtn: document.getElementById('i2p-preview-next-btn'),
       previewTotalPages: document.getElementById('i2p-preview-total-pages'),
+      sigOverlayBox: document.getElementById('i2p-sig-overlay-box'),
+      sigOverlayImg: document.getElementById('i2p-sig-overlay-img'),
+      sigResizeHandle: document.getElementById('i2p-sig-resize-handle'),
+      sigDeleteBtn: document.getElementById('i2p-sig-delete-btn'),
+      addSignatureBtn: document.getElementById('i2p-add-signature-btn'),
+      sigControlsRow: document.getElementById('i2p-sig-controls-row'),
+      sigApplyScopeSelect: document.getElementById('i2p-sig-scope-select'),
+      sigPosBtns: document.querySelectorAll('.i2p-sig-pos-btn'),
 
-      // Editor Modal
+      // Image Editor Modal
       editorModal: document.getElementById('i2p-editor-modal'),
       editorCloseBtn: document.getElementById('i2p-editor-close-btn'),
       editorSaveBtn: document.getElementById('i2p-editor-save-btn'),
@@ -79,36 +128,33 @@ const ImageToPDF = (() => {
       editorCanvas: document.getElementById('i2p-editor-canvas'),
       editorFilename: document.getElementById('i2p-editor-filename'),
       editorDimsBadge: document.getElementById('i2p-editor-dims'),
-
-      // Editor Controls - Crop
       cropToggleBtn: document.getElementById('i2p-crop-toggle-btn'),
       cropControlsPanel: document.getElementById('i2p-crop-controls-panel'),
       cropRatioBtns: document.querySelectorAll('.i2p-crop-ratio-btn'),
       applyCropBtn: document.getElementById('i2p-apply-crop-btn'),
       cancelCropBtn: document.getElementById('i2p-cancel-crop-btn'),
       resetCropBtn: document.getElementById('i2p-reset-crop-btn'),
-
-      // Editor Controls - Rotate & Flip
       rotateCwBtn: document.getElementById('i2p-rotate-cw'),
       rotateCcwBtn: document.getElementById('i2p-rotate-ccw'),
       flipHBtn: document.getElementById('i2p-flip-h'),
       flipVBtn: document.getElementById('i2p-flip-v'),
+      filterCardsRow: document.getElementById('i2p-filter-cards-row'),
 
-      // Editor Controls - Adjustments
-      brightnessSlider: document.getElementById('i2p-adj-brightness'),
-      brightnessVal: document.getElementById('i2p-adj-brightness-val'),
-      contrastSlider: document.getElementById('i2p-adj-contrast'),
-      contrastVal: document.getElementById('i2p-adj-contrast-val'),
-      saturateSlider: document.getElementById('i2p-adj-saturate'),
-      saturateVal: document.getElementById('i2p-adj-saturate-val'),
-      blurSlider: document.getElementById('i2p-adj-blur'),
-      blurVal: document.getElementById('i2p-adj-blur-val'),
-      grayscaleSlider: document.getElementById('i2p-adj-grayscale'),
-      grayscaleVal: document.getElementById('i2p-adj-grayscale-val'),
-      resetAdjBtn: document.getElementById('i2p-reset-adj-btn'),
-
-      // Editor Controls - Filters
-      filterChips: document.querySelectorAll('.i2p-filter-chip')
+      // Signature Studio Modal
+      signatureModal: document.getElementById('i2p-signature-modal'),
+      sigCloseBtn: document.getElementById('i2p-sig-close-btn'),
+      sigCancelBtn: document.getElementById('i2p-sig-cancel-btn'),
+      sigUseBtn: document.getElementById('i2p-sig-use-btn'),
+      sigDropzone: document.getElementById('i2p-sig-dropzone'),
+      sigFileInput: document.getElementById('i2p-sig-file-input'),
+      sigBrowseBtn: document.getElementById('i2p-sig-browse-btn'),
+      sigSensitivitySlider: document.getElementById('i2p-sig-sensitivity'),
+      sigSensitivityVal: document.getElementById('i2p-sig-sensitivity-val'),
+      sigColorChips: document.querySelectorAll('.i2p-sig-color-chip'),
+      sigAutoCropCheckbox: document.getElementById('i2p-sig-autocrop'),
+      sigPreviewCanvas: document.getElementById('i2p-sig-preview-canvas'),
+      sigEmptyPreview: document.getElementById('i2p-sig-empty-preview'),
+      sigPreviewWrap: document.getElementById('i2p-sig-preview-wrap')
     };
 
     if (!dom.container) return;
@@ -131,7 +177,7 @@ const ImageToPDF = (() => {
   function bindEvents() {
     // Dropzone & File Pickers
     Utils.setupDropZone(dom.dropzone, handleFiles, ['image/', '.jpg', '.jpeg', '.png', '.webp']);
-    
+
     if (dom.browseBtn) dom.browseBtn.addEventListener('click', () => dom.fileInput.click());
     if (dom.fileInput) {
       dom.fileInput.addEventListener('change', (e) => {
@@ -148,30 +194,22 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Settings changes update Live PDF Preview
+    // PDF Layout Settings update Preview
     if (dom.pageSizeSelect) {
       dom.pageSizeSelect.addEventListener('change', () => {
-        if (dom.customSizeRow) {
-          dom.customSizeRow.classList.toggle('hidden', dom.pageSizeSelect.value !== 'custom');
-        }
+        if (dom.customSizeRow) dom.customSizeRow.classList.toggle('hidden', dom.pageSizeSelect.value !== 'custom');
         updatePDFPreview();
       });
     }
-
     if (dom.customWidthInput) dom.customWidthInput.addEventListener('input', updatePDFPreview);
     if (dom.customHeightInput) dom.customHeightInput.addEventListener('input', updatePDFPreview);
-
     if (dom.orientationSelect) dom.orientationSelect.addEventListener('change', updatePDFPreview);
-
     if (dom.marginSelect) {
       dom.marginSelect.addEventListener('change', () => {
-        if (dom.customMarginRow) {
-          dom.customMarginRow.classList.toggle('hidden', dom.marginSelect.value !== 'custom');
-        }
+        if (dom.customMarginRow) dom.customMarginRow.classList.toggle('hidden', dom.marginSelect.value !== 'custom');
         updatePDFPreview();
       });
     }
-
     if (dom.customMarginInput) dom.customMarginInput.addEventListener('input', updatePDFPreview);
     if (dom.imagePlacementSelect) dom.imagePlacementSelect.addEventListener('change', updatePDFPreview);
 
@@ -205,132 +243,19 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Editor Modal Events
+    // Editor Events
     bindEditorEvents();
+
+    // Signature Studio Events
+    bindSignatureEvents();
+
+    // Signature Placement Overlay Events
+    bindSignatureOverlayEvents();
   }
 
-  function bindEditorEvents() {
-    if (dom.editorCloseBtn) dom.editorCloseBtn.addEventListener('click', closeEditor);
-    if (dom.editorCancelBtn) dom.editorCancelBtn.addEventListener('click', closeEditor);
-    if (dom.editorSaveBtn) dom.editorSaveBtn.addEventListener('click', saveEditorChanges);
-
-    // Crop Toggle & Presets
-    if (dom.cropToggleBtn) {
-      dom.cropToggleBtn.addEventListener('click', () => {
-        editorCropActive = !editorCropActive;
-        dom.cropToggleBtn.classList.toggle('active', editorCropActive);
-        if (dom.cropControlsPanel) dom.cropControlsPanel.classList.toggle('hidden', !editorCropActive);
-        if (editorCropActive) {
-          initCropRect();
-        }
-        drawEditorCanvas();
-      });
-    }
-
-    if (dom.cropRatioBtns) {
-      dom.cropRatioBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          editorCropRatio = btn.dataset.ratio;
-          dom.cropRatioBtns.forEach(b => b.classList.toggle('active', b === btn));
-          adjustCropRectToRatio();
-          drawEditorCanvas();
-        });
-      });
-    }
-
-    if (dom.applyCropBtn) {
-      dom.applyCropBtn.addEventListener('click', applyCropToTempState);
-    }
-    if (dom.cancelCropBtn) {
-      dom.cancelCropBtn.addEventListener('click', () => {
-        editorCropActive = false;
-        if (dom.cropToggleBtn) dom.cropToggleBtn.classList.remove('active');
-        if (dom.cropControlsPanel) dom.cropControlsPanel.classList.add('hidden');
-        drawEditorCanvas();
-      });
-    }
-    if (dom.resetCropBtn) {
-      dom.resetCropBtn.addEventListener('click', () => {
-        editorTempState.crop = null;
-        editorCropActive = false;
-        if (dom.cropToggleBtn) dom.cropToggleBtn.classList.remove('active');
-        if (dom.cropControlsPanel) dom.cropControlsPanel.classList.add('hidden');
-        drawEditorCanvas();
-        Utils.showToast('Crop reset to full image.', 'info');
-      });
-    }
-
-    // Rotate & Flip
-    if (dom.rotateCwBtn) {
-      dom.rotateCwBtn.addEventListener('click', () => {
-        editorTempState.rotate = (editorTempState.rotate + 90) % 360;
-        drawEditorCanvas();
-      });
-    }
-    if (dom.rotateCcwBtn) {
-      dom.rotateCcwBtn.addEventListener('click', () => {
-        editorTempState.rotate = (editorTempState.rotate - 90 + 360) % 360;
-        drawEditorCanvas();
-      });
-    }
-    if (dom.flipHBtn) {
-      dom.flipHBtn.addEventListener('click', () => {
-        editorTempState.flipH = !editorTempState.flipH;
-        dom.flipHBtn.classList.toggle('active', editorTempState.flipH);
-        drawEditorCanvas();
-      });
-    }
-    if (dom.flipVBtn) {
-      dom.flipVBtn.addEventListener('click', () => {
-        editorTempState.flipV = !editorTempState.flipV;
-        dom.flipVBtn.classList.toggle('active', editorTempState.flipV);
-        drawEditorCanvas();
-      });
-    }
-
-    // Adjustment Sliders
-    const setupSlider = (slider, valEl, prop, suffix = '%') => {
-      if (!slider) return;
-      slider.addEventListener('input', (e) => {
-        const val = parseInt(e.target.value, 10);
-        if (valEl) valEl.textContent = val + suffix;
-        editorTempState[prop] = val;
-        drawEditorCanvas();
-      });
-    };
-
-    setupSlider(dom.brightnessSlider, dom.brightnessVal, 'brightness', '%');
-    setupSlider(dom.contrastSlider, dom.contrastVal, 'contrast', '%');
-    setupSlider(dom.saturateSlider, dom.saturateVal, 'saturate', '%');
-    setupSlider(dom.blurSlider, dom.blurVal, 'blur', 'px');
-    setupSlider(dom.grayscaleSlider, dom.grayscaleVal, 'grayscale', '%');
-
-    if (dom.resetAdjBtn) {
-      dom.resetAdjBtn.addEventListener('click', resetEditorAdjustments);
-    }
-
-    // Filters
-    if (dom.filterChips) {
-      dom.filterChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-          editorTempState.filter = chip.dataset.filter;
-          dom.filterChips.forEach(c => c.classList.toggle('active', c === chip));
-          drawEditorCanvas();
-        });
-      });
-    }
-
-    // Pointer events for interactive cropping on Editor Canvas
-    if (dom.editorCanvas) {
-      dom.editorCanvas.addEventListener('mousedown', onCropPointerDown);
-      window.addEventListener('mousemove', onCropPointerMove);
-      window.addEventListener('mouseup', onCropPointerUp);
-
-      dom.editorCanvas.addEventListener('touchstart', onCropTouchStart, { passive: false });
-      window.addEventListener('touchmove', onCropTouchMove, { passive: false });
-      window.addEventListener('touchend', onCropPointerUp);
-    }
-  }
+  // =========================================================================
+  // FILE LOADING & LIST MANAGEMENT
+  // =========================================================================
 
   async function handleFiles(newFiles, isAppend = false) {
     if (!newFiles || newFiles.length === 0) return;
@@ -347,13 +272,13 @@ const ImageToPDF = (() => {
 
       if (currentPreset === 'jpg-to-pdf') {
         if (isJpg) valid.push(f);
-        else invalid.push({ name: f.name, ext: ext || f.type, expected: 'JPG/JPEG' });
+        else invalid.push({ name: f.name, expected: 'JPG/JPEG' });
       } else if (currentPreset === 'png-to-pdf') {
         if (isPng) valid.push(f);
-        else invalid.push({ name: f.name, ext: ext || f.type, expected: 'PNG' });
+        else invalid.push({ name: f.name, expected: 'PNG' });
       } else {
         if (isImage) valid.push(f);
-        else invalid.push({ name: f.name, ext: ext || f.type, expected: 'Image (JPG, PNG, WebP)' });
+        else invalid.push({ name: f.name, expected: 'Image (JPG, PNG, WebP)' });
       }
     }
 
@@ -387,11 +312,6 @@ const ImageToPDF = (() => {
             rotate: 0,
             flipH: false,
             flipV: false,
-            brightness: 100,
-            contrast: 100,
-            saturate: 100,
-            blur: 0,
-            grayscale: 0,
             filter: 'original'
           }
         };
@@ -406,7 +326,7 @@ const ImageToPDF = (() => {
 
       renderList();
       updatePDFPreview();
-      Utils.showToast(`Added ${valid.length} image(s). Drag to reorder, click Edit to adjust, or generate PDF!`, 'success');
+      Utils.showToast(`Added ${valid.length} image(s). Drag to reorder, click Edit to adjust, or add a signature!`, 'success');
     } catch (err) {
       console.error(err);
       Utils.showToast('Error loading images: ' + err.message, 'error');
@@ -439,11 +359,6 @@ const ImageToPDF = (() => {
                        item.editState.rotate !== 0 ||
                        item.editState.flipH ||
                        item.editState.flipV ||
-                       item.editState.brightness !== 100 ||
-                       item.editState.contrast !== 100 ||
-                       item.editState.saturate !== 100 ||
-                       item.editState.blur !== 0 ||
-                       item.editState.grayscale !== 0 ||
                        item.editState.filter !== 'original';
 
       card.innerHTML = `
@@ -459,7 +374,7 @@ const ImageToPDF = (() => {
         </div>
         <div class="i2p-item-info">
           <p class="i2p-item-name" title="${Utils.escapeHtml(item.name)}">${Utils.escapeHtml(item.name)}</p>
-          <span class="i2p-item-dims">${item.width} × ${item.height} px</span>
+          <span class="i2p-item-dims">${item.width} × ${item.height} px ${item.editState.filter !== 'original' ? '• ' + getFilterName(item.editState.filter) : ''}</span>
         </div>
         <div class="i2p-item-actions">
           <button type="button" class="btn btn-xs btn-secondary i2p-edit-btn" title="Edit image (Crop, Rotate, Filters)">
@@ -477,7 +392,7 @@ const ImageToPDF = (() => {
         </div>
       `;
 
-      // Drag and Drop Events
+      // Drag and Drop
       card.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('text/plain', index);
         card.classList.add('dragging');
@@ -539,87 +454,18 @@ const ImageToPDF = (() => {
     if (dom.generateBtn) dom.generateBtn.disabled = imageList.length === 0;
   }
 
+  function getFilterName(filterId) {
+    const f = FILTER_PRESETS.find(p => p.id === filterId);
+    return f ? f.name : filterId;
+  }
+
   // =========================================================================
-  // IMAGE EDITOR IMPLEMENTATION (Crop, Rotate, Flip, Adjustments, Filters)
+  // NON-DESTRUCTIVE RENDERING PIPELINE & 8 FILTER PRESETS
   // =========================================================================
 
-  async function openEditor(index) {
-    if (index < 0 || index >= imageList.length) return;
-    currentEditingIndex = index;
-    const item = imageList[index];
-
-    // Deep clone current editState into temp state
-    editorTempState = JSON.parse(JSON.stringify(item.editState));
-    editorCropActive = false;
-    editorCropRatio = 'free';
-
-    if (dom.editorFilename) dom.editorFilename.textContent = item.name;
-    if (dom.editorDimsBadge) dom.editorDimsBadge.textContent = `${item.width} × ${item.height} px`;
-
-    // Load original image into memory
-    editorImgObj = await Utils.loadImage(item.originalDataUrl);
-
-    // Sync UI controls with current values
-    syncEditorControlsUI();
-
-    // Show Editor Modal
-    if (dom.editorModal) dom.editorModal.classList.remove('hidden');
-
-    drawEditorCanvas();
-  }
-
-  function syncEditorControlsUI() {
-    if (dom.cropToggleBtn) dom.cropToggleBtn.classList.remove('active');
-    if (dom.cropControlsPanel) dom.cropControlsPanel.classList.add('hidden');
-    if (dom.cropRatioBtns) {
-      dom.cropRatioBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.ratio === 'free'));
-    }
-
-    if (dom.flipHBtn) dom.flipHBtn.classList.toggle('active', !!editorTempState.flipH);
-    if (dom.flipVBtn) dom.flipVBtn.classList.toggle('active', !!editorTempState.flipV);
-
-    if (dom.brightnessSlider) dom.brightnessSlider.value = editorTempState.brightness;
-    if (dom.brightnessVal) dom.brightnessVal.textContent = editorTempState.brightness + '%';
-
-    if (dom.contrastSlider) dom.contrastSlider.value = editorTempState.contrast;
-    if (dom.contrastVal) dom.contrastVal.textContent = editorTempState.contrast + '%';
-
-    if (dom.saturateSlider) dom.saturateSlider.value = editorTempState.saturate;
-    if (dom.saturateVal) dom.saturateVal.textContent = editorTempState.saturate + '%';
-
-    if (dom.blurSlider) dom.blurSlider.value = editorTempState.blur;
-    if (dom.blurVal) dom.blurVal.textContent = editorTempState.blur + 'px';
-
-    if (dom.grayscaleSlider) dom.grayscaleSlider.value = editorTempState.grayscale;
-    if (dom.grayscaleVal) dom.grayscaleVal.textContent = editorTempState.grayscale + '%';
-
-    if (dom.filterChips) {
-      dom.filterChips.forEach(chip => chip.classList.toggle('active', chip.dataset.filter === (editorTempState.filter || 'original')));
-    }
-  }
-
-  function resetEditorAdjustments() {
-    editorTempState.brightness = 100;
-    editorTempState.contrast = 100;
-    editorTempState.saturate = 100;
-    editorTempState.blur = 0;
-    editorTempState.grayscale = 0;
-    syncEditorControlsUI();
-    drawEditorCanvas();
-  }
-
-  function closeEditor() {
-    if (dom.editorModal) dom.editorModal.classList.add('hidden');
-    currentEditingIndex = -1;
-    editorImgObj = null;
-    editorCropActive = false;
-  }
-
-  // Render edited image onto an arbitrary canvas with given dimensions
   function renderEditedImageToCanvas(canvas, imgObj, editState, targetWidth = null, targetHeight = null) {
     const isRotated90 = (editState.rotate === 90 || editState.rotate === 270);
-    
-    // Determine source crop bounds on original unrotated image
+
     let sx = 0, sy = 0, sw = imgObj.naturalWidth, sh = imgObj.naturalHeight;
     if (editState.crop) {
       sx = editState.crop.x;
@@ -639,24 +485,28 @@ const ImageToPDF = (() => {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Apply Filter String (Brightness, Contrast, Saturation, Blur, Grayscale, Filter Presets)
-    let filterParts = [];
-    if (editState.brightness !== 100) filterParts.push(`brightness(${editState.brightness}%)`);
-    if (editState.contrast !== 100) filterParts.push(`contrast(${editState.contrast}%)`);
-    if (editState.saturate !== 100) filterParts.push(`saturate(${editState.saturate}%)`);
-    if (editState.blur > 0) filterParts.push(`blur(${editState.blur}px)`);
-    if (editState.grayscale > 0) filterParts.push(`grayscale(${editState.grayscale}%)`);
+    // CSS Filter string based on Preset
+    let filterCSS = 'none';
+    const f = editState.filter || 'original';
 
-    // Presets
-    if (editState.filter === 'grayscale') filterParts.push('grayscale(100%)');
-    else if (editState.filter === 'warm') filterParts.push('sepia(35%) saturate(140%)');
-    else if (editState.filter === 'cool') filterParts.push('hue-rotate(180deg) saturate(110%)');
-    else if (editState.filter === 'high-contrast') filterParts.push('contrast(160%) brightness(105%)');
-    else if (editState.filter === 'soft') filterParts.push('brightness(108%) contrast(90%)');
+    if (f === 'vibrant') {
+      filterCSS = 'saturate(1.4) contrast(1.1) brightness(1.02)';
+    } else if (f === 'soft-tone') {
+      filterCSS = 'contrast(0.92) brightness(1.04) saturate(0.95)';
+    } else if (f === 'color') {
+      filterCSS = 'saturate(1.22) contrast(1.06) brightness(1.02)';
+    } else if (f === 'sharp-black') {
+      filterCSS = 'contrast(1.6) brightness(0.94) grayscale(0.15)';
+    } else if (f === 'grayscale') {
+      filterCSS = 'grayscale(100%) contrast(1.08)';
+    } else if (f === 'high-contrast') {
+      filterCSS = 'contrast(1.75) brightness(1.04)';
+    } else if (f === 'clean-document') {
+      filterCSS = 'contrast(1.35) brightness(1.15) saturate(0.9)';
+    }
 
-    ctx.filter = filterParts.length > 0 ? filterParts.join(' ') : 'none';
+    ctx.filter = filterCSS;
 
-    // Transformations (Rotation & Flip)
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
 
@@ -667,19 +517,125 @@ const ImageToPDF = (() => {
     const scaleY = editState.flipV ? -1 : 1;
     ctx.scale(scaleX, scaleY);
 
-    // Scale to fit canvas if resized
     const drawW = isRotated90 ? canvas.height : canvas.width;
     const drawH = isRotated90 ? canvas.width : canvas.height;
 
     ctx.drawImage(imgObj, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
     ctx.restore();
     ctx.filter = 'none';
+
+    // Secondary pixel pass for Clean Document / Sharp Black if needed
+    if (f === 'clean-document') {
+      applyCleanDocumentPixelFilter(ctx, canvas.width, canvas.height);
+    }
+  }
+
+  function applyCleanDocumentPixelFilter(ctx, w, h) {
+    try {
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i];
+        const g = d[i + 1];
+        const b = d[i + 2];
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+        // Whiten light gray background (shadows/faded paper) while keeping dark text crisp
+        if (lum > 205) {
+          d[i] = Math.min(255, r + (255 - r) * 0.75);
+          d[i + 1] = Math.min(255, g + (255 - g) * 0.75);
+          d[i + 2] = Math.min(255, b + (255 - b) * 0.75);
+        } else if (lum < 110) {
+          d[i] = Math.max(0, r * 0.88);
+          d[i + 1] = Math.max(0, g * 0.88);
+          d[i + 2] = Math.max(0, b * 0.88);
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    } catch (e) {
+      // Fallback silently if canvas is tainted
+    }
+  }
+
+  // =========================================================================
+  // IMAGE EDITOR MODAL WITH LIVE FILTER CARDS
+  // =========================================================================
+
+  async function openEditor(index) {
+    if (index < 0 || index >= imageList.length) return;
+    currentEditingIndex = index;
+    const item = imageList[index];
+
+    editorTempState = JSON.parse(JSON.stringify(item.editState));
+    editorCropActive = false;
+    editorCropRatio = 'free';
+
+    if (dom.editorFilename) dom.editorFilename.textContent = item.name;
+    if (dom.editorDimsBadge) dom.editorDimsBadge.textContent = `${item.width} × ${item.height} px`;
+
+    editorImgObj = await Utils.loadImage(item.originalDataUrl);
+
+    syncEditorControlsUI();
+    renderFilterPresetCards();
+
+    if (dom.editorModal) dom.editorModal.classList.remove('hidden');
+
+    drawEditorCanvas();
+  }
+
+  function syncEditorControlsUI() {
+    if (dom.cropToggleBtn) dom.cropToggleBtn.classList.remove('active');
+    if (dom.cropControlsPanel) dom.cropControlsPanel.classList.add('hidden');
+    if (dom.cropRatioBtns) {
+      dom.cropRatioBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.ratio === 'free'));
+    }
+    if (dom.flipHBtn) dom.flipHBtn.classList.toggle('active', !!editorTempState.flipH);
+    if (dom.flipVBtn) dom.flipVBtn.classList.toggle('active', !!editorTempState.flipV);
+  }
+
+  function renderFilterPresetCards() {
+    if (!dom.filterCardsRow || !editorImgObj) return;
+    dom.filterCardsRow.innerHTML = '';
+
+    const activeFilter = editorTempState.filter || 'original';
+
+    FILTER_PRESETS.forEach(preset => {
+      const card = document.createElement('div');
+      card.className = `i2p-filter-card ${preset.id === activeFilter ? 'active' : ''}`;
+      card.dataset.filter = preset.id;
+
+      // Small thumbnail canvas
+      const thumbCanvas = document.createElement('canvas');
+      thumbCanvas.className = 'i2p-filter-card-thumb';
+      
+      const thumbState = {
+        crop: editorTempState.crop,
+        rotate: editorTempState.rotate,
+        flipH: editorTempState.flipH,
+        flipV: editorTempState.flipV,
+        filter: preset.id
+      };
+      renderEditedImageToCanvas(thumbCanvas, editorImgObj, thumbState, 90, 90);
+
+      card.innerHTML = `
+        <div class="i2p-filter-card-preview-wrap"></div>
+        <span class="i2p-filter-card-name">${preset.name}</span>
+      `;
+      card.querySelector('.i2p-filter-card-preview-wrap').appendChild(thumbCanvas);
+
+      card.addEventListener('click', () => {
+        editorTempState.filter = preset.id;
+        dom.filterCardsRow.querySelectorAll('.i2p-filter-card').forEach(c => c.classList.toggle('active', c === card));
+        drawEditorCanvas();
+      });
+
+      dom.filterCardsRow.appendChild(card);
+    });
   }
 
   function drawEditorCanvas() {
     if (!dom.editorCanvas || !editorImgObj) return;
 
-    // Display scale calculation for modal preview
     const maxDisplayW = Math.min(650, window.innerWidth - 60);
     const maxDisplayH = Math.min(480, window.innerHeight * 0.55);
 
@@ -695,9 +651,100 @@ const ImageToPDF = (() => {
 
     renderEditedImageToCanvas(dom.editorCanvas, editorImgObj, editorTempState, canvasW, canvasH);
 
-    // If Crop Mode is Active, overlay the crop box and handles
     if (editorCropActive) {
       drawCropOverlay(dom.editorCanvas);
+    }
+  }
+
+  function bindEditorEvents() {
+    if (dom.editorCloseBtn) dom.editorCloseBtn.addEventListener('click', closeEditor);
+    if (dom.editorCancelBtn) dom.editorCancelBtn.addEventListener('click', closeEditor);
+    if (dom.editorSaveBtn) dom.editorSaveBtn.addEventListener('click', saveEditorChanges);
+
+    // Crop Toggle & Presets
+    if (dom.cropToggleBtn) {
+      dom.cropToggleBtn.addEventListener('click', () => {
+        editorCropActive = !editorCropActive;
+        dom.cropToggleBtn.classList.toggle('active', editorCropActive);
+        if (dom.cropControlsPanel) dom.cropControlsPanel.classList.toggle('hidden', !editorCropActive);
+        if (editorCropActive) initCropRect();
+        drawEditorCanvas();
+      });
+    }
+
+    if (dom.cropRatioBtns) {
+      dom.cropRatioBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          editorCropRatio = btn.dataset.ratio;
+          dom.cropRatioBtns.forEach(b => b.classList.toggle('active', b === btn));
+          adjustCropRectToRatio();
+          drawEditorCanvas();
+        });
+      });
+    }
+
+    if (dom.applyCropBtn) dom.applyCropBtn.addEventListener('click', applyCropToTempState);
+    if (dom.cancelCropBtn) {
+      dom.cancelCropBtn.addEventListener('click', () => {
+        editorCropActive = false;
+        if (dom.cropToggleBtn) dom.cropToggleBtn.classList.remove('active');
+        if (dom.cropControlsPanel) dom.cropControlsPanel.classList.add('hidden');
+        drawEditorCanvas();
+      });
+    }
+    if (dom.resetCropBtn) {
+      dom.resetCropBtn.addEventListener('click', () => {
+        editorTempState.crop = null;
+        editorCropActive = false;
+        if (dom.cropToggleBtn) dom.cropToggleBtn.classList.remove('active');
+        if (dom.cropControlsPanel) dom.cropControlsPanel.classList.add('hidden');
+        drawEditorCanvas();
+        renderFilterPresetCards();
+        Utils.showToast('Crop reset to full image.', 'info');
+      });
+    }
+
+    // Rotate & Flip
+    if (dom.rotateCwBtn) {
+      dom.rotateCwBtn.addEventListener('click', () => {
+        editorTempState.rotate = (editorTempState.rotate + 90) % 360;
+        drawEditorCanvas();
+        renderFilterPresetCards();
+      });
+    }
+    if (dom.rotateCcwBtn) {
+      dom.rotateCcwBtn.addEventListener('click', () => {
+        editorTempState.rotate = (editorTempState.rotate - 90 + 360) % 360;
+        drawEditorCanvas();
+        renderFilterPresetCards();
+      });
+    }
+    if (dom.flipHBtn) {
+      dom.flipHBtn.addEventListener('click', () => {
+        editorTempState.flipH = !editorTempState.flipH;
+        dom.flipHBtn.classList.toggle('active', editorTempState.flipH);
+        drawEditorCanvas();
+        renderFilterPresetCards();
+      });
+    }
+    if (dom.flipVBtn) {
+      dom.flipVBtn.addEventListener('click', () => {
+        editorTempState.flipV = !editorTempState.flipV;
+        dom.flipVBtn.classList.toggle('active', editorTempState.flipV);
+        drawEditorCanvas();
+        renderFilterPresetCards();
+      });
+    }
+
+    // Crop Pointer Events
+    if (dom.editorCanvas) {
+      dom.editorCanvas.addEventListener('mousedown', onCropPointerDown);
+      window.addEventListener('mousemove', onCropPointerMove);
+      window.addEventListener('mouseup', onCropPointerUp);
+
+      dom.editorCanvas.addEventListener('touchstart', onCropTouchStart, { passive: false });
+      window.addEventListener('touchmove', onCropTouchMove, { passive: false });
+      window.addEventListener('touchend', onCropPointerUp);
     }
   }
 
@@ -736,29 +783,25 @@ const ImageToPDF = (() => {
     const ch = canvas.height;
     const r = editorCropRect;
 
-    // Dim background outside crop rect
     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.fillRect(0, 0, cw, r.y);
     ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h));
     ctx.fillRect(0, r.y, r.x, r.h);
     ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h);
 
-    // Crop border
     ctx.strokeStyle = '#6366f1';
     ctx.lineWidth = 2;
     ctx.strokeRect(r.x, r.y, r.w, r.h);
 
-    // Rule of thirds grid
+    // Rule of thirds
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
-    // Vertical lines
     ctx.moveTo(r.x + r.w / 3, r.y);
     ctx.lineTo(r.x + r.w / 3, r.y + r.h);
     ctx.moveTo(r.x + (r.w * 2) / 3, r.y);
     ctx.lineTo(r.x + (r.w * 2) / 3, r.y + r.h);
-    // Horizontal lines
     ctx.moveTo(r.x, r.y + r.h / 3);
     ctx.lineTo(r.x + r.w, r.y + r.h / 3);
     ctx.moveTo(r.x, r.y + (r.h * 2) / 3);
@@ -766,21 +809,17 @@ const ImageToPDF = (() => {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Corner & Edge Handles
+    // Handles
     const handleSize = 10;
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#6366f1';
     ctx.lineWidth = 2;
 
     const handles = [
-      { x: r.x, y: r.y }, // NW
-      { x: r.x + r.w, y: r.y }, // NE
-      { x: r.x + r.w, y: r.y + r.h }, // SE
-      { x: r.x, y: r.y + r.h }, // SW
-      { x: r.x + r.w / 2, y: r.y }, // N
-      { x: r.x + r.w, y: r.y + r.h / 2 }, // E
-      { x: r.x + r.w / 2, y: r.y + r.h }, // S
-      { x: r.x, y: r.y + r.h / 2 } // W
+      { x: r.x, y: r.y },
+      { x: r.x + r.w, y: r.y },
+      { x: r.x + r.w, y: r.y + r.h },
+      { x: r.x, y: r.y + r.h }
     ];
 
     handles.forEach(h => {
@@ -793,20 +832,12 @@ const ImageToPDF = (() => {
 
   function getCropHandleAt(x, y) {
     const r = editorCropRect;
-    const pad = 14;
-
+    const pad = 16;
     if (Math.hypot(x - r.x, y - r.y) < pad) return 'nw';
     if (Math.hypot(x - (r.x + r.w), y - r.y) < pad) return 'ne';
     if (Math.hypot(x - (r.x + r.w), y - (r.y + r.h)) < pad) return 'se';
     if (Math.hypot(x - r.x, y - (r.y + r.h)) < pad) return 'sw';
-
-    if (Math.abs(y - r.y) < pad && x >= r.x && x <= r.x + r.w) return 'n';
-    if (Math.abs(x - (r.x + r.w)) < pad && y >= r.y && y <= r.y + r.h) return 'e';
-    if (Math.abs(y - (r.y + r.h)) < pad && x >= r.x && x <= r.x + r.w) return 's';
-    if (Math.abs(x - r.x) < pad && y >= r.y && y <= r.y + r.h) return 'w';
-
     if (x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h) return 'move';
-
     return null;
   }
 
@@ -815,18 +846,10 @@ const ImageToPDF = (() => {
     const rect = dom.editorCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-
     cropDragMode = getCropHandleAt(x, y);
     if (cropDragMode) {
       isDraggingCrop = true;
-      cropDragStart = {
-        x,
-        y,
-        rectX: editorCropRect.x,
-        rectY: editorCropRect.y,
-        rectW: editorCropRect.w,
-        rectH: editorCropRect.h
-      };
+      cropDragStart = { x, y, rectX: editorCropRect.x, rectY: editorCropRect.y, rectW: editorCropRect.w, rectH: editorCropRect.h };
     }
   }
 
@@ -836,28 +859,18 @@ const ImageToPDF = (() => {
     const rect = dom.editorCanvas.getBoundingClientRect();
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
-
     cropDragMode = getCropHandleAt(x, y);
     if (cropDragMode) {
       e.preventDefault();
       isDraggingCrop = true;
-      cropDragStart = {
-        x,
-        y,
-        rectX: editorCropRect.x,
-        rectY: editorCropRect.y,
-        rectW: editorCropRect.w,
-        rectH: editorCropRect.h
-      };
+      cropDragStart = { x, y, rectX: editorCropRect.x, rectY: editorCropRect.y, rectW: editorCropRect.w, rectH: editorCropRect.h };
     }
   }
 
   function onCropPointerMove(e) {
     if (!editorCropActive || !isDraggingCrop || !dom.editorCanvas) return;
     const rect = dom.editorCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    updateCropDrag(x, y);
+    updateCropDrag(e.clientX - rect.left, e.clientY - rect.top);
   }
 
   function onCropTouchMove(e) {
@@ -865,9 +878,7 @@ const ImageToPDF = (() => {
     e.preventDefault();
     const touch = e.touches[0];
     const rect = dom.editorCanvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    updateCropDrag(x, y);
+    updateCropDrag(touch.clientX - rect.left, touch.clientY - rect.top);
   }
 
   function updateCropDrag(x, y) {
@@ -899,18 +910,8 @@ const ImageToPDF = (() => {
       newY = cropDragStart.rectY + (cropDragStart.rectH - newH);
     } else if (cropDragMode === 'sw') {
       newW = Math.max(minSize, cropDragStart.rectW - dx);
-      newH = Math.max(minSize, cropDragStart.rectH - dy);
-      newX = cropDragStart.rectX + (cropDragStart.rectW - newW);
-    } else if (cropDragMode === 'e') {
-      newW = Math.max(minSize, Math.min(cw - newX, cropDragStart.rectW + dx));
-    } else if (cropDragMode === 's') {
       newH = Math.max(minSize, Math.min(ch - newY, cropDragStart.rectH + dy));
-    } else if (cropDragMode === 'w') {
-      newW = Math.max(minSize, cropDragStart.rectW - dx);
       newX = cropDragStart.rectX + (cropDragStart.rectW - newW);
-    } else if (cropDragMode === 'n') {
-      newH = Math.max(minSize, cropDragStart.rectH - dy);
-      newY = cropDragStart.rectY + (cropDragStart.rectH - newH);
     }
 
     editorCropRect = { x: newX, y: newY, w: newW, h: newH };
@@ -926,11 +927,10 @@ const ImageToPDF = (() => {
   function applyCropToTempState() {
     if (!dom.editorCanvas || !editorImgObj) return;
 
-    // Convert canvas crop rectangle coordinates back to original unrotated image coordinates
     const cw = dom.editorCanvas.width;
     const ch = dom.editorCanvas.height;
     const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
-    
+
     let baseW = editorImgObj.naturalWidth;
     let baseH = editorImgObj.naturalHeight;
     let dispW = isRotated90 ? baseH : baseW;
@@ -939,16 +939,11 @@ const ImageToPDF = (() => {
     const scaleX = dispW / cw;
     const scaleY = dispH / ch;
 
-    const unrotatedCropX = Math.round(editorCropRect.x * scaleX);
-    const unrotatedCropY = Math.round(editorCropRect.y * scaleY);
-    const unrotatedCropW = Math.round(editorCropRect.w * scaleX);
-    const unrotatedCropH = Math.round(editorCropRect.h * scaleY);
-
     editorTempState.crop = {
-      x: Math.max(0, unrotatedCropX),
-      y: Math.max(0, unrotatedCropY),
-      w: Math.min(dispW, unrotatedCropW),
-      h: Math.min(dispH, unrotatedCropH)
+      x: Math.max(0, Math.round(editorCropRect.x * scaleX)),
+      y: Math.max(0, Math.round(editorCropRect.y * scaleY)),
+      w: Math.min(dispW, Math.round(editorCropRect.w * scaleX)),
+      h: Math.min(dispH, Math.round(editorCropRect.h * scaleY))
     };
 
     editorCropActive = false;
@@ -956,6 +951,7 @@ const ImageToPDF = (() => {
     if (dom.cropControlsPanel) dom.cropControlsPanel.classList.add('hidden');
 
     drawEditorCanvas();
+    renderFilterPresetCards();
     Utils.showToast('Crop area applied! Click "Save Changes" to confirm.', 'success');
   }
 
@@ -965,7 +961,6 @@ const ImageToPDF = (() => {
 
     item.editState = JSON.parse(JSON.stringify(editorTempState));
 
-    // Render updated thumbnail & compute new dimensions
     const offscreen = document.createElement('canvas');
     renderEditedImageToCanvas(offscreen, editorImgObj, item.editState);
 
@@ -979,13 +974,426 @@ const ImageToPDF = (() => {
     Utils.showToast(`Saved changes for "${item.name}"!`, 'success');
   }
 
+  function closeEditor() {
+    if (dom.editorModal) dom.editorModal.classList.add('hidden');
+    currentEditingIndex = -1;
+    editorImgObj = null;
+    editorCropActive = false;
+  }
+
   // =========================================================================
-  // PDF PAGE PREVIEW & LAYOUT ENGINE
+  // CLIENT-SIDE SIGNATURE EXTRACTION STUDIO (BACKGROUND REMOVAL)
+  // =========================================================================
+
+  function bindSignatureEvents() {
+    if (dom.addSignatureBtn) dom.addSignatureBtn.addEventListener('click', openSignatureModal);
+    if (dom.sigCloseBtn) dom.sigCloseBtn.addEventListener('click', closeSignatureModal);
+    if (dom.sigCancelBtn) dom.sigCancelBtn.addEventListener('click', closeSignatureModal);
+    if (dom.sigUseBtn) dom.sigUseBtn.addEventListener('click', applySignatureToPDF);
+
+    // Signature Dropzone & Picker
+    Utils.setupDropZone(dom.sigDropzone, handleSignatureFile, ['image/', '.jpg', '.jpeg', '.png', '.webp']);
+    if (dom.sigBrowseBtn) dom.sigBrowseBtn.addEventListener('click', () => dom.sigFileInput.click());
+    if (dom.sigFileInput) {
+      dom.sigFileInput.addEventListener('change', (e) => {
+        handleSignatureFile(Array.from(e.target.files));
+        dom.sigFileInput.value = '';
+      });
+    }
+
+    // Sensitivity Slider
+    if (dom.sigSensitivitySlider) {
+      dom.sigSensitivitySlider.addEventListener('input', (e) => {
+        signatureSettings.sensitivity = parseInt(e.target.value, 10);
+        if (dom.sigSensitivityVal) dom.sigSensitivityVal.textContent = signatureSettings.sensitivity + '%';
+        processSignature();
+      });
+    }
+
+    // Ink Color Chips
+    if (dom.sigColorChips) {
+      dom.sigColorChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          signatureSettings.inkColor = chip.dataset.color;
+          dom.sigColorChips.forEach(c => c.classList.toggle('active', c === chip));
+          processSignature();
+        });
+      });
+    }
+
+    // Auto Crop Checkbox
+    if (dom.sigAutoCropCheckbox) {
+      dom.sigAutoCropCheckbox.addEventListener('change', (e) => {
+        signatureSettings.autoCrop = e.target.checked;
+        processSignature();
+      });
+    }
+  }
+
+  function openSignatureModal() {
+    if (dom.signatureModal) dom.signatureModal.classList.remove('hidden');
+    if (signatureRawImage) {
+      processSignature();
+    }
+  }
+
+  function closeSignatureModal() {
+    if (dom.signatureModal) dom.signatureModal.classList.add('hidden');
+  }
+
+  async function handleSignatureFile(files) {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (!file.type.startsWith('image/') && !/\.(jpg|jpeg|png|webp|bmp)$/i.test(file.name)) {
+      Utils.showToast('Please upload a valid signature image (JPG, PNG, WebP).', 'warning');
+      return;
+    }
+
+    try {
+      const dataUrl = await Utils.readFileAsDataURL(file);
+      signatureRawImage = await Utils.loadImage(dataUrl);
+
+      if (dom.sigEmptyPreview) dom.sigEmptyPreview.classList.add('hidden');
+      if (dom.sigPreviewWrap) dom.sigPreviewWrap.classList.remove('hidden');
+      if (dom.sigUseBtn) dom.sigUseBtn.disabled = false;
+
+      processSignature();
+      Utils.showToast('Signature loaded! Background automatically extracted.', 'success');
+    } catch (err) {
+      console.error(err);
+      Utils.showToast('Failed to load signature image: ' + err.message, 'error');
+    }
+  }
+
+  function processSignature() {
+    if (!signatureRawImage || !dom.sigPreviewCanvas) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = signatureRawImage.naturalWidth;
+    canvas.height = signatureRawImage.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(signatureRawImage, 0, 0);
+
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = imgData.data;
+
+    // Threshold calculation from sensitivity (30 - 240)
+    const threshold = 120 + (signatureSettings.sensitivity / 100) * 125;
+    const inkMode = signatureSettings.inkColor;
+
+    let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+    let hasInk = false;
+
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i];
+      const g = d[i + 1];
+      const b = d[i + 2];
+
+      // Luminance
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+      // Detect white/light paper background
+      if (lum >= threshold) {
+        // Transparent
+        d[i + 3] = 0;
+      } else {
+        // Fade alpha smoothly near threshold
+        const alphaFactor = Math.min(1, Math.max(0, (threshold - lum) / (threshold * 0.45)));
+        const alpha = Math.round(alphaFactor * 255);
+        d[i + 3] = alpha;
+
+        if (alpha > 20) {
+          const pixelIdx = i / 4;
+          const px = pixelIdx % canvas.width;
+          const py = Math.floor(pixelIdx / canvas.width);
+          if (px < minX) minX = px;
+          if (px > maxX) maxX = px;
+          if (py < minY) minY = py;
+          if (py > maxY) maxY = py;
+          hasInk = true;
+
+          // Color Recoloring
+          if (inkMode === 'black') {
+            d[i] = 20;
+            d[i + 1] = 20;
+            d[i + 2] = 20;
+          } else if (inkMode === 'blue') {
+            d[i] = 20;
+            d[i + 1] = 60;
+            d[i + 2] = 165;
+          }
+        }
+      }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+
+    // Auto Crop to Ink Bounding Box if enabled
+    let finalCanvas = canvas;
+    if (signatureSettings.autoCrop && hasInk && minX < maxX && minY < maxY) {
+      const pad = 8;
+      const cropX = Math.max(0, minX - pad);
+      const cropY = Math.max(0, minY - pad);
+      const cropW = Math.min(canvas.width - cropX, (maxX - minX) + pad * 2);
+      const cropH = Math.min(canvas.height - cropY, (maxY - minY) + pad * 2);
+
+      const cropped = document.createElement('canvas');
+      cropped.width = cropW;
+      cropped.height = cropH;
+      const cCtx = cropped.getContext('2d');
+      cCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+      finalCanvas = cropped;
+    }
+
+    // Render onto Checkerboard preview canvas in modal
+    const prevCanvas = dom.sigPreviewCanvas;
+    const maxPrevW = 280;
+    const maxPrevH = 140;
+    const scale = Math.min(maxPrevW / finalCanvas.width, maxPrevH / finalCanvas.height, 1);
+
+    prevCanvas.width = Math.round(finalCanvas.width * scale);
+    prevCanvas.height = Math.round(finalCanvas.height * scale);
+    const pCtx = prevCanvas.getContext('2d');
+    pCtx.clearRect(0, 0, prevCanvas.width, prevCanvas.height);
+    pCtx.drawImage(finalCanvas, 0, 0, prevCanvas.width, prevCanvas.height);
+
+    // Cache transparent PNG data URL
+    signatureDataUrl = finalCanvas.toDataURL('image/png');
+    signaturePlacement.aspectRatio = finalCanvas.width / finalCanvas.height;
+  }
+
+  function applySignatureToPDF() {
+    if (!signatureDataUrl) {
+      Utils.showToast('Please upload a signature first.', 'warning');
+      return;
+    }
+
+    signaturePlacement.active = true;
+    closeSignatureModal();
+
+    if (dom.sigControlsRow) dom.sigControlsRow.classList.remove('hidden');
+    if (dom.addSignatureBtn) dom.addSignatureBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      Edit Signature
+    `;
+
+    updatePDFPreview();
+    Utils.showToast('Signature added! Drag or use position presets to place on page.', 'success');
+  }
+
+  // =========================================================================
+  // SIGNATURE OVERLAY INTERACTION ON PDF PREVIEW
+  // =========================================================================
+
+  function bindSignatureOverlayEvents() {
+    if (dom.sigDeleteBtn) {
+      dom.sigDeleteBtn.addEventListener('click', () => {
+        signaturePlacement.active = false;
+        if (dom.sigOverlayBox) dom.sigOverlayBox.classList.add('hidden');
+        if (dom.sigControlsRow) dom.sigControlsRow.classList.add('hidden');
+        if (dom.addSignatureBtn) dom.addSignatureBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M10.5 14.5c.8-1.2 2-1.5 2.5-.5.5 1-1.5 2.5-.5 3.5 1 1 2.5 0 3-1.5"></path></svg>
+          Add Signature
+        `;
+        Utils.showToast('Signature removed.', 'info');
+      });
+    }
+
+    if (dom.sigApplyScopeSelect) {
+      dom.sigApplyScopeSelect.addEventListener('change', (e) => {
+        signaturePlacement.applyToAll = e.target.value === 'all';
+      });
+    }
+
+    if (dom.sigPosBtns && dom.sigPosBtns.length > 0) {
+      dom.sigPosBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const pos = btn.dataset.pos;
+          setSignaturePositionPreset(pos);
+        });
+      });
+    }
+
+    // Drag to Move on Preview
+    if (dom.sigOverlayBox) {
+      dom.sigOverlayBox.addEventListener('mousedown', onSigPointerDown);
+      dom.sigOverlayBox.addEventListener('touchstart', onSigTouchStart, { passive: false });
+
+      if (dom.sigResizeHandle) {
+        dom.sigResizeHandle.addEventListener('mousedown', onSigResizeDown);
+        dom.sigResizeHandle.addEventListener('touchstart', onSigResizeTouchStart, { passive: false });
+      }
+    }
+
+    window.addEventListener('mousemove', onSigPointerMove);
+    window.addEventListener('touchmove', onSigTouchMove, { passive: false });
+    window.addEventListener('mouseup', onSigPointerUp);
+    window.addEventListener('touchend', onSigPointerUp);
+  }
+
+  function setSignaturePositionPreset(pos) {
+    if (!signaturePlacement.active || !dom.previewCanvas) return;
+    const cw = dom.previewCanvas.clientWidth || dom.previewCanvas.width;
+    const ch = dom.previewCanvas.clientHeight || dom.previewCanvas.height;
+    if (cw <= 0 || ch <= 0) return;
+
+    const w = signaturePlacement.relW;
+    const pxW = cw * w;
+    const pxH = pxW / (signaturePlacement.aspectRatio || 1);
+    const relH = pxH / ch;
+
+    const p = (pos || '').toLowerCase();
+    if (p === 'tl' || p === 'top-left') {
+      signaturePlacement.relX = 0.05;
+      signaturePlacement.relY = 0.05;
+    } else if (p === 'tr' || p === 'top-right') {
+      signaturePlacement.relX = Math.max(0, 1 - w - 0.05);
+      signaturePlacement.relY = 0.05;
+    } else if (p === 'center') {
+      signaturePlacement.relX = Math.max(0, (1 - w) / 2);
+      signaturePlacement.relY = Math.max(0, (1 - relH) / 2);
+    } else if (p === 'bl' || p === 'bottom-left') {
+      signaturePlacement.relX = 0.05;
+      signaturePlacement.relY = Math.max(0, 1 - relH - 0.05);
+    } else if (p === 'br' || p === 'bottom-right') {
+      signaturePlacement.relX = Math.max(0, 1 - w - 0.05);
+      signaturePlacement.relY = Math.max(0, 1 - relH - 0.05);
+    }
+
+    if (dom.sigPosBtns) {
+      dom.sigPosBtns.forEach(b => {
+        const bPos = (b.dataset.pos || '').toLowerCase();
+        b.classList.toggle('active', bPos === p);
+      });
+    }
+
+    renderSignatureOverlayBox();
+  }
+
+  function onSigPointerDown(e) {
+    if (e.target === dom.sigResizeHandle || e.target === dom.sigDeleteBtn || isResizingSig) return;
+    e.preventDefault();
+    isDraggingSig = true;
+    sigDragStart = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      origX: signaturePlacement.relX,
+      origY: signaturePlacement.relY
+    };
+  }
+
+  function onSigTouchStart(e) {
+    if (e.target === dom.sigResizeHandle || e.target === dom.sigDeleteBtn || isResizingSig || e.touches.length === 0) return;
+    e.preventDefault();
+    isDraggingSig = true;
+    sigDragStart = {
+      mouseX: e.touches[0].clientX,
+      mouseY: e.touches[0].clientY,
+      origX: signaturePlacement.relX,
+      origY: signaturePlacement.relY
+    };
+  }
+
+  function onSigResizeDown(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    isResizingSig = true;
+    sigDragStart = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      origW: signaturePlacement.relW
+    };
+  }
+
+  function onSigResizeTouchStart(e) {
+    e.stopPropagation();
+    if (e.touches.length === 0) return;
+    e.preventDefault();
+    isResizingSig = true;
+    sigDragStart = {
+      mouseX: e.touches[0].clientX,
+      mouseY: e.touches[0].clientY,
+      origW: signaturePlacement.relW
+    };
+  }
+
+  function onSigPointerMove(e) {
+    if (!signaturePlacement.active || !dom.previewCanvas) return;
+    const cw = dom.previewCanvas.clientWidth || dom.previewCanvas.width;
+    const ch = dom.previewCanvas.clientHeight || dom.previewCanvas.height;
+    if (cw <= 0 || ch <= 0) return;
+
+    if (isDraggingSig) {
+      const dx = (e.clientX - sigDragStart.mouseX) / cw;
+      const dy = (e.clientY - sigDragStart.mouseY) / ch;
+
+      const pxW = cw * signaturePlacement.relW;
+      const pxH = pxW / (signaturePlacement.aspectRatio || 1);
+      const relH = pxH / ch;
+
+      signaturePlacement.relX = Math.max(0, Math.min(1 - signaturePlacement.relW, sigDragStart.origX + dx));
+      signaturePlacement.relY = Math.max(0, Math.min(1 - relH, sigDragStart.origY + dy));
+      renderSignatureOverlayBox();
+    } else if (isResizingSig) {
+      const dx = (e.clientX - sigDragStart.mouseX) / cw;
+      const newW = Math.max(0.08, Math.min(0.9, sigDragStart.origW + dx));
+      const pxW = cw * newW;
+      const pxH = pxW / (signaturePlacement.aspectRatio || 1);
+      const relH = pxH / ch;
+
+      signaturePlacement.relW = newW;
+      if (signaturePlacement.relX + newW > 1) {
+        signaturePlacement.relX = Math.max(0, 1 - newW);
+      }
+      if (signaturePlacement.relY + relH > 1) {
+        signaturePlacement.relY = Math.max(0, 1 - relH);
+      }
+      renderSignatureOverlayBox();
+    }
+  }
+
+  function onSigTouchMove(e) {
+    if (!signaturePlacement.active || (!isDraggingSig && !isResizingSig) || e.touches.length === 0) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    onSigPointerMove(touch);
+  }
+
+  function onSigPointerUp() {
+    isDraggingSig = false;
+    isResizingSig = false;
+  }
+
+  function renderSignatureOverlayBox() {
+    if (!signaturePlacement.active || !signatureDataUrl || !dom.sigOverlayBox || !dom.previewCanvas) return;
+
+    dom.sigOverlayBox.classList.remove('hidden');
+    if (dom.sigControlsRow) dom.sigControlsRow.classList.remove('hidden');
+    if (dom.sigOverlayImg) dom.sigOverlayImg.src = signatureDataUrl;
+
+    const cw = dom.previewCanvas.clientWidth || dom.previewCanvas.width;
+    const ch = dom.previewCanvas.clientHeight || dom.previewCanvas.height;
+    if (cw <= 0 || ch <= 0) return;
+
+    const pxW = Math.max(20, Math.round(cw * signaturePlacement.relW));
+    const pxH = Math.max(10, Math.round(pxW / (signaturePlacement.aspectRatio || 1)));
+    const pxX = Math.round(cw * signaturePlacement.relX);
+    const pxY = Math.round(ch * signaturePlacement.relY);
+
+    dom.sigOverlayBox.style.left = `${pxX}px`;
+    dom.sigOverlayBox.style.top = `${pxY}px`;
+    dom.sigOverlayBox.style.width = `${pxW}px`;
+    dom.sigOverlayBox.style.height = `${pxH}px`;
+  }
+
+  // =========================================================================
+  // PDF PAGE PREVIEW ENGINE
   // =========================================================================
 
   function getPageDimensions() {
     const size = dom.pageSizeSelect ? dom.pageSizeSelect.value : 'a4';
-    let w = 595.28; // A4 pt (210 x 297 mm)
+    let w = 595.28;
     let h = 841.89;
 
     if (size === 'a5') {
@@ -1005,14 +1413,12 @@ const ImageToPDF = (() => {
         h = customH;
       }
     } else if (size === 'original') {
-      // Original size will follow current image dimensions
       if (imageList.length > 0 && imageList[previewPageIndex]) {
         w = imageList[previewPageIndex].width;
         h = imageList[previewPageIndex].height;
       }
     }
 
-    // Orientation
     const orientation = dom.orientationSelect ? dom.orientationSelect.value : 'auto';
     let isLandscape = false;
 
@@ -1055,7 +1461,6 @@ const ImageToPDF = (() => {
     const item = imageList[previewPageIndex];
     if (!item) return;
 
-    // Update Pagination Header
     if (dom.previewPageNum) dom.previewPageNum.textContent = `Page ${previewPageIndex + 1}`;
     if (dom.previewTotalPages) dom.previewTotalPages.textContent = `of ${imageList.length}`;
     if (dom.previewPrevBtn) dom.previewPrevBtn.disabled = previewPageIndex === 0;
@@ -1065,7 +1470,6 @@ const ImageToPDF = (() => {
     const margin = getMarginPoints();
     const placement = dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'fit';
 
-    // Canvas size for preview simulation
     const maxPreviewW = 340;
     const maxPreviewH = 440;
     const previewScale = Math.min(maxPreviewW / pageDim.width, maxPreviewH / pageDim.height, 1);
@@ -1077,12 +1481,9 @@ const ImageToPDF = (() => {
     dom.previewCanvas.height = canvasH;
 
     const ctx = dom.previewCanvas.getContext('2d');
-    
-    // Draw white PDF page sheet with subtle shadow
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvasW, canvasH);
 
-    // Draw margins guide indicator if margins > 0
     const marginX = margin * previewScale;
     const marginY = margin * previewScale;
     const usableW = Math.max(4, canvasW - marginX * 2);
@@ -1096,12 +1497,10 @@ const ImageToPDF = (() => {
       ctx.setLineDash([]);
     }
 
-    // Render item's edited visual representation
     const imgObj = await Utils.loadImage(item.originalDataUrl);
     const offscreen = document.createElement('canvas');
     renderEditedImageToCanvas(offscreen, imgObj, item.editState);
 
-    // Calculate placement inside usable area
     let drawW = usableW;
     let drawH = usableH;
     const imgRatio = offscreen.width / offscreen.height;
@@ -1116,7 +1515,6 @@ const ImageToPDF = (() => {
         drawW = usableH * imgRatio;
       }
     } else if (placement === 'fill') {
-      // Cover the usable area
       drawW = usableW;
       drawH = usableH;
     } else if (placement === 'original') {
@@ -1129,9 +1527,11 @@ const ImageToPDF = (() => {
 
     ctx.drawImage(offscreen, drawX, drawY, drawW, drawH);
 
-    // Clean up temporary canvas
     offscreen.width = 1;
     offscreen.height = 1;
+
+    // Reposition Signature Overlay Box
+    renderSignatureOverlayBox();
   }
 
   // =========================================================================
@@ -1155,17 +1555,33 @@ const ImageToPDF = (() => {
     try {
       const pdfDoc = await PDFLib.PDFDocument.create();
 
+      // Embed signature image if active
+      let embeddedSig = null;
+      if (signaturePlacement.active && signatureDataUrl) {
+        const sigImgObj = await Utils.loadImage(signatureDataUrl);
+        const sigCanvas = document.createElement('canvas');
+        sigCanvas.width = sigImgObj.naturalWidth;
+        sigCanvas.height = sigImgObj.naturalHeight;
+        const sCtx = sigCanvas.getContext('2d');
+        sCtx.drawImage(sigImgObj, 0, 0);
+
+        const sigPngBlob = await Utils.canvasToBlob(sigCanvas, 'image/png');
+        const sigBytes = await sigPngBlob.arrayBuffer();
+        embeddedSig = await pdfDoc.embedPng(sigBytes);
+        sigCanvas.width = 1;
+        sigCanvas.height = 1;
+      }
+
       for (let i = 0; i < imageList.length; i++) {
         const item = imageList[i];
         const progressPct = Math.round(10 + ((i + 1) / imageList.length) * 78);
         showProgress(progressPct, `Rendering Page ${i + 1} of ${imageList.length}...`);
 
-        // Load original and render all visual edits onto high-res canvas
         const imgObj = await Utils.loadImage(item.originalDataUrl);
         const renderCanvas = document.createElement('canvas');
         renderEditedImageToCanvas(renderCanvas, imgObj, item.editState);
 
-        // Safe Downscaling for extremely large images (> 4000px) to conserve memory
+        // Safe Downscaling for ultra-large images (> 4000px)
         if (renderCanvas.width > 4096 || renderCanvas.height > 4096) {
           const maxDim = 3840;
           const scale = Math.min(maxDim / renderCanvas.width, maxDim / renderCanvas.height);
@@ -1182,7 +1598,6 @@ const ImageToPDF = (() => {
           scaledCanvas.height = 1;
         }
 
-        // Determine format based on transparency
         const hasAlpha = item.file.type === 'image/png' || item.file.type === 'image/webp';
         let embeddedImage = null;
 
@@ -1196,7 +1611,7 @@ const ImageToPDF = (() => {
           embeddedImage = await pdfDoc.embedJpg(jpgBytes);
         }
 
-        // Determine Page Dimensions
+        // Page Dimensions
         let pageWidth = 595.28;
         let pageHeight = 841.89;
 
@@ -1243,7 +1658,6 @@ const ImageToPDF = (() => {
 
         const page = pdfDoc.addPage([pageWidth, pageHeight]);
 
-        // Usable page area
         const usableWidth = Math.max(10, pageWidth - margin * 2);
         const usableHeight = Math.max(10, pageHeight - margin * 2);
 
@@ -1265,7 +1679,6 @@ const ImageToPDF = (() => {
           drawHeight = Math.min(usableHeight, renderCanvas.height);
         }
 
-        // Center on PDF page
         const drawX = margin + (usableWidth - drawWidth) / 2;
         const drawY = margin + (usableHeight - drawHeight) / 2;
 
@@ -1276,7 +1689,23 @@ const ImageToPDF = (() => {
           height: drawHeight
         });
 
-        // Release canvas memory
+        // Draw Signature Overlay if applicable on this page
+        const shouldDrawSig = embeddedSig && (signaturePlacement.applyToAll || i === previewPageIndex);
+        if (shouldDrawSig) {
+          const sigPdfW = pageWidth * signaturePlacement.relW;
+          const sigPdfH = sigPdfW / signaturePlacement.aspectRatio;
+          const sigPdfX = pageWidth * signaturePlacement.relX;
+          // In PDF coordinate system, Y=0 is bottom
+          const sigPdfY = pageHeight - (pageHeight * signaturePlacement.relY) - sigPdfH;
+
+          page.drawImage(embeddedSig, {
+            x: Math.max(0, sigPdfX),
+            y: Math.max(0, sigPdfY),
+            width: sigPdfW,
+            height: sigPdfH
+          });
+        }
+
         renderCanvas.width = 1;
         renderCanvas.height = 1;
       }
@@ -1288,14 +1717,13 @@ const ImageToPDF = (() => {
       showProgress(100, 'PDF Ready!');
       setTimeout(hideProgress, 600);
 
-      // Show PDF Ready Card
       if (dom.pdfConfigCard) dom.pdfConfigCard.classList.add('hidden');
       if (dom.pdfReadyCard) dom.pdfReadyCard.classList.remove('hidden');
 
       const fileSizeStr = Utils.formatBytes(generatedPdfBlob.size);
       const readyMeta = document.getElementById('i2p-ready-meta');
       if (readyMeta) {
-        readyMeta.textContent = `${imageList.length} Page${imageList.length !== 1 ? 's' : ''} • ${fileSizeStr}`;
+        readyMeta.textContent = `${imageList.length} Page${imageList.length !== 1 ? 's' : ''} • ${fileSizeStr} ${signaturePlacement.active ? '• With Signature' : ''}`;
       }
 
       Utils.showToast(`Successfully created PDF with ${imageList.length} page(s)!`, 'success');
@@ -1322,7 +1750,6 @@ const ImageToPDF = (() => {
   // =========================================================================
 
   function resetTool() {
-    // Revoke any existing object URLs and memory
     imageList = [];
     currentEditingIndex = -1;
     generatedPdfBlob = null;
@@ -1330,15 +1757,28 @@ const ImageToPDF = (() => {
     editorCropActive = false;
     previewPageIndex = 0;
 
+    signatureRawImage = null;
+    signatureDataUrl = null;
+    signaturePlacement.active = false;
+
     if (dom.emptyState) dom.emptyState.classList.remove('hidden');
     if (dom.workspace) dom.workspace.classList.add('hidden');
     if (dom.pdfReadyCard) dom.pdfReadyCard.classList.add('hidden');
     if (dom.pdfConfigCard) dom.pdfConfigCard.classList.remove('hidden');
     if (dom.editorModal) dom.editorModal.classList.add('hidden');
+    if (dom.signatureModal) dom.signatureModal.classList.add('hidden');
+    if (dom.sigOverlayBox) dom.sigOverlayBox.classList.add('hidden');
+    if (dom.sigControlsRow) dom.sigControlsRow.classList.add('hidden');
+
+    if (dom.addSignatureBtn) dom.addSignatureBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M10.5 14.5c.8-1.2 2-1.5 2.5-.5.5 1-1.5 2.5-.5 3.5 1 1 2.5 0 3-1.5"></path></svg>
+      Add Signature
+    `;
 
     if (dom.imageListContainer) dom.imageListContainer.innerHTML = '';
     if (dom.fileInput) dom.fileInput.value = '';
     if (dom.addMoreInput) dom.addMoreInput.value = '';
+    if (dom.sigFileInput) dom.sigFileInput.value = '';
 
     if (dom.generateBtn) {
       dom.generateBtn.classList.remove('hidden');
@@ -1352,6 +1792,10 @@ const ImageToPDF = (() => {
     if (dom.editorCanvas) {
       dom.editorCanvas.width = 1;
       dom.editorCanvas.height = 1;
+    }
+    if (dom.sigPreviewCanvas) {
+      dom.sigPreviewCanvas.width = 1;
+      dom.sigPreviewCanvas.height = 1;
     }
 
     hideProgress();
@@ -1372,7 +1816,8 @@ const ImageToPDF = (() => {
     handleFiles,
     setPreset,
     reset: resetTool,
-    closeEditor
+    closeEditor,
+    closeSignatureModal
   };
 })();
 

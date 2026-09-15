@@ -3668,12 +3668,19 @@ input.form-control.input-success {
   overflow: hidden;
 }
 
+.i2p-canvas-stage-inner {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  max-width: 100%;
+}
+
 .i2p-preview-canvas {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   border-radius: 2px;
   max-width: 100%;
   height: auto;
-  transition: transform 0.2s ease;
+  display: block;
 }
 
 .i2p-preview-nav {
@@ -3804,45 +3811,272 @@ input.form-control.input-success {
   color: #ffffff;
 }
 
-.i2p-filters-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+/* Checkerboard transparency background pattern */
+.checkerboard-bg {
+  background-color: #1e293b;
+  background-image: 
+    linear-gradient(45deg, #0f172a 25%, transparent 25%), 
+    linear-gradient(-45deg, #0f172a 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #0f172a 75%), 
+    linear-gradient(-45deg, transparent 75%, #0f172a 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
 }
 
-.i2p-filter-chip {
+/* Filter Preset Cards (Horizontal Row in Image Editor) */
+.i2p-filter-cards-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-height: 230px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+
+.i2p-filter-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-app);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+  user-select: none;
+}
+
+.i2p-filter-card:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--color-primary-light);
+  transform: translateY(-1px);
+}
+
+.i2p-filter-card.active {
+  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.i2p-filter-card-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--bg-input);
+  display: block;
+}
+
+.i2p-filter-card-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.i2p-filter-card.active .i2p-filter-card-name {
+  color: var(--color-primary-light);
+  font-weight: 700;
+}
+
+/* Interactive Signature Placement on Preview */
+.i2p-sig-controls-row {
+  transition: all var(--transition-fast);
+}
+
+.i2p-sig-overlay-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1.5px dashed var(--color-primary);
+  background: rgba(99, 102, 241, 0.08);
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+}
+
+.i2p-sig-overlay-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.i2p-sig-delete-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: transform var(--transition-fast);
+}
+
+.i2p-sig-delete-btn:hover {
+  transform: scale(1.15);
+}
+
+.i2p-sig-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--color-primary);
+  border: 1.5px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.i2p-sig-handle-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+/* Handwritten Signature Studio Modal */
+.i2p-signature-card {
+  max-width: 860px;
+  width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.i2p-signature-body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  padding: 20px;
+  overflow-y: auto;
+  align-items: start;
+}
+
+.i2p-signature-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  min-height: 320px;
+  position: relative;
+  overflow: hidden;
+}
+
+.i2p-sig-dropzone {
+  width: 100%;
+  max-width: 380px;
+  padding: 30px 20px;
+  margin: 0 auto;
+}
+
+.i2p-sig-preview-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.i2p-sig-canvas-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  max-width: 100%;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.i2p-sig-preview-canvas {
+  max-width: 100%;
+  max-height: 360px;
+  height: auto;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+}
+
+.i2p-signature-sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.i2p-ink-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.i2p-sig-color-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   padding: 8px 4px;
   background: var(--bg-app);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
+  border: 1.5px solid var(--border-subtle);
   border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   font-size: 0.76rem;
   font-weight: 600;
-  text-align: center;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.i2p-filter-chip:hover {
+.i2p-sig-color-chip:hover {
   background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  border-color: var(--color-primary-light);
 }
 
-.i2p-filter-chip.active {
-  background: var(--grad-surface);
+.i2p-sig-color-chip.active {
   border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.12);
   color: var(--color-primary-light);
   font-weight: 700;
-  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.i2p-ink-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.2);
 }
 
 @media (max-width: 768px) {
-  .i2p-editor-body {
+  .i2p-editor-body,
+  .i2p-signature-body {
     grid-template-columns: 1fr;
   }
-  .i2p-editor-stage {
-    min-height: 260px;
+  .i2p-editor-stage,
+  .i2p-signature-stage {
+    min-height: 240px;
     padding: 10px;
+  }
+  .i2p-filter-cards-row {
+    grid-template-columns: repeat(4, 1fr);
+    max-height: 180px;
   }
   .i2p-item-card {
     padding: 8px 10px;
