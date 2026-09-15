@@ -455,6 +455,15 @@ const App = (() => {
       icon: 'download-all-zip',
       badge: 'Bundle',
       accepts: ['*/*']
+    },
+    {
+      id: 'image-to-pdf',
+      name: 'Image to PDF',
+      category: ['image', 'pdf', 'convert'],
+      desc: 'Convert JPG, PNG, and WebP photos into a PDF with built-in crop, rotate, flip, adjustments, filters, and page layouts.',
+      icon: 'img-to-pdf',
+      badge: 'New',
+      accepts: ['image/*']
     }
   ];
 
@@ -1219,6 +1228,10 @@ const App = (() => {
       targetContainerId = 'tool-image-converter';
       handlerModule = window.ImageConverter;
       if (handlerModule) handlerModule.setPreset('png-to-jpg');
+    } else if (toolId === 'image-to-pdf') {
+      targetContainerId = 'tool-image-to-pdf';
+      handlerModule = window.ImageToPDF;
+      if (handlerModule && typeof handlerModule.setPreset === 'function') handlerModule.setPreset('general');
     } else if (toolId === 'jpg-to-pdf') {
       targetContainerId = 'tool-image-to-pdf';
       handlerModule = window.ImageToPDF;

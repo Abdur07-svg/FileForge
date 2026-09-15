@@ -3518,5 +3518,334 @@ input.form-control.input-success {
   }
 }
 
+/* ==========================================================================
+   Tool 51: Image to PDF & Image Editor Styles
+   ========================================================================== */
 
+.i2p-item-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 10px;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
 
+.i2p-item-card:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.i2p-item-card.dragging {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.i2p-item-card.drag-target {
+  border-color: var(--color-primary);
+  background-color: var(--dropzone-active-bg);
+  transform: translateY(-2px);
+}
+
+.i2p-drag-handle {
+  color: var(--text-muted);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.i2p-drag-handle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.i2p-drag-handle:active {
+  cursor: grabbing;
+}
+
+.i2p-item-preview {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.i2p-item-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.i2p-page-badge {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  padding: 1px 4px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.i2p-edited-tag {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  padding: 1px 4px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.i2p-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.i2p-item-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.i2p-item-dims {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.i2p-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.i2p-order-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.i2p-order-btns .btn-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 0.85rem;
+}
+
+/* PDF Live Preview Sheet Simulation */
+.i2p-preview-sheet-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  padding: 24px;
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.i2p-preview-canvas {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border-radius: 2px;
+  max-width: 100%;
+  height: auto;
+  transition: transform 0.2s ease;
+}
+
+.i2p-preview-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.i2p-preview-nav .btn-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* Image Editor Modal Styles */
+.i2p-modal-wide .i2p-editor-card {
+  max-width: 960px;
+  width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.i2p-editor-file-badge {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-app);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.i2p-editor-body {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  padding: 20px;
+  overflow-y: auto;
+  align-items: start;
+}
+
+.i2p-editor-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  min-height: 380px;
+  overflow: hidden;
+}
+
+.i2p-canvas-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.i2p-editor-canvas {
+  max-width: 100%;
+  max-height: 480px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.i2p-editor-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.i2p-editor-section {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.i2p-section-title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.i2p-crop-panel {
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-top: 8px;
+}
+
+.i2p-ratio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.i2p-crop-ratio-btn {
+  padding: 4px 10px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.i2p-crop-ratio-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.i2p-crop-ratio-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.i2p-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.i2p-filter-chip {
+  padding: 8px 4px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.i2p-filter-chip:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.i2p-filter-chip.active {
+  background: var(--grad-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary-light);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+@media (max-width: 768px) {
+  .i2p-editor-body {
+    grid-template-columns: 1fr;
+  }
+  .i2p-editor-stage {
+    min-height: 260px;
+    padding: 10px;
+  }
+  .i2p-item-card {
+    padding: 8px 10px;
+    gap: 10px;
+  }
+}
