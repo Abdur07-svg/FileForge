@@ -1198,6 +1198,15 @@ body.is-native-app #apk-download-btn {
   grid-template-columns: 1fr 1fr;
   gap: 28px;
   margin-top: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.workspace-grid > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .workspace-grid-single {
@@ -1205,6 +1214,9 @@ body.is-native-app #apk-download-btn {
   flex-direction: column;
   gap: 24px;
   margin-top: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .panel-card {
@@ -1212,6 +1224,10 @@ body.is-native-app #apk-download-btn {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .panel-title {
@@ -3524,15 +3540,19 @@ input.form-control.input-success {
 
 .i2p-item-card {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 10px 14px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
   background-color: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   margin-bottom: 10px;
   transition: all var(--transition-fast);
   user-select: none;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .i2p-item-card:hover {
@@ -3551,20 +3571,30 @@ input.form-control.input-success {
   transform: translateY(-2px);
 }
 
+.i2p-item-main-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .i2p-drag-handle {
   color: var(--text-muted);
   cursor: grab;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
 }
 
 .i2p-drag-handle svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .i2p-drag-handle:active {
@@ -3573,13 +3603,13 @@ input.form-control.input-success {
 
 .i2p-item-preview {
   position: relative;
-  width: 54px;
-  height: 54px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-sm);
   overflow: hidden;
   background-color: var(--bg-app);
   border: 1px solid var(--border-subtle);
-  flex-shrink: 0;
+  flex: 0 0 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3618,52 +3648,101 @@ input.form-control.input-success {
 }
 
 .i2p-item-info {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 .i2p-item-name {
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
   margin-bottom: 2px;
 }
 
 .i2p-item-dims {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.i2p-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.i2p-item-actions .i2p-edit-btn {
+  padding: 4px 8px;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.i2p-order-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.i2p-order-btns .btn-icon {
+  width: 26px;
+  height: 26px;
+  font-size: 0.8rem;
+  padding: 0;
+}
+
+.i2p-item-actions .i2p-remove {
+  width: 26px;
+  height: 26px;
+  font-size: 1.1rem;
+  padding: 0;
 }
 
 /* Per-Page Orientation Controls inside Image Cards */
 .i2p-item-orient-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
-  margin-top: 6px;
-  flex-wrap: wrap;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-subtle);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .i2p-orient-label {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .i2p-orient-pill-group {
-  display: inline-flex;
+  display: flex;
   background: var(--bg-app);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 2px;
   gap: 2px;
+  flex: 1 1 auto;
+  max-width: 200px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .i2p-orient-pill {
-  padding: 2px 7px;
-  font-size: 0.72rem;
+  padding: 3px 6px;
+  font-size: 0.7rem;
   font-weight: 600;
   background: transparent;
   border: none;
@@ -3672,6 +3751,10 @@ input.form-control.input-success {
   cursor: pointer;
   transition: all var(--transition-fast);
   line-height: 1.2;
+  text-align: center;
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .i2p-orient-pill:hover {
@@ -3684,24 +3767,6 @@ input.form-control.input-success {
   color: #ffffff;
   font-weight: 700;
   box-shadow: 0 1px 4px rgba(99, 102, 241, 0.35);
-}
-
-.i2p-item-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.i2p-order-btns {
-  display: flex;
-  gap: 4px;
-}
-
-.i2p-order-btns .btn-icon {
-  width: 28px;
-  height: 28px;
-  font-size: 0.85rem;
 }
 
 /* PDF Live Preview Sheet Simulation */
@@ -3781,8 +3846,11 @@ input.form-control.input-success {
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 16px;
-  min-height: 380px;
+  padding: 12px;
+  min-height: 280px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
@@ -3790,15 +3858,19 @@ input.form-control.input-success {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .i2p-editor-canvas {
-  max-width: 100%;
-  max-height: 480px;
+  max-width: 100% !important;
+  height: auto !important;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-md);
   cursor: crosshair;
   touch-action: none;
+  display: block;
 }
 
 .i2p-editor-sidebar {
@@ -4113,22 +4185,327 @@ input.form-control.input-success {
   border: 1px solid rgba(255,255,255,0.2);
 }
 
+/* ==========================================================================
+   Tool 51: Mobile Responsive Enhancements
+   ========================================================================== */
+
 @media (max-width: 768px) {
+  /* Workspace Layout on Tablet / Mobile */
+  #tool-image-to-pdf .workspace-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Modals Layout */
+  .modal-container {
+    padding: 8px;
+  }
+
+  .i2p-modal-wide .i2p-editor-card,
+  .i2p-signature-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: 94dvh;
+    border-radius: var(--radius-lg);
+    padding: 14px 12px;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
   .i2p-editor-body,
   .i2p-signature-body {
     grid-template-columns: 1fr;
+    padding: 8px 0;
+    gap: 12px;
+    max-height: 68vh;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
   }
+
   .i2p-editor-stage,
   .i2p-signature-stage {
-    min-height: 240px;
+    min-height: 180px;
+    padding: 8px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .i2p-canvas-container {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .i2p-editor-canvas {
+    max-width: 100% !important;
+    max-height: 280px !important;
+    height: auto !important;
+    object-fit: contain;
+    margin: 0 auto;
+    display: block;
+  }
+
+  .i2p-editor-sidebar {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .i2p-editor-section {
     padding: 10px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
+
+  .i2p-sig-preview-canvas {
+    max-height: 220px;
+    max-width: 100% !important;
+    margin: 0 auto;
+  }
+
+  /* Filter Presets Swipeable Row */
   .i2p-filter-cards-row {
-    grid-template-columns: repeat(4, 1fr);
-    max-height: 180px;
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    gap: 8px;
+    padding: 4px 2px 10px;
+    max-height: unset;
   }
-  .i2p-item-card {
-    padding: 8px 10px;
+
+  .i2p-filter-card {
+    flex: 0 0 72px;
+    scroll-snap-align: start;
+    padding: 6px 4px;
+  }
+
+  .i2p-filter-card-thumb {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Settings & Main Buttons */
+  #tool-image-to-pdf .panel-card {
+    padding: 14px;
+  }
+
+  #tool-image-to-pdf .form-control,
+  #tool-image-to-pdf select {
+    font-size: 15px;
+    padding: 10px 12px;
+    min-height: 42px;
+  }
+
+  #tool-image-to-pdf .button-group-row {
+    flex-direction: column;
     gap: 10px;
+    margin-top: 18px;
+  }
+
+  #tool-image-to-pdf .button-group-row .btn,
+  #tool-image-to-pdf .button-group-row #i2p-generate-btn,
+  #tool-image-to-pdf .button-group-row #i2p-reset-btn {
+    width: 100%;
+    min-height: 46px;
+    font-size: 0.96rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* PDF Ready Result Card */
+  #i2p-pdf-ready-card .btn {
+    width: 100%;
+    min-height: 46px;
+    font-size: 0.96rem;
+  }
+
+  /* Image Reorder Item Cards on Mobile */
+  .i2p-item-card {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .i2p-item-main-row {
+    gap: 6px;
+  }
+
+  .i2p-drag-handle {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+  }
+
+  .i2p-item-preview {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+  }
+
+  .i2p-item-info {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .i2p-item-name {
+    font-size: 0.78rem;
+  }
+
+  .i2p-item-dims {
+    font-size: 0.68rem;
+  }
+
+  .i2p-item-actions {
+    gap: 2px;
+    flex: 0 0 auto;
+  }
+
+  .i2p-item-actions .i2p-edit-btn {
+    padding: 3px 6px;
+    font-size: 0.72rem;
+  }
+
+  .i2p-item-actions .i2p-order-btns .btn-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+
+  .i2p-item-actions .i2p-remove {
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
+  }
+
+  /* Per-Page Orientation Row on Mobile */
+  .i2p-item-orient-row {
+    width: 100%;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    box-sizing: border-box;
+  }
+
+  .i2p-orient-label {
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  .i2p-orient-pill-group {
+    display: flex;
+    flex: 1 1 auto;
+    max-width: 180px;
+    min-width: 0;
+  }
+
+  .i2p-orient-pill {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 3px 4px;
+    text-align: center;
+    font-size: 0.68rem;
+  }
+
+  /* Live Preview Card & Signature Controls */
+  .i2p-sig-controls-row {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px;
+  }
+
+  .i2p-sig-controls-row > div {
+    justify-content: space-between;
+  }
+
+  .i2p-preview-sheet-wrap {
+    min-height: 260px;
+    padding: 12px;
+  }
+
+  .i2p-sig-handle-se {
+    width: 18px;
+    height: 18px;
+    bottom: -9px;
+    right: -9px;
+  }
+
+  .i2p-sig-delete-btn {
+    width: 24px;
+    height: 24px;
+    top: -12px;
+    right: -12px;
+    font-size: 15px;
+  }
+
+  /* Sensitivity Slider & Ink Options on Mobile */
+  .range-slider {
+    height: 8px;
+  }
+
+  .i2p-ink-options {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .i2p-sig-color-chip {
+    padding: 8px 3px;
+    font-size: 0.72rem;
+  }
+
+  /* Crop Controls Panel */
+  .i2p-ratio-group {
+    gap: 4px;
+  }
+
+  .i2p-crop-ratio-btn {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+  }
+
+  /* Modal Header & Footers */
+  .modal-header {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+  }
+
+  .modal-footer {
+    padding: 12px 14px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
   }
 }

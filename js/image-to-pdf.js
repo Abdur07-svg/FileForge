@@ -154,7 +154,8 @@ const ImageToPDF = (() => {
       sigAutoCropCheckbox: document.getElementById('i2p-sig-autocrop'),
       sigPreviewCanvas: document.getElementById('i2p-sig-preview-canvas'),
       sigEmptyPreview: document.getElementById('i2p-sig-empty-preview'),
-      sigPreviewWrap: document.getElementById('i2p-sig-preview-wrap')
+      sigPreviewWrap: document.getElementById('i2p-sig-preview-wrap'),
+      sigChangeBtn: document.getElementById('i2p-sig-change-btn')
     };
 
     if (!dom.container) return;
@@ -374,41 +375,43 @@ const ImageToPDF = (() => {
       const orient = item.orientation || 'auto';
 
       card.innerHTML = `
-        <div class="i2p-drag-handle" title="Drag to reorder page">
-          <svg viewBox="0 0 20 20" fill="currentColor">
-            <path d="M7 2a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zm-6 6a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zm-6 6a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4z"/>
-          </svg>
-        </div>
-        <div class="i2p-item-preview">
-          <img src="${item.previewDataUrl}" alt="Page ${index + 1}">
-          <span class="i2p-page-badge">P${index + 1}</span>
-          ${hasEdits ? '<span class="i2p-edited-tag" title="Edited">Edited</span>' : ''}
-        </div>
-        <div class="i2p-item-info">
-          <p class="i2p-item-name" title="${Utils.escapeHtml(item.name)}">${Utils.escapeHtml(item.name)}</p>
-          <span class="i2p-item-dims">${item.width} × ${item.height} px ${item.editState.filter !== 'original' ? '• ' + getFilterName(item.editState.filter) : ''}</span>
-          <div class="i2p-item-orient-row">
-            <span class="i2p-orient-label">Orientation:</span>
-            <div class="i2p-orient-pill-group">
-              <button type="button" class="i2p-orient-pill ${orient === 'auto' ? 'active' : ''}" data-orient="auto" title="Auto: Detect aspect ratio">Auto</button>
-              <button type="button" class="i2p-orient-pill ${orient === 'portrait' ? 'active' : ''}" data-orient="portrait" title="Force Portrait page">Portrait</button>
-              <button type="button" class="i2p-orient-pill ${orient === 'landscape' ? 'active' : ''}" data-orient="landscape" title="Force Landscape page">Landscape</button>
-            </div>
-          </div>
-        </div>
-        <div class="i2p-item-actions">
-          <button type="button" class="btn btn-xs btn-secondary i2p-edit-btn" title="Edit image (Crop, Rotate, Filters)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px; margin-right: 4px;">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        <div class="i2p-item-main-row">
+          <div class="i2p-drag-handle" title="Drag to reorder page">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path d="M7 2a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zm-6 6a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zm-6 6a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4z"/>
             </svg>
-            Edit
-          </button>
-          <div class="i2p-order-btns">
-            <button type="button" class="btn-icon i2p-move-up" title="Move Up" ${index === 0 ? 'disabled' : ''}>↑</button>
-            <button type="button" class="btn-icon i2p-move-down" title="Move Down" ${index === imageList.length - 1 ? 'disabled' : ''}>↓</button>
           </div>
-          <button type="button" class="btn-icon i2p-remove" title="Remove image">&times;</button>
+          <div class="i2p-item-preview">
+            <img src="${item.previewDataUrl}" alt="Page ${index + 1}">
+            <span class="i2p-page-badge">P${index + 1}</span>
+            ${hasEdits ? '<span class="i2p-edited-tag" title="Edited">Edited</span>' : ''}
+          </div>
+          <div class="i2p-item-info">
+            <p class="i2p-item-name" title="${Utils.escapeHtml(item.name)}">${Utils.escapeHtml(item.name)}</p>
+            <span class="i2p-item-dims">${item.width} × ${item.height} px ${item.editState.filter !== 'original' ? '• ' + getFilterName(item.editState.filter) : ''}</span>
+          </div>
+          <div class="i2p-item-actions">
+            <button type="button" class="btn btn-xs btn-secondary i2p-edit-btn" title="Edit image (Crop, Rotate, Filters)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px; margin-right: 4px;">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Edit
+            </button>
+            <div class="i2p-order-btns">
+              <button type="button" class="btn-icon i2p-move-up" title="Move Up" ${index === 0 ? 'disabled' : ''}>↑</button>
+              <button type="button" class="btn-icon i2p-move-down" title="Move Down" ${index === imageList.length - 1 ? 'disabled' : ''}>↓</button>
+            </div>
+            <button type="button" class="btn-icon i2p-remove" title="Remove image">&times;</button>
+          </div>
+        </div>
+        <div class="i2p-item-orient-row">
+          <span class="i2p-orient-label">Orientation:</span>
+          <div class="i2p-orient-pill-group">
+            <button type="button" class="i2p-orient-pill ${orient === 'auto' ? 'active' : ''}" data-orient="auto" title="Auto: Detect aspect ratio">Auto</button>
+            <button type="button" class="i2p-orient-pill ${orient === 'portrait' ? 'active' : ''}" data-orient="portrait" title="Force Portrait page">Portrait</button>
+            <button type="button" class="i2p-orient-pill ${orient === 'landscape' ? 'active' : ''}" data-orient="landscape" title="Force Landscape page">Landscape</button>
+          </div>
         </div>
       `;
 
@@ -667,8 +670,10 @@ const ImageToPDF = (() => {
   function drawEditorCanvas() {
     if (!dom.editorCanvas || !editorImgObj) return;
 
-    const maxDisplayW = Math.min(650, window.innerWidth - 60);
-    const maxDisplayH = Math.min(480, window.innerHeight * 0.55);
+    const stageEl = dom.editorCanvas.parentElement ? dom.editorCanvas.parentElement.parentElement : null;
+    const stageW = stageEl ? Math.max(160, stageEl.clientWidth - 24) : 300;
+    const maxDisplayW = Math.min(540, stageW);
+    const maxDisplayH = Math.min(380, Math.max(180, window.innerHeight * 0.42));
 
     const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
     let baseW = editorTempState.crop ? editorTempState.crop.w : editorImgObj.naturalWidth;
@@ -677,14 +682,28 @@ const ImageToPDF = (() => {
     let dispH = isRotated90 ? baseW : baseH;
 
     const scale = Math.min(maxDisplayW / dispW, maxDisplayH / dispH, 1);
-    const canvasW = Math.round(dispW * scale);
-    const canvasH = Math.round(dispH * scale);
+    const canvasW = Math.max(80, Math.round(dispW * scale));
+    const canvasH = Math.max(80, Math.round(dispH * scale));
 
     renderEditedImageToCanvas(dom.editorCanvas, editorImgObj, editorTempState, canvasW, canvasH);
+
+    dom.editorCanvas.style.maxWidth = '100%';
+    dom.editorCanvas.style.height = 'auto';
 
     if (editorCropActive) {
       drawCropOverlay(dom.editorCanvas);
     }
+  }
+
+  function getCanvasCoords(clientX, clientY) {
+    if (!dom.editorCanvas) return { x: 0, y: 0 };
+    const rect = dom.editorCanvas.getBoundingClientRect();
+    const scaleX = dom.editorCanvas.width / (rect.width || 1);
+    const scaleY = dom.editorCanvas.height / (rect.height || 1);
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
   }
 
   function bindEditorEvents() {
@@ -863,7 +882,7 @@ const ImageToPDF = (() => {
 
   function getCropHandleAt(x, y) {
     const r = editorCropRect;
-    const pad = 16;
+    const pad = 24; // Touch-friendly handle hit area
     if (Math.hypot(x - r.x, y - r.y) < pad) return 'nw';
     if (Math.hypot(x - (r.x + r.w), y - r.y) < pad) return 'ne';
     if (Math.hypot(x - (r.x + r.w), y - (r.y + r.h)) < pad) return 'se';
@@ -874,9 +893,7 @@ const ImageToPDF = (() => {
 
   function onCropPointerDown(e) {
     if (!editorCropActive || !dom.editorCanvas) return;
-    const rect = dom.editorCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const { x, y } = getCanvasCoords(e.clientX, e.clientY);
     cropDragMode = getCropHandleAt(x, y);
     if (cropDragMode) {
       isDraggingCrop = true;
@@ -887,9 +904,7 @@ const ImageToPDF = (() => {
   function onCropTouchStart(e) {
     if (!editorCropActive || !dom.editorCanvas || e.touches.length === 0) return;
     const touch = e.touches[0];
-    const rect = dom.editorCanvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    const { x, y } = getCanvasCoords(touch.clientX, touch.clientY);
     cropDragMode = getCropHandleAt(x, y);
     if (cropDragMode) {
       e.preventDefault();
@@ -900,16 +915,21 @@ const ImageToPDF = (() => {
 
   function onCropPointerMove(e) {
     if (!editorCropActive || !isDraggingCrop || !dom.editorCanvas) return;
-    const rect = dom.editorCanvas.getBoundingClientRect();
-    updateCropDrag(e.clientX - rect.left, e.clientY - rect.top);
+    const { x, y } = getCanvasCoords(e.clientX, e.clientY);
+    updateCropDrag(x, y);
   }
 
   function onCropTouchMove(e) {
     if (!editorCropActive || !isDraggingCrop || !dom.editorCanvas || e.touches.length === 0) return;
     e.preventDefault();
     const touch = e.touches[0];
-    const rect = dom.editorCanvas.getBoundingClientRect();
-    updateCropDrag(touch.clientX - rect.left, touch.clientY - rect.top);
+    const { x, y } = getCanvasCoords(touch.clientX, touch.clientY);
+    updateCropDrag(x, y);
+  }
+
+  function onCropPointerUp() {
+    isDraggingCrop = false;
+    cropDragMode = null;
   }
 
   function updateCropDrag(x, y) {
@@ -1025,6 +1045,7 @@ const ImageToPDF = (() => {
     // Signature Dropzone & Picker
     Utils.setupDropZone(dom.sigDropzone, handleSignatureFile, ['image/', '.jpg', '.jpeg', '.png', '.webp']);
     if (dom.sigBrowseBtn) dom.sigBrowseBtn.addEventListener('click', () => dom.sigFileInput.click());
+    if (dom.sigChangeBtn) dom.sigChangeBtn.addEventListener('click', () => dom.sigFileInput.click());
     if (dom.sigFileInput) {
       dom.sigFileInput.addEventListener('change', (e) => {
         handleSignatureFile(Array.from(e.target.files));
@@ -1064,7 +1085,12 @@ const ImageToPDF = (() => {
   function openSignatureModal() {
     if (dom.signatureModal) dom.signatureModal.classList.remove('hidden');
     if (signatureRawImage) {
+      if (dom.sigDropzone) dom.sigDropzone.classList.add('hidden');
+      if (dom.sigPreviewWrap) dom.sigPreviewWrap.classList.remove('hidden');
       processSignature();
+    } else {
+      if (dom.sigDropzone) dom.sigDropzone.classList.remove('hidden');
+      if (dom.sigPreviewWrap) dom.sigPreviewWrap.classList.add('hidden');
     }
   }
 
@@ -1084,6 +1110,7 @@ const ImageToPDF = (() => {
       const dataUrl = await Utils.readFileAsDataURL(file);
       signatureRawImage = await Utils.loadImage(dataUrl);
 
+      if (dom.sigDropzone) dom.sigDropzone.classList.add('hidden');
       if (dom.sigEmptyPreview) dom.sigEmptyPreview.classList.add('hidden');
       if (dom.sigPreviewWrap) dom.sigPreviewWrap.classList.remove('hidden');
       if (dom.sigUseBtn) dom.sigUseBtn.disabled = false;
@@ -1530,15 +1557,21 @@ const ImageToPDF = (() => {
     const margin = getMarginPoints();
     const placement = dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'fit';
 
-    const maxPreviewW = 340;
-    const maxPreviewH = 440;
+    const stageEl = dom.previewStage || (dom.previewCanvas ? dom.previewCanvas.parentElement : null);
+    const wrapEl = stageEl ? stageEl.closest('.i2p-preview-sheet-wrap') : null;
+    const containerW = wrapEl ? wrapEl.clientWidth : (stageEl ? stageEl.clientWidth : 300);
+    const availableW = Math.max(140, containerW - 32);
+    const maxPreviewW = Math.min(320, availableW);
+    const maxPreviewH = 420;
     const previewScale = Math.min(maxPreviewW / pageDim.width, maxPreviewH / pageDim.height, 1);
 
-    const canvasW = Math.round(pageDim.width * previewScale);
-    const canvasH = Math.round(pageDim.height * previewScale);
+    const canvasW = Math.max(100, Math.round(pageDim.width * previewScale));
+    const canvasH = Math.max(100, Math.round(pageDim.height * previewScale));
 
     dom.previewCanvas.width = canvasW;
     dom.previewCanvas.height = canvasH;
+    dom.previewCanvas.style.maxWidth = '100%';
+    dom.previewCanvas.style.height = 'auto';
 
     const ctx = dom.previewCanvas.getContext('2d');
     ctx.fillStyle = '#ffffff';

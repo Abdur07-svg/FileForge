@@ -1,10 +1,11 @@
-const CACHE_NAME = 'fileforge-v1.0.1';
+const CACHE_NAME = 'fileforge-v1.0.4';
 const CORE_ASSETS = [
   './',
   './index.html',
   './style.css',
   './js/utils.js',
   './js/app.js',
+  './js/image-to-pdf.js',
   './vendor/pdf.min.js',
   './vendor/pdf.worker.min.js',
   './vendor/pdf-lib.min.js',
