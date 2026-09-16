@@ -4509,3 +4509,265 @@ input.form-control.input-success {
     justify-content: center;
   }
 }
+
+/* ================================================================= */
+/* UNIVERSAL UX ENHANCEMENTS & PROGRESSIVE DISCLOSURE SYSTEM */
+/* ================================================================= */
+
+/* Advanced Options Accordion / Collapsible Details */
+.advanced-options-details {
+  background-color: var(--bg-surface-elevated, var(--bg-surface));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-top: 16px;
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+
+.advanced-options-details[open] {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.advanced-options-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.advanced-options-summary::-webkit-details-marker {
+  display: none;
+}
+
+.advanced-options-summary:hover {
+  color: var(--color-primary-light);
+  background-color: var(--bg-hover);
+}
+
+.advanced-options-summary .summary-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.advanced-options-summary .summary-chevron {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--transition-fast);
+}
+
+.advanced-options-details[open] .summary-chevron {
+  transform: rotate(180deg);
+}
+
+.advanced-options-content {
+  padding: 16px;
+  border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-app);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Input Fields with Visible Labels & Unit Badges */
+.input-with-unit-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-with-unit-wrap .form-control {
+  padding-right: 48px;
+}
+
+.unit-badge {
+  position: absolute;
+  right: 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.form-label-helper {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* Segmented Control / Preset Option Pills */
+.preset-pill-group {
+  display: flex;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 3px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.preset-pill {
+  flex: 1 1 0;
+  min-width: max-content;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.preset-pill:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+.preset-pill.active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+}
+
+/* Action Button Typography & Icons */
+.btn-action-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.btn-action-primary svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Clean File Cards */
+.clean-file-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  gap: 12px;
+}
+
+.clean-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.clean-file-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-app);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-light);
+  flex-shrink: 0;
+}
+
+.clean-file-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.clean-file-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clean-file-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Legal Disclaimer Box for Add Signature */
+.signature-disclaimer-box {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background-color: rgba(234, 179, 8, 0.08);
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.signature-disclaimer-box strong {
+  color: #eab308;
+}
+
+/* Visual Selection State for PDF Page Thumbnails */
+.page-thumbnail-card.selected {
+  border-color: var(--color-primary) !important;
+  background-color: rgba(99, 102, 241, 0.08) !important;
+  box-shadow: 0 0 0 2px var(--color-primary) !important;
+}
+
+.page-thumbnail-card .page-checkmark {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: all var(--transition-fast);
+}
+
+.page-thumbnail-card.selected .page-checkmark {
+  opacity: 1;
+  transform: scale(1);
+}
+

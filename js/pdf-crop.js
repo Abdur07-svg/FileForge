@@ -609,7 +609,7 @@ const PDFCrop = (() => {
       const finalPdfBytes = await srcDoc.save({ useObjectStreams: true });
       generatedPdfBlob = new Blob([finalPdfBytes], { type: 'application/pdf' });
 
-      dom.applyBtn.classList.add('hidden');
+      dom.applyBtn.classList.remove('hidden');
       dom.downloadBtn.classList.remove('hidden');
       dom.downloadBtn.disabled = false;
 

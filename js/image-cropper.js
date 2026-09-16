@@ -122,7 +122,10 @@ const ImageCropper = (() => {
         dataUrl,
         img,
         width: img.naturalWidth,
-        height: img.naturalHeight
+        height: img.naturalHeight,
+        originalImg: img,
+        originalWidth: img.naturalWidth,
+        originalHeight: img.naturalHeight
       };
 
       dom.emptyState.classList.add('hidden');
@@ -423,8 +426,28 @@ const ImageCropper = (() => {
 
       showProgress(75, 'Encoding cropped image...');
       croppedBlob = await Utils.canvasToBlob(outCanvas, mime, quality);
+      croppedDataUrl = URL.createObjectURL(croppedBlob);
 
-      dom.cropBtn.classList.add('hidden');
+      // Store original image if not stored yet
+      if (!currentFile.originalImg) {
+        currentFile.originalImg = currentFile.img;
+        currentFile.originalWidth = currentFile.width;
+        currentFile.originalHeight = currentFile.height;
+      }
+
+      // Update active image object to display cropped result on canvas
+      const newImg = await Utils.loadImage(croppedDataUrl);
+      currentFile.img = newImg;
+      currentFile.width = newImg.naturalWidth;
+      currentFile.height = newImg.naturalHeight;
+
+      // Re-init crop rectangle to match new cropped dimensions
+      initCropRect();
+      drawCropCanvas();
+
+      dom.cropBtn.classList.remove('hidden');
+      const spanEl = dom.cropBtn.querySelector('span');
+      if (spanEl) spanEl.textContent = 'Apply Crop';
       dom.downloadBtn.classList.remove('hidden');
       dom.downloadBtn.disabled = false;
 

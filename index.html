@@ -1344,8 +1344,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M12 12v9m0 0l-3-3m3 3l3-3"/></svg>
               </div>
               <h3 class="dropzone-title">Upload PDF to Compress</h3>
-              <p class="dropzone-desc">Drag & drop your PDF file or click browse</p>
-              <button id="pc-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Drag & drop your PDF file or tap to choose</p>
+              <button id="pc-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="pc-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -1364,45 +1364,36 @@
             <div class="workspace-grid">
               <!-- Left: Settings & File Info -->
               <div class="panel-card">
-                <h3 class="panel-title">Document & Settings</h3>
+                <h3 class="panel-title">Document & Compression Settings</h3>
                 
-                <div class="metric-card" style="margin-bottom: 20px;">
-                  <p class="metric-label">Selected Document</p>
-                  <p id="pc-file-name" class="metric-value" style="font-size: 1rem; word-break: break-all;">document.pdf</p>
-                  <div style="display: flex; gap: 16px; margin-top: 8px;">
-                    <span id="pc-orig-size" class="badge badge-neutral">-</span>
-                    <span id="pc-page-count" class="badge badge-info">-</span>
+                <div class="clean-file-card" style="margin-bottom: 20px;">
+                  <div class="clean-file-info">
+                    <div class="clean-file-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    </div>
+                    <div class="clean-file-details">
+                      <span id="pc-file-name" class="clean-file-name">document.pdf</span>
+                      <div class="clean-file-meta">
+                        <span id="pc-orig-size">-</span> &bull; <span id="pc-page-count">-</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <div class="form-label">
-                    <span>Compression Level</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span id="pc-compress-val" class="range-val-badge">60%</span>
-                    </div>
-                  </div>
+                  <label class="form-label">
+                    <span>Compression Preset</span>
+                  </label>
 
-                  <!-- Slider Bar + Direct Number Input -->
-                  <div class="slider-number-row">
-                    <input type="range" id="pc-compress-slider" class="range-slider" min="10" max="90" value="60">
-                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
-                      <input type="number" id="pc-compress-num" class="form-control slider-number-input" min="10" max="90" value="60" aria-label="Compression percentage number">
-                      <span style="font-weight: 700; color: var(--text-secondary);">%</span>
-                    </div>
-                  </div>
-
-                  <!-- Preset Percentage Buttons -->
-                  <div class="presets-row" style="margin-top: 10px;">
-                    <button type="button" class="preset-btn pc-preset-btn" data-pct="30">Low (30%)</button>
-                    <button type="button" class="preset-btn pc-preset-btn" data-pct="50">Medium (50%)</button>
-                    <button type="button" class="preset-btn pc-preset-btn active" data-pct="60">Balanced (60%)</button>
-                    <button type="button" class="preset-btn pc-preset-btn" data-pct="70">High (70%)</button>
-                    <button type="button" class="preset-btn pc-preset-btn" data-pct="85">Max (85%)</button>
+                  <!-- Preset Pill Buttons -->
+                  <div class="preset-pill-group">
+                    <button type="button" class="preset-pill pc-preset-btn" data-pct="30">Small File</button>
+                    <button type="button" class="preset-pill pc-preset-btn active" data-pct="60">Balanced</button>
+                    <button type="button" class="preset-pill pc-preset-btn" data-pct="85">Best Quality</button>
                   </div>
 
                   <!-- Dynamic Level Guide Description -->
-                  <div id="pc-compress-desc" class="compress-level-desc">
+                  <div id="pc-compress-desc" class="compress-level-desc" style="margin-top: 10px;">
                     Balanced Compression (140 DPI, ~60% Quality) — Good size reduction, clear text
                   </div>
 
@@ -1411,9 +1402,38 @@
                   </div>
                 </div>
 
-                <div class="button-group-row">
-                  <button id="pc-compress-btn" type="button" class="btn btn-primary btn-lg">Compress PDF</button>
-                  <button id="pc-reset-btn" type="button" class="btn btn-ghost">Choose Another File</button>
+                <!-- Progressive Disclosure: Advanced Options Accordion -->
+                <details class="advanced-options-details">
+                  <summary class="advanced-options-summary">
+                    <span class="summary-title">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                      Advanced Compression Fine-Tuning
+                    </span>
+                    <svg class="summary-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                  </summary>
+                  <div class="advanced-options-content">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <div class="form-label">
+                        <span>Target Quality</span>
+                        <span id="pc-compress-val" class="range-val-badge">60%</span>
+                      </div>
+                      <div class="slider-number-row">
+                        <input type="range" id="pc-compress-slider" class="range-slider" min="10" max="90" value="60">
+                        <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                          <input type="number" id="pc-compress-num" class="form-control slider-number-input" min="10" max="90" value="60" aria-label="Compression percentage number">
+                          <span style="font-weight: 700; color: var(--text-secondary);">%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                <div class="button-group-row" style="margin-top: 20px;">
+                  <button id="pc-compress-btn" type="button" class="btn btn-primary btn-action-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                    <span>Compress PDF</span>
+                  </button>
+                  <button id="pc-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -1456,8 +1476,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
               </div>
               <h3 class="dropzone-title">Upload Images to Compress</h3>
-              <p class="dropzone-desc">Supports JPG, JPEG, PNG, WebP &bull; Batch upload allowed</p>
-              <button id="ic-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag & drop or tap to select</p>
+              <button id="ic-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Add Images</button>
               <input type="file" id="ic-file-input" class="hidden" multiple accept="image/jpeg,image/png,image/webp">
             </div>
           </div>
@@ -1482,28 +1502,15 @@
                 <h3 class="panel-title">Compression Controls</h3>
 
                 <div class="form-group">
-                  <div class="form-label">
-                    <span>Compression Level & Quality</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span id="ic-quality-val" class="range-val-badge">75%</span>
-                    </div>
-                  </div>
+                  <label class="form-label">
+                    <span>Quality Level</span>
+                  </label>
 
-                  <!-- Slider Bar + Direct Number Input -->
-                  <div class="slider-number-row">
-                    <input type="range" id="ic-quality" class="range-slider" min="10" max="100" value="75">
-                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
-                      <input type="number" id="ic-quality-num" class="form-control slider-number-input" min="10" max="100" value="75" aria-label="Quality percentage number">
-                      <span style="font-weight: 700; color: var(--text-secondary);">%</span>
-                    </div>
-                  </div>
-
-                  <!-- Preset Percentage Buttons -->
-                  <div class="presets-row" style="margin-top: 10px;">
-                    <button type="button" class="preset-btn ic-preset-btn" data-pct="35">Strong (35%)</button>
-                    <button type="button" class="preset-btn ic-preset-btn" data-pct="50">Medium (50%)</button>
-                    <button type="button" class="preset-btn ic-preset-btn active" data-pct="75">Standard (75%)</button>
-                    <button type="button" class="preset-btn ic-preset-btn" data-pct="90">High Quality (90%)</button>
+                  <!-- Preset Pill Buttons -->
+                  <div class="preset-pill-group">
+                    <button type="button" class="preset-pill ic-preset-btn" data-pct="50">Low</button>
+                    <button type="button" class="preset-pill ic-preset-btn active" data-pct="75">Balanced</button>
+                    <button type="button" class="preset-pill ic-preset-btn" data-pct="90">High</button>
                   </div>
                 </div>
 
@@ -1512,35 +1519,66 @@
                   <select id="ic-format" class="form-control">
                     <option value="original">Keep Original Format</option>
                     <option value="jpeg">Convert to JPG</option>
-                    <option value="webp">Convert to WebP (Best Compression)</option>
+                    <option value="webp">Convert to WebP</option>
                     <option value="png">Convert to PNG</option>
                   </select>
                 </div>
 
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Resize Dimensions (Optional)</span>
-                    <button type="button" id="ic-reset-dims" class="btn-xs btn-ghost">Reset</button>
-                  </div>
-                  <div class="dims-row">
-                    <div>
-                      <input type="number" id="ic-width" class="form-control" placeholder="Width (px)">
+                <!-- Progressive Disclosure: Advanced Options -->
+                <details class="advanced-options-details">
+                  <summary class="advanced-options-summary">
+                    <span class="summary-title">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                      Advanced Settings (Quality % & Custom Resize)
+                    </span>
+                    <svg class="summary-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                  </summary>
+                  <div class="advanced-options-content">
+                    <div class="form-group">
+                      <div class="form-label">
+                        <span>Quality Percentage</span>
+                        <span id="ic-quality-val" class="range-val-badge">75%</span>
+                      </div>
+                      <div class="slider-number-row">
+                        <input type="range" id="ic-quality" class="range-slider" min="10" max="100" value="75">
+                        <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                          <input type="number" id="ic-quality-num" class="form-control slider-number-input" min="10" max="100" value="75" aria-label="Quality percentage number">
+                          <span style="font-weight: 700; color: var(--text-secondary);">%</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <input type="number" id="ic-height" class="form-control" placeholder="Height (px)">
-                    </div>
-                    <label class="aspect-ratio-btn">
-                      <input type="checkbox" id="ic-aspect-ratio" checked>
-                      <span>Lock Ratio</span>
-                    </label>
-                  </div>
-                </div>
 
-                <div class="button-group-row">
-                  <button id="ic-compress-btn" type="button" class="btn btn-primary">Re-Compress All</button>
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <div class="form-label">
+                        <span>Max Dimensions</span>
+                        <button type="button" id="ic-reset-dims" class="btn-xs btn-ghost">Reset</button>
+                      </div>
+                      <div class="dims-row">
+                        <div class="input-with-unit-wrap">
+                          <input type="number" id="ic-width" class="form-control" placeholder="Width">
+                          <span class="unit-badge">px</span>
+                        </div>
+                        <div class="input-with-unit-wrap">
+                          <input type="number" id="ic-height" class="form-control" placeholder="Height">
+                          <span class="unit-badge">px</span>
+                        </div>
+                        <label class="aspect-ratio-btn">
+                          <input type="checkbox" id="ic-aspect-ratio" checked>
+                          <span>🔗 Lock ratio</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                <div class="button-group-row" style="margin-top: 20px;">
+                  <button id="ic-compress-btn" type="button" class="btn btn-primary btn-action-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <span>Compress Image</span>
+                  </button>
                   <button id="ic-download-btn" type="button" class="btn btn-success" disabled>Download Image</button>
                   <button id="ic-download-all-btn" type="button" class="btn btn-secondary hidden">Download All (ZIP)</button>
-                  <button id="ic-reset-btn" type="button" class="btn btn-ghost">Clear All</button>
+                  <button id="ic-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -1603,8 +1641,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><circle cx="10" cy="13" r="2"></circle><path d="M20 17l-3-3-4 4"></path></svg>
               </div>
               <h3 class="dropzone-title">Upload PDF to Extract Images</h3>
-              <p class="dropzone-desc">Render PDF pages to high-DPI JPG or PNG images</p>
-              <button id="p2i-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Render PDF pages into high-DPI JPG or PNG image files</p>
+              <button id="p2i-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="p2i-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -1661,9 +1699,9 @@
               </div>
 
               <div style="display: flex; gap: 10px;">
-                <button id="p2i-convert-btn" type="button" class="btn btn-primary btn-sm">Convert Selected Pages</button>
+                <button id="p2i-convert-btn" type="button" class="btn btn-primary btn-action-primary">Convert Selected Pages</button>
                 <button id="p2i-download-zip-btn" type="button" class="btn btn-success btn-sm" disabled>Download All as ZIP</button>
-                <button id="p2i-reset-btn" type="button" class="btn btn-ghost btn-sm">Clear</button>
+                <button id="p2i-reset-btn" type="button" class="btn btn-ghost btn-sm">Clear All & Start Over</button>
               </div>
             </div>
 
@@ -1683,7 +1721,7 @@
               </div>
               <h3 class="dropzone-title">Upload Images to Convert</h3>
               <p class="dropzone-desc">Convert JPG, PNG, WebP with custom transparency handling</p>
-              <button id="iconv-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <button id="iconv-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Add Images</button>
               <input type="file" id="iconv-file-input" class="hidden" multiple accept="image/*">
             </div>
           </div>
@@ -1732,9 +1770,9 @@
               </div>
 
               <div class="button-group-row">
-                <button id="iconv-convert-btn" type="button" class="btn btn-primary">Convert Images</button>
+                <button id="iconv-convert-btn" type="button" class="btn btn-primary btn-action-primary">Convert Format</button>
                 <button id="iconv-download-all-btn" type="button" class="btn btn-success" disabled>Download All (ZIP)</button>
-                <button id="iconv-reset-btn" type="button" class="btn btn-ghost">Clear All</button>
+                <button id="iconv-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
               </div>
             </div>
 
@@ -1754,7 +1792,7 @@
               </div>
               <h3 class="dropzone-title">Upload Images to Create PDF</h3>
               <p class="dropzone-desc">Combine JPG, PNG, and WebP photos into a clean PDF document</p>
-              <button id="i2p-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <button id="i2p-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Add Images</button>
               <input type="file" id="i2p-file-input" class="hidden" multiple accept=".jpg,.jpeg,.png,.webp,image/*">
             </div>
           </div>
@@ -1946,7 +1984,7 @@
               </div>
               <h3 class="dropzone-title">Upload Images to Resize</h3>
               <p class="dropzone-desc">Resize by exact pixels or percentage with aspect ratio lock</p>
-              <button id="ir-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <button id="ir-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose Image</button>
               <input type="file" id="ir-file-input" class="hidden" multiple accept="image/*">
             </div>
           </div>
@@ -1994,17 +2032,19 @@
                 <!-- Dimension Panel -->
                 <div id="ir-dims-panel">
                   <div class="form-group">
-                    <label class="form-label">Target Dimensions (Pixels)</label>
+                    <label class="form-label">Target Dimensions (px)</label>
                     <div class="dims-row">
-                      <div>
+                      <div class="input-with-unit-wrap">
                         <input type="number" id="ir-width" class="form-control" placeholder="Width">
+                        <span class="unit-badge">px</span>
                       </div>
-                      <div>
+                      <div class="input-with-unit-wrap">
                         <input type="number" id="ir-height" class="form-control" placeholder="Height">
+                        <span class="unit-badge">px</span>
                       </div>
                       <label class="aspect-ratio-btn">
                         <input type="checkbox" id="ir-aspect-ratio" checked>
-                        <span>Lock Ratio</span>
+                        <span>🔗 Lock Ratio</span>
                       </label>
                     </div>
                   </div>
@@ -2039,34 +2079,40 @@
                 </div>
 
                 <div class="button-group-row">
-                  <button id="ir-resize-btn" type="button" class="btn btn-primary">Resize All Images</button>
+                  <button id="ir-resize-btn" type="button" class="btn btn-primary btn-action-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                    <span>Resize Image</span>
+                  </button>
+                  <button id="ir-crop-btn" type="button" class="btn btn-secondary btn-action-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path></svg>
+                    <span>Apply Crop</span>
+                  </button>
                   <button id="ir-download-btn" type="button" class="btn btn-success" disabled>Download Image</button>
                   <button id="ir-download-all-btn" type="button" class="btn btn-secondary hidden">Download All (ZIP)</button>
-                  <button id="ir-reset-btn" type="button" class="btn btn-ghost">Clear</button>
+                  <button id="ir-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
-              <!-- Right: Preview & Stats -->
+              <!-- Right: Preview & Metrics -->
               <div class="panel-card">
-                <h3 class="panel-title">Preview & Metrics</h3>
+                <h3 class="panel-title">Interactive Canvas &amp; Metrics</h3>
 
-                <div class="metrics-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="metrics-row" style="grid-template-columns: 1fr 1fr; margin-bottom: 16px;">
                   <div class="metric-card">
                     <span class="metric-label">Original</span>
                     <p id="ir-orig-dims" class="metric-value">-</p>
                     <span id="ir-orig-size" style="font-size: 0.75rem; color: var(--text-muted);">-</span>
                   </div>
                   <div class="metric-card">
-                    <span class="metric-label">Resized</span>
+                    <span class="metric-label">Resized (Target)</span>
                     <p id="ir-new-dims" class="metric-value">-</p>
                     <span id="ir-new-size" style="font-size: 0.75rem; color: var(--text-muted);">-</span>
                   </div>
                 </div>
 
-                <div class="preview-box" style="margin-top: 16px;">
-                  <div class="preview-box-img-wrap" style="height: 280px;">
-                    <img id="ir-preview" alt="Resized Image Preview">
-                  </div>
+                <div class="preview-stage-wrap" style="display: flex; justify-content: center; align-items: center; background: var(--bg-tertiary); padding: 16px; border-radius: 8px;">
+                  <canvas id="ir-canvas" style="max-width: 100%; height: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border-radius: 4px; touch-action: none; cursor: crosshair;"></canvas>
+                  <img id="ir-preview" alt="Resized Image Preview" class="hidden">
                 </div>
               </div>
             </div>
@@ -2084,7 +2130,7 @@
               </div>
               <h3 class="dropzone-title">Upload PDF to Extract Pages</h3>
               <p class="dropzone-desc">Select visual thumbnails to extract into a fresh PDF file</p>
-              <button id="pe-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <button id="pe-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="pe-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -2105,15 +2151,15 @@
               <div class="toolbar-helpers">
                 <span id="pe-selected-count" style="font-weight: 700; margin-right: 8px;">0 selected</span>
                 <button type="button" id="pe-select-all" class="btn btn-xs btn-secondary">Select All</button>
-                <button type="button" id="pe-deselect-all" class="btn btn-xs btn-secondary">Clear</button>
-                <button type="button" id="pe-select-odd" class="btn btn-xs btn-secondary">Odd</button>
-                <button type="button" id="pe-select-even" class="btn btn-xs btn-secondary">Even</button>
+                <button type="button" id="pe-deselect-all" class="btn btn-xs btn-secondary">Clear Selection</button>
+                <button type="button" id="pe-select-odd" class="btn btn-xs btn-secondary">Odd Pages</button>
+                <button type="button" id="pe-select-even" class="btn btn-xs btn-secondary">Even Pages</button>
               </div>
 
               <div style="display: flex; gap: 10px;">
-                <button id="pe-extract-btn" type="button" class="btn btn-primary btn-sm" disabled>Extract Selected Pages</button>
+                <button id="pe-extract-btn" type="button" class="btn btn-primary btn-action-primary" disabled>Extract Selected Pages</button>
                 <button id="pe-download-btn" type="button" class="btn btn-success btn-sm hidden">Download Extracted PDF</button>
-                <button id="pe-reset-btn" type="button" class="btn btn-ghost btn-sm">Clear</button>
+                <button id="pe-reset-btn" type="button" class="btn btn-ghost btn-sm">Clear All & Start Over</button>
               </div>
             </div>
 
@@ -2133,7 +2179,7 @@
               </div>
               <h3 class="dropzone-title">Upload Multiple PDFs to Merge</h3>
               <p class="dropzone-desc">Combine 2 or more PDF files into a single document</p>
-              <button id="pm-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <button id="pm-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Add PDFs</button>
               <input type="file" id="pm-file-input" class="hidden" multiple accept=".pdf,application/pdf">
             </div>
           </div>
@@ -2157,9 +2203,9 @@
               </div>
 
               <div style="display: flex; gap: 10px;">
-                <button id="pm-merge-btn" type="button" class="btn btn-primary btn-sm" disabled>Merge PDFs</button>
+                <button id="pm-merge-btn" type="button" class="btn btn-primary btn-action-primary" disabled>Merge PDFs</button>
                 <button id="pm-download-btn" type="button" class="btn btn-success btn-sm hidden">Download Merged PDF</button>
-                <button id="pm-reset-btn" type="button" class="btn btn-ghost btn-sm">Clear</button>
+                <button id="pm-reset-btn" type="button" class="btn btn-ghost btn-sm">Clear All & Start Over</button>
               </div>
             </div>
 
@@ -2179,7 +2225,7 @@
               </div>
               <h3 class="dropzone-title">Upload PDF to Split</h3>
               <p class="dropzone-desc">Split into custom page ranges or separate single-page files</p>
-              <button id="ps-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <button id="ps-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="ps-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -2229,16 +2275,16 @@
 
                 <div id="ps-ranges-panel" class="form-group">
                   <label for="ps-range-input" class="form-label">Page Ranges</label>
-                  <input type="text" id="ps-range-input" class="form-control" placeholder="e.g. 1-2, 3-4">
+                  <input type="text" id="ps-range-input" class="form-control" placeholder="e.g. 1-3, 5, 8-10">
                   <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; display: block;">
                     Separate ranges with commas (e.g. 1-3, 5, 7-10).
                   </span>
                 </div>
 
                 <div class="button-group-row">
-                  <button id="ps-split-btn" type="button" class="btn btn-primary">Split PDF</button>
+                  <button id="ps-split-btn" type="button" class="btn btn-primary btn-action-primary">Split PDF</button>
                   <button id="ps-download-all-btn" type="button" class="btn btn-success" disabled>Download All (ZIP)</button>
-                  <button id="ps-reset-btn" type="button" class="btn btn-ghost">Clear</button>
+                  <button id="ps-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -2265,8 +2311,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
               </div>
               <h3 class="dropzone-title">Upload PDF to Rotate Pages</h3>
-              <p class="dropzone-desc">Drag & drop your PDF file or click browse</p>
-              <button id="pr-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Drag & drop your PDF file or tap to choose</p>
+              <button id="pr-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="pr-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -2287,9 +2333,9 @@
                   <button type="button" id="pr-reset-all" class="preset-btn">Reset All</button>
                 </div>
                 <div class="button-group-row">
-                  <button id="pr-apply-btn" type="button" class="btn btn-primary btn-lg">Apply Rotation &amp; Save</button>
+                  <button id="pr-apply-btn" type="button" class="btn btn-primary btn-action-primary">Rotate PDF</button>
                   <button id="pr-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Rotated PDF</button>
-                  <button id="pr-reset-btn" type="button" class="btn btn-ghost">Choose Another File</button>
+                  <button id="pr-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -2311,8 +2357,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
               </div>
               <h3 class="dropzone-title">Upload PDF to Remove Pages</h3>
-              <p class="dropzone-desc">Drag & drop your PDF file or click browse</p>
-              <button id="pdp-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Drag & drop your PDF file or tap to choose</p>
+              <button id="pdp-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="pdp-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -2340,9 +2386,9 @@
                   <span id="pdp-status-text">Click on any thumbnail to mark/unmark for deletion.</span>
                 </div>
                 <div class="button-group-row">
-                  <button id="pdp-delete-btn" type="button" class="btn btn-danger btn-lg" disabled>Remove Selected Pages</button>
+                  <button id="pdp-delete-btn" type="button" class="btn btn-danger btn-action-primary" disabled>Delete Selected Pages</button>
                   <button id="pdp-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Clean PDF</button>
-                  <button id="pdp-reset-btn" type="button" class="btn btn-ghost">Choose Another File</button>
+                  <button id="pdp-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -2364,8 +2410,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
               </div>
               <h3 class="dropzone-title">Upload PDF to Reorder Pages</h3>
-              <p class="dropzone-desc">Drag & drop your multi-page PDF or click browse</p>
-              <button id="preord-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Drag & drop your multi-page PDF or tap to choose</p>
+              <button id="preord-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="preord-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -2384,9 +2430,9 @@
                   <button type="button" id="preord-reset-order-btn" class="preset-btn">Reset to Original</button>
                 </div>
                 <div class="button-group-row">
-                  <button id="preord-save-btn" type="button" class="btn btn-primary btn-lg">Save Reordered PDF</button>
+                  <button id="preord-save-btn" type="button" class="btn btn-primary btn-action-primary">Save Page Order</button>
                   <button id="preord-download-btn" type="button" class="btn btn-success btn-lg hidden">Download PDF</button>
-                  <button id="preord-reset-btn" type="button" class="btn btn-ghost">Choose Another File</button>
+                  <button id="preord-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -2408,8 +2454,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
               </div>
               <h3 class="dropzone-title">Upload PDF to Add Watermark</h3>
-              <p class="dropzone-desc">Drag & drop your PDF file or click browse</p>
-              <button id="pwm-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Drag & drop your PDF file or tap to choose</p>
+              <button id="pwm-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="pwm-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -2422,11 +2468,11 @@
 
             <div class="workspace-grid">
               <div class="panel-card">
-                <h3 class="panel-title">Watermark Settings</h3>
+                <h3 class="panel-title">Watermark Type &amp; Settings</h3>
                 
-                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                  <button type="button" id="pwm-type-text" class="btn btn-sm btn-primary" style="flex: 1;">Text Watermark</button>
-                  <button type="button" id="pwm-type-image" class="btn btn-sm btn-ghost" style="flex: 1;">Logo Image</button>
+                <div class="preset-pill-group" style="margin-bottom: 16px;">
+                  <button type="button" id="pwm-type-text" class="preset-pill active">Text Watermark</button>
+                  <button type="button" id="pwm-type-image" class="preset-pill">Image Logo</button>
                 </div>
 
                 <!-- Text options -->
@@ -2548,8 +2594,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
               </div>
               <h3 class="dropzone-title">Upload PDF to Add Page Numbers</h3>
-              <p class="dropzone-desc">Drag & drop your PDF file or click browse</p>
-              <button id="ppn-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Drag & drop your PDF file or tap to choose</p>
+              <button id="ppn-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="ppn-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -2598,31 +2644,43 @@
                   </div>
                 </div>
 
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Font Size</span>
-                    <span id="ppn-font-size-val" class="range-val-badge">12pt</span>
+                <!-- Progressive Disclosure: Advanced Numbering Settings -->
+                <details class="advanced-options-details">
+                  <summary class="advanced-options-summary">
+                    <span class="summary-title">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                      Font Size &amp; Margin Padding
+                    </span>
+                    <svg class="summary-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                  </summary>
+                  <div class="advanced-options-content">
+                    <div class="form-group">
+                      <div class="form-label">
+                        <span>Font Size</span>
+                        <span id="ppn-font-size-val" class="range-val-badge">12pt</span>
+                      </div>
+                      <input type="range" id="ppn-font-size" class="range-slider" min="8" max="24" value="12">
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <span>Margin Padding</span>
+                        <span id="ppn-margin-val" class="range-val-badge">25px</span>
+                      </div>
+                      <input type="range" id="ppn-margin" class="range-slider" min="10" max="60" value="25">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label for="ppn-color" class="form-label">Text Color</label>
+                      <input type="color" id="ppn-color" value="#333333" style="width: 44px; height: 38px; border: none; border-radius: 6px; cursor: pointer;">
+                    </div>
                   </div>
-                  <input type="range" id="ppn-font-size" class="range-slider" min="8" max="24" value="12">
-                </div>
+                </details>
 
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Margin Padding</span>
-                    <span id="ppn-margin-val" class="range-val-badge">25px</span>
-                  </div>
-                  <input type="range" id="ppn-margin" class="range-slider" min="10" max="60" value="25">
-                </div>
-
-                <div class="form-group">
-                  <label for="ppn-color" class="form-label">Text Color</label>
-                  <input type="color" id="ppn-color" value="#333333" style="width: 44px; height: 38px; border: none; border-radius: 6px; cursor: pointer;">
-                </div>
-
-                <div class="button-group-row">
-                  <button id="ppn-apply-btn" type="button" class="btn btn-primary btn-lg">Add Page Numbers</button>
+                <div class="button-group-row" style="margin-top: 20px;">
+                  <button id="ppn-apply-btn" type="button" class="btn btn-primary btn-action-primary">Add Page Numbers</button>
                   <button id="ppn-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Numbered PDF</button>
-                  <button id="ppn-reset-btn" type="button" class="btn btn-ghost">Clear</button>
+                  <button id="ppn-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -2646,8 +2704,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
               </div>
               <h3 class="dropzone-title">Upload PDF to Password Protect</h3>
-              <p class="dropzone-desc">Drag & drop your PDF file or click browse</p>
-              <button id="pp-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Drag & drop your PDF file or tap to choose</p>
+              <button id="pp-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="pp-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -2662,12 +2720,17 @@
               <div class="panel-card">
                 <h3 class="panel-title">Document Security</h3>
                 
-                <div class="metric-card" style="margin-bottom: 20px;">
-                  <p class="metric-label">Selected File</p>
-                  <p id="pp-file-name" class="metric-value" style="font-size: 1rem; word-break: break-all;">-</p>
-                  <div style="display: flex; gap: 12px; margin-top: 8px;">
-                    <span id="pp-file-size" class="badge badge-neutral">-</span>
-                    <span id="pp-page-count" class="badge badge-info">-</span>
+                <div class="clean-file-card" style="margin-bottom: 20px;">
+                  <div class="clean-file-info">
+                    <div class="clean-file-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <div class="clean-file-details">
+                      <span id="pp-file-name" class="clean-file-name">document.pdf</span>
+                      <div class="clean-file-meta">
+                        <span id="pp-file-size">-</span> &bull; <span id="pp-page-count">-</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2685,23 +2748,35 @@
                   <div id="pp-password-feedback" class="password-feedback-msg hidden"></div>
                 </div>
 
-                <h4 style="font-size: 0.9rem; font-weight: 700; margin: 16px 0 10px;">Optional Restrictions</h4>
-                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
-                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem;">
-                    <input type="checkbox" id="pp-restrict-printing"> Restrict Printing
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem;">
-                    <input type="checkbox" id="pp-restrict-copying"> Restrict Copying Text &amp; Images
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem;">
-                    <input type="checkbox" id="pp-restrict-modifying"> Restrict Modifying Document
-                  </label>
-                </div>
+                <!-- Progressive Disclosure: Optional Restrictions -->
+                <details class="advanced-options-details">
+                  <summary class="advanced-options-summary">
+                    <span class="summary-title">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                      Optional Permission Restrictions
+                    </span>
+                    <svg class="summary-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                  </summary>
+                  <div class="advanced-options-content">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem;">
+                      <input type="checkbox" id="pp-restrict-printing"> Restrict Printing
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem;">
+                      <input type="checkbox" id="pp-restrict-copying"> Restrict Copying Text &amp; Images
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem;">
+                      <input type="checkbox" id="pp-restrict-modifying"> Restrict Modifying Document
+                    </label>
+                  </div>
+                </details>
 
-                <div class="button-group-row">
-                  <button id="pp-protect-btn" type="button" class="btn btn-primary btn-lg">Encrypt &amp; Protect PDF 🔒</button>
+                <div class="button-group-row" style="margin-top: 20px;">
+                  <button id="pp-protect-btn" type="button" class="btn btn-primary btn-action-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <span>Protect PDF</span>
+                  </button>
                   <button id="pp-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Protected PDF</button>
-                  <button id="pp-reset-btn" type="button" class="btn btn-ghost">Choose Another File</button>
+                  <button id="pp-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -2730,8 +2805,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
               </div>
               <h3 class="dropzone-title">Upload PDF to Edit Metadata</h3>
-              <p class="dropzone-desc">Drag & drop your PDF file or click browse</p>
-              <button id="pme-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Drag & drop your PDF file or tap to choose</p>
+              <button id="pme-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose PDF</button>
               <input type="file" id="pme-file-input" class="hidden" accept=".pdf,application/pdf">
             </div>
           </div>
@@ -3018,11 +3093,11 @@
           <div id="icrop-empty-state" class="empty-drop-state">
             <div id="icrop-dropzone" class="tool-dropzone">
               <div class="dropzone-icon-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"></path></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path><path d="M1..."></path></svg>
               </div>
               <h3 class="dropzone-title">Upload Image to Crop</h3>
-              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag &amp; drop or browse</p>
-              <button id="icrop-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag &amp; drop or tap to choose</p>
+              <button id="icrop-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose Image</button>
               <input type="file" id="icrop-file-input" class="hidden" accept="image/*">
             </div>
           </div>
@@ -3035,49 +3110,55 @@
 
             <div class="workspace-grid">
               <div class="panel-card">
-                <h3 class="panel-title">Aspect Ratio &amp; Dimensions</h3>
+                <h3 class="panel-title">Aspect Ratio &amp; Settings</h3>
                 
-                <div class="presets-row" style="margin-bottom: 16px;">
-                  <button type="button" class="preset-btn icrop-ratio-btn active" data-ratio="free">Freeform</button>
-                  <button type="button" class="preset-btn icrop-ratio-btn" data-ratio="1:1">1:1 Square</button>
-                  <button type="button" class="preset-btn icrop-ratio-btn" data-ratio="16:9">16:9 Landscape</button>
-                  <button type="button" class="preset-btn icrop-ratio-btn" data-ratio="4:3">4:3 Photo</button>
-                  <button type="button" class="preset-btn icrop-ratio-btn" data-ratio="9:16">9:16 Story</button>
-                  <button type="button" class="preset-btn icrop-ratio-btn" data-ratio="3:2">3:2 Standard</button>
+                <div class="preset-pill-group" style="margin-bottom: 16px;">
+                  <button type="button" class="preset-pill icrop-ratio-btn active" data-ratio="free">Freeform</button>
+                  <button type="button" class="preset-pill icrop-ratio-btn" data-ratio="1:1">1:1</button>
+                  <button type="button" class="preset-pill icrop-ratio-btn" data-ratio="16:9">16:9</button>
+                  <button type="button" class="preset-pill icrop-ratio-btn" data-ratio="4:3">4:3</button>
+                  <button type="button" class="preset-pill icrop-ratio-btn" data-ratio="9:16">9:16</button>
                 </div>
 
-                <div class="metrics-row" style="grid-template-columns: 1fr 1fr; margin-bottom: 16px;">
-                  <div class="form-group" style="margin-bottom: 0;">
-                    <label for="icrop-width" class="form-label">Crop Width (px)</label>
-                    <input type="number" id="icrop-width" class="form-control" min="10">
+                <!-- Progressive Disclosure: Dimensions & Output Format -->
+                <details class="advanced-options-details">
+                  <summary class="advanced-options-summary">
+                    <span class="summary-title">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                      Crop Dimensions &amp; Output Format
+                    </span>
+                    <svg class="summary-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                  </summary>
+                  <div class="advanced-options-content">
+                    <div class="dims-row">
+                      <div class="input-with-unit-wrap">
+                        <input type="number" id="icrop-width" class="form-control" placeholder="Width" min="10">
+                        <span class="unit-badge">px</span>
+                      </div>
+                      <div class="input-with-unit-wrap">
+                        <input type="number" id="icrop-height" class="form-control" placeholder="Height" min="10">
+                        <span class="unit-badge">px</span>
+                      </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label for="icrop-format" class="form-label">Output Format</label>
+                      <select id="icrop-format" class="form-control">
+                        <option value="jpeg" selected>JPG (Standard Photo)</option>
+                        <option value="png">PNG (Lossless)</option>
+                        <option value="webp">WebP (Modern Compact)</option>
+                      </select>
+                    </div>
                   </div>
-                  <div class="form-group" style="margin-bottom: 0;">
-                    <label for="icrop-height" class="form-label">Crop Height (px)</label>
-                    <input type="number" id="icrop-height" class="form-control" min="10">
-                  </div>
-                </div>
+                </details>
 
-                <div class="form-group">
-                  <label for="icrop-format" class="form-label">Output Format</label>
-                  <select id="icrop-format" class="form-control">
-                    <option value="jpeg" selected>JPG (Standard Photo)</option>
-                    <option value="png">PNG (Lossless)</option>
-                    <option value="webp">WebP (Modern Compact)</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Quality</span>
-                    <span id="icrop-quality-val" class="range-val-badge">90%</span>
-                  </div>
-                  <input type="range" id="icrop-quality" class="range-slider" min="20" max="100" value="90">
-                </div>
-
-                <div class="button-group-row">
-                  <button id="icrop-crop-btn" type="button" class="btn btn-primary btn-lg">Crop &amp; Save Image</button>
-                  <button id="icrop-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Cropped Image</button>
-                  <button id="icrop-reset-btn" type="button" class="btn btn-ghost">Choose Another File</button>
+                <div class="button-group-row" style="margin-top: 20px;">
+                  <button id="icrop-crop-btn" type="button" class="btn btn-primary btn-action-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path></svg>
+                    <span>Apply Crop</span>
+                  </button>
+                  <button id="icrop-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Image</button>
+                  <button id="icrop-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -3101,8 +3182,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
               </div>
               <h3 class="dropzone-title">Upload Image to Rotate</h3>
-              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag &amp; drop or browse</p>
-              <button id="irot-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag &amp; drop or tap to choose</p>
+              <button id="irot-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose Image</button>
               <input type="file" id="irot-file-input" class="hidden" accept="image/*">
             </div>
           </div>
@@ -3124,35 +3205,10 @@
                   <button type="button" id="irot-reset-angle-btn" class="preset-btn">Reset (0°)</button>
                 </div>
 
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Fine-Tune Angle</span>
-                    <span id="irot-angle-val" class="range-val-badge">0°</span>
-                  </div>
-                  <input type="range" id="irot-angle-slider" class="range-slider" min="-180" max="180" value="0">
-                </div>
-
-                <div class="form-group">
-                  <label for="irot-format" class="form-label">Output Format</label>
-                  <select id="irot-format" class="form-control">
-                    <option value="jpeg" selected>JPG (Standard)</option>
-                    <option value="png">PNG (Lossless)</option>
-                    <option value="webp">WebP (Modern)</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Quality</span>
-                    <span id="irot-quality-val" class="range-val-badge">90%</span>
-                  </div>
-                  <input type="range" id="irot-quality" class="range-slider" min="20" max="100" value="90">
-                </div>
-
                 <div class="button-group-row">
-                  <button id="irot-apply-btn" type="button" class="btn btn-primary btn-lg">Apply &amp; Save Image</button>
-                  <button id="irot-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Rotated Image</button>
-                  <button id="irot-reset-btn" type="button" class="btn btn-ghost">Choose Another File</button>
+                  <button id="irot-apply-btn" type="button" class="btn btn-primary btn-action-primary">Rotate Image</button>
+                  <button id="irot-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Image</button>
+                  <button id="irot-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -3176,8 +3232,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 8 3 12 7 16"></polyline><polyline points="17 8 21 12 17 16"></polyline><line x1="3" y1="12" x2="21" y2="12"></line></svg>
               </div>
               <h3 class="dropzone-title">Upload Image to Flip</h3>
-              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag &amp; drop or browse</p>
-              <button id="iflip-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag &amp; drop or tap to choose</p>
+              <button id="iflip-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose Image</button>
               <input type="file" id="iflip-file-input" class="hidden" accept="image/*">
             </div>
           </div>
@@ -3193,32 +3249,14 @@
                 <h3 class="panel-title">Flip Orientation</h3>
                 
                 <div class="presets-row" style="margin-bottom: 16px;">
-                  <button type="button" id="iflip-h-btn" class="preset-btn">⇆ Flip Horizontal (Mirror)</button>
+                  <button type="button" id="iflip-h-btn" class="preset-btn">⇆ Flip Horizontal</button>
                   <button type="button" id="iflip-v-btn" class="preset-btn">⇅ Flip Vertical</button>
-                  <button type="button" id="iflip-reset-btn" class="preset-btn">Reset</button>
-                </div>
-
-                <div class="form-group">
-                  <label for="iflip-format" class="form-label">Output Format</label>
-                  <select id="iflip-format" class="form-control">
-                    <option value="jpeg" selected>JPG (Standard)</option>
-                    <option value="png">PNG (Lossless)</option>
-                    <option value="webp">WebP (Modern)</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Quality</span>
-                    <span id="iflip-quality-val" class="range-val-badge">90%</span>
-                  </div>
-                  <input type="range" id="iflip-quality" class="range-slider" min="20" max="100" value="90">
                 </div>
 
                 <div class="button-group-row">
-                  <button id="iflip-apply-btn" type="button" class="btn btn-primary btn-lg">Apply &amp; Save Image</button>
-                  <button id="iflip-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Flipped Image</button>
-                  <button id="iflip-tool-reset-btn" type="button" class="btn btn-ghost">Choose Another File</button>
+                  <button id="iflip-apply-btn" type="button" class="btn btn-primary btn-action-primary">Flip Image</button>
+                  <button id="iflip-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Image</button>
+                  <button id="iflip-tool-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -3242,8 +3280,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
               </div>
               <h3 class="dropzone-title">Upload Image to Add Watermark</h3>
-              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag &amp; drop or browse</p>
-              <button id="iwm-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag &amp; drop or tap to choose</p>
+              <button id="iwm-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose Image</button>
               <input type="file" id="iwm-file-input" class="hidden" accept="image/*">
             </div>
           </div>
@@ -3258,9 +3296,9 @@
               <div class="panel-card">
                 <h3 class="panel-title">Watermark Settings</h3>
                 
-                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                  <button type="button" id="iwm-type-text" class="btn btn-sm btn-primary" style="flex: 1;">Text Watermark</button>
-                  <button type="button" id="iwm-type-image" class="btn btn-sm btn-ghost" style="flex: 1;">Logo Stamp</button>
+                <div class="preset-pill-group" style="margin-bottom: 16px;">
+                  <button type="button" id="iwm-type-text" class="preset-pill active">Text Watermark</button>
+                  <button type="button" id="iwm-type-image" class="preset-pill">Image Logo</button>
                 </div>
 
                 <!-- Text options -->
@@ -3276,25 +3314,6 @@
                     </div>
                     <input type="range" id="iwm-font-size" class="range-slider" min="12" max="80" value="36">
                   </div>
-                  <div class="form-group">
-                    <label for="iwm-color" class="form-label">Text Color</label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                      <input type="color" id="iwm-color" value="#ffffff" style="width: 44px; height: 38px; border: none; border-radius: 6px; cursor: pointer;">
-                      <div class="presets-row">
-                        <button type="button" class="preset-btn iwm-color-preset" data-color="#ffffff">White</button>
-                        <button type="button" class="preset-btn iwm-color-preset" data-color="#000000">Black</button>
-                        <button type="button" class="preset-btn iwm-color-preset" data-color="#ff0000">Red</button>
-                        <button type="button" class="preset-btn iwm-color-preset" data-color="#6366f1">Indigo</button>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <div class="form-label">
-                      <span>Rotation Angle</span>
-                      <span id="iwm-rotation-val" class="range-val-badge">0°</span>
-                    </div>
-                    <input type="range" id="iwm-rotation" class="range-slider" min="-90" max="90" value="0">
-                  </div>
                 </div>
 
                 <!-- Image Logo options -->
@@ -3304,57 +3323,12 @@
                     <button type="button" id="iwm-logo-browse-btn" class="btn btn-secondary" style="width: 100%;">Select Logo (PNG, SVG, JPG)</button>
                     <input type="file" id="iwm-logo-input" class="hidden" accept="image/*">
                   </div>
-                  <div class="form-group">
-                    <div class="form-label">
-                      <span>Logo Scale</span>
-                      <span id="iwm-logo-scale-val" class="range-val-badge">40%</span>
-                    </div>
-                    <input type="range" id="iwm-logo-scale" class="range-slider" min="10" max="150" value="40">
-                  </div>
                 </div>
 
-                <!-- Shared options -->
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Opacity</span>
-                    <span id="iwm-opacity-val" class="range-val-badge">50%</span>
-                  </div>
-                  <input type="range" id="iwm-opacity" class="range-slider" min="5" max="100" value="50">
-                </div>
-
-                <div class="form-group">
-                  <label for="iwm-position" class="form-label">Position Placement</label>
-                  <select id="iwm-position" class="form-control">
-                    <option value="center" selected>Center</option>
-                    <option value="tiled">Tiled / Repeated Across Image</option>
-                    <option value="bottom-right">Bottom Right</option>
-                    <option value="bottom-left">Bottom Left</option>
-                    <option value="top-right">Top Right</option>
-                    <option value="top-left">Top Left</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label for="iwm-format" class="form-label">Output Format</label>
-                  <select id="iwm-format" class="form-control">
-                    <option value="jpeg" selected>JPG (Standard Photo)</option>
-                    <option value="png">PNG (Lossless)</option>
-                    <option value="webp">WebP (Modern Compact)</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Quality</span>
-                    <span id="iwm-quality-val" class="range-val-badge">90%</span>
-                  </div>
-                  <input type="range" id="iwm-quality" class="range-slider" min="20" max="100" value="90">
-                </div>
-
-                <div class="button-group-row">
-                  <button id="iwm-apply-btn" type="button" class="btn btn-primary btn-lg">Apply &amp; Save</button>
+                <div class="button-group-row" style="margin-top: 20px;">
+                  <button id="iwm-apply-btn" type="button" class="btn btn-primary btn-action-primary">Apply Watermark</button>
                   <button id="iwm-download-btn" type="button" class="btn btn-success btn-lg hidden">Download Watermarked Image</button>
-                  <button id="iwm-reset-btn" type="button" class="btn btn-ghost">Clear</button>
+                  <button id="iwm-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -3378,8 +3352,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
               </div>
               <h3 class="dropzone-title">Upload Images to Remove EXIF &amp; GPS Data</h3>
-              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Batch upload allowed</p>
-              <button id="imr-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <p class="dropzone-desc">Supports JPG, PNG, WebP &bull; Drag &amp; drop or tap to choose</p>
+              <button id="imr-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Add Images</button>
               <input type="file" id="imr-file-input" class="hidden" multiple accept="image/*">
             </div>
           </div>
@@ -3398,18 +3372,10 @@
                   <strong>100% Privacy Protection:</strong> Strips GPS geolocation coordinates, camera model, date &amp; timestamps, serial numbers, and thumbnail caches.
                 </div>
 
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Output Image Quality</span>
-                    <span id="imr-quality-val" class="range-val-badge">92%</span>
-                  </div>
-                  <input type="range" id="imr-quality" class="range-slider" min="50" max="100" value="92">
-                </div>
-
                 <div class="button-group-row">
-                  <button id="imr-strip-btn" type="button" class="btn btn-primary btn-lg">Remove Metadata 🛡️</button>
+                  <button id="imr-strip-btn" type="button" class="btn btn-primary btn-action-primary">Strip Metadata 🛡️</button>
                   <button id="imr-download-all-btn" type="button" class="btn btn-success btn-lg hidden">Download Clean Images (ZIP)</button>
-                  <button id="imr-reset-btn" type="button" class="btn btn-ghost">Add More Files</button>
+                  <button id="imr-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -3432,7 +3398,7 @@
               </div>
               <h3 class="dropzone-title">Upload Image for Grayscale Conversion</h3>
               <p class="dropzone-desc">Convert to black &amp; white, high-contrast monochrome, or sepia tone</p>
-              <button id="ig-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <button id="ig-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose Image</button>
               <input type="file" id="ig-file-input" class="hidden" accept="image/*">
             </div>
           </div>
@@ -3447,15 +3413,6 @@
               <div class="panel-card">
                 <h3 class="panel-title">Grayscale Adjustments</h3>
 
-                <div class="metric-card" style="margin-bottom: 20px;">
-                  <p class="metric-label">Selected Image</p>
-                  <p id="ig-file-name" class="metric-value" style="font-size: 1rem; word-break: break-all;">image.jpg</p>
-                  <div style="display: flex; gap: 16px; margin-top: 8px;">
-                    <span id="ig-file-size" class="badge badge-neutral">-</span>
-                    <span id="ig-file-dims" class="badge badge-info">-</span>
-                  </div>
-                </div>
-
                 <div class="form-group">
                   <label for="ig-mode" class="form-label">Conversion Mode</label>
                   <select id="ig-mode" class="form-control">
@@ -3466,35 +3423,10 @@
                   </select>
                 </div>
 
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Contrast</span>
-                    <span id="ig-contrast-val" class="range-val-badge">0</span>
-                  </div>
-                  <input type="range" id="ig-contrast-slider" class="range-slider" min="-100" max="100" value="0">
-                </div>
-
-                <div class="form-group">
-                  <div class="form-label">
-                    <span>Brightness</span>
-                    <span id="ig-brightness-val" class="range-val-badge">0</span>
-                  </div>
-                  <input type="range" id="ig-brightness-slider" class="range-slider" min="-100" max="100" value="0">
-                </div>
-
-                <div class="form-group">
-                  <label for="ig-format" class="form-label">Output Format</label>
-                  <select id="ig-format" class="form-control">
-                    <option value="jpeg" selected>JPG (Standard Photo)</option>
-                    <option value="png">PNG (Lossless)</option>
-                    <option value="webp">WebP (Modern Compact)</option>
-                  </select>
-                </div>
-
                 <div class="button-group-row">
-                  <button id="ig-apply-btn" type="button" class="btn btn-primary">Apply Filters</button>
+                  <button id="ig-apply-btn" type="button" class="btn btn-primary btn-action-primary">Convert to Grayscale</button>
                   <button id="ig-download-btn" type="button" class="btn btn-success btn-lg">Download Image</button>
-                  <button id="ig-reset-btn" type="button" class="btn btn-ghost">Change Image</button>
+                  <button id="ig-reset-btn" type="button" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
               </div>
 
@@ -3519,7 +3451,7 @@
               </div>
               <h3 class="dropzone-title">Upload Image to Encode to Base64</h3>
               <p class="dropzone-desc">Generates Data URI, Raw Base64 string, HTML &lt;img&gt; tag &amp; CSS background</p>
-              <button id="i2b-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <button id="i2b-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Choose Image</button>
               <input type="file" id="i2b-file-input" class="hidden" accept="image/*">
             </div>
           </div>
@@ -3599,9 +3531,9 @@
                 </div>
 
                 <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                  <button type="button" id="b2i-render-btn" class="btn btn-primary" style="flex: 1;">Decode Image ⚡</button>
+                  <button type="button" id="b2i-render-btn" class="btn btn-primary btn-action-primary" style="flex: 1;">Decode Image ⚡</button>
                   <button type="button" id="b2i-sample-btn" class="btn btn-secondary">Load Sample</button>
-                  <button type="button" id="b2i-clear-btn" class="btn btn-ghost">Clear</button>
+                  <button type="button" id="b2i-clear-btn" class="btn btn-ghost">Clear All & Start Over</button>
                 </div>
 
                 <div id="b2i-result-card" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border-subtle); padding-top: 16px;">
@@ -3802,7 +3734,7 @@
               </div>
               <h3 class="dropzone-title">Drop Files to Create ZIP Archive</h3>
               <p class="dropzone-desc">Combine multiple files or folders into a single compressed .zip file in browser memory</p>
-              <button id="zipc-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
+              <button id="zipc-browse-btn" type="button" class="btn btn-primary btn-action-primary">+ Add Files</button>
               <input type="file" id="zipc-file-input" class="hidden" multiple>
             </div>
           </div>
@@ -3814,7 +3746,7 @@
                   <h3 class="panel-title" style="margin-bottom: 0;">Files in Archive</h3>
                   <div style="display: flex; gap: 8px;">
                     <button type="button" id="zipc-add-more-btn" class="btn btn-xs btn-secondary">+ Add More</button>
-                    <button type="button" id="zipc-reset-btn" class="btn btn-xs btn-ghost">Clear All</button>
+                    <button type="button" id="zipc-reset-btn" class="btn btn-xs btn-ghost">Clear All & Start Over</button>
                   </div>
                 </div>
 
@@ -3859,7 +3791,7 @@
                 </div>
 
                 <div style="margin-top: 20px;">
-                  <button type="button" id="zipc-create-btn" class="btn btn-primary btn-block">Build &amp; Download ZIP</button>
+                  <button type="button" id="zipc-create-btn" class="btn btn-primary btn-action-primary btn-block">Create ZIP Archive</button>
                 </div>
               </div>
             </div>
@@ -4532,12 +4464,18 @@
               <span>Auto-trim empty margins around signature</span>
             </label>
           </div>
+
+          <!-- Legal Disclaimer Notice -->
+          <div class="signature-disclaimer-box" style="margin-top: 14px;">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="flex-shrink:0; margin-top:2px; color: var(--color-warning);"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+            <span><strong>Disclaimer:</strong> FileForge’s Signature feature only places a user-provided signature image onto a document. It does not create, verify, authenticate, or certify a legally valid digital signature or electronic signature.</span>
+          </div>
         </div>
       </div>
 
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
         <button type="button" id="i2p-sig-cancel-btn" class="btn btn-secondary">Cancel</button>
-        <button type="button" id="i2p-sig-use-btn" class="btn btn-primary" disabled>Place Signature on PDF</button>
+        <button type="button" id="i2p-sig-use-btn" class="btn btn-primary btn-action-primary" disabled>Place Signature on PDF</button>
       </div>
     </div>
   </div>

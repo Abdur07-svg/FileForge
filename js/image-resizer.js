@@ -1,12 +1,20 @@
 /**
  * FileForge - Image Resizer Tool
- * Batch image resizing with pixel dimension lock, percentage scaling, and format output.
+ * Batch image resizing with interactive canvas drag-handles (laptop cursor & mobile touch support),
+ * pixel dimension lock, percentage scaling, and format output.
  */
 
 const ImageResizer = (() => {
-  let files = []; // { file, name, dataUrl, origWidth, origHeight, origSize, resizedBlob, resizedUrl, resizedWidth, resizedHeight }
+  let files = []; // { file, name, dataUrl, img, origWidth, origHeight, origSize, resizedBlob, resizedUrl, resizedWidth, resizedHeight }
   let activeIndex = 0;
   let resizeMode = 'dimensions'; // 'dimensions' or 'percentage'
+
+  // Interactive Canvas Drag State
+  let resizeRect = { x: 0, y: 0, w: 200, h: 200 };
+  let canvasScale = 1;
+  let isDragging = false;
+  let dragMode = null; // 'nw' | 'ne' | 'se' | 'sw' | 'e' | 's' | 'move'
+  let dragStart = { x: 0, y: 0, rectX: 0, rectY: 0, rectW: 0, rectH: 0 };
 
   let dom = {};
 
@@ -20,6 +28,9 @@ const ImageResizer = (() => {
       emptyState: document.getElementById('ir-empty-state'),
       fileList: document.getElementById('ir-file-list'),
       
+      // Interactive Canvas
+      resizeCanvas: document.getElementById('ir-canvas'),
+
       // Mode switch
       modeDimsRadio: document.getElementById('ir-mode-dims'),
       modePctRadio: document.getElementById('ir-mode-pct'),
@@ -48,6 +59,7 @@ const ImageResizer = (() => {
       
       // Actions
       resizeBtn: document.getElementById('ir-resize-btn'),
+      cropBtn: document.getElementById('ir-crop-btn'),
       downloadBtn: document.getElementById('ir-download-btn'),
       downloadAllBtn: document.getElementById('ir-download-all-btn'),
       resetBtn: document.getElementById('ir-reset-btn'),
@@ -70,58 +82,88 @@ const ImageResizer = (() => {
     });
 
     // Mode toggle
-    dom.modeDimsRadio.addEventListener('change', () => {
-      resizeMode = 'dimensions';
-      dom.dimsPanel.classList.remove('hidden');
-      dom.pctPanel.classList.add('hidden');
-      updateDimensionsFromMode();
-    });
+    if (dom.modeDimsRadio) {
+      dom.modeDimsRadio.addEventListener('change', () => {
+        resizeMode = 'dimensions';
+        dom.dimsPanel.classList.remove('hidden');
+        dom.pctPanel.classList.add('hidden');
+        updateDimensionsFromMode();
+        syncCanvasFromInputs();
+      });
+    }
 
-    dom.modePctRadio.addEventListener('change', () => {
-      resizeMode = 'percentage';
-      dom.dimsPanel.classList.add('hidden');
-      dom.pctPanel.classList.remove('hidden');
-      updateDimensionsFromMode();
-    });
+    if (dom.modePctRadio) {
+      dom.modePctRadio.addEventListener('change', () => {
+        resizeMode = 'percentage';
+        dom.dimsPanel.classList.add('hidden');
+        dom.pctPanel.classList.remove('hidden');
+        updateDimensionsFromMode();
+        syncCanvasFromInputs();
+      });
+    }
 
     // Percentage slider & presets
-    dom.pctSlider.addEventListener('input', (e) => {
-      dom.pctVal.textContent = e.target.value + '%';
-      updateDimensionsFromMode();
-    });
-
-    dom.pctPresets.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const val = btn.dataset.pct;
-        dom.pctSlider.value = val;
-        dom.pctVal.textContent = val + '%';
+    if (dom.pctSlider) {
+      dom.pctSlider.addEventListener('input', (e) => {
+        dom.pctVal.textContent = e.target.value + '%';
         updateDimensionsFromMode();
+        syncCanvasFromInputs();
       });
-    });
+    }
+
+    if (dom.pctPresets) {
+      dom.pctPresets.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.dataset.pct;
+          dom.pctSlider.value = val;
+          dom.pctVal.textContent = val + '%';
+          updateDimensionsFromMode();
+          syncCanvasFromInputs();
+        });
+      });
+    }
 
     // Dimension inputs with ratio lock
-    dom.widthInput.addEventListener('input', () => {
-      const active = files[activeIndex];
-      if (active && dom.aspectRatioCheck.checked && dom.widthInput.value) {
-        const ratio = active.origWidth / active.origHeight;
-        dom.heightInput.value = Math.max(1, Math.round(dom.widthInput.value / ratio));
-      }
-      updatePreviewStats();
-    });
+    if (dom.widthInput) {
+      dom.widthInput.addEventListener('input', () => {
+        const active = files[activeIndex];
+        if (active && dom.aspectRatioCheck.checked && dom.widthInput.value) {
+          const ratio = active.origWidth / active.origHeight;
+          dom.heightInput.value = Math.max(1, Math.round(dom.widthInput.value / ratio));
+        }
+        updatePreviewStats();
+        syncCanvasFromInputs();
+      });
+    }
 
-    dom.heightInput.addEventListener('input', () => {
-      const active = files[activeIndex];
-      if (active && dom.aspectRatioCheck.checked && dom.heightInput.value) {
-        const ratio = active.origWidth / active.origHeight;
-        dom.widthInput.value = Math.max(1, Math.round(dom.heightInput.value * ratio));
-      }
-      updatePreviewStats();
-    });
+    if (dom.heightInput) {
+      dom.heightInput.addEventListener('input', () => {
+        const active = files[activeIndex];
+        if (active && dom.aspectRatioCheck.checked && dom.heightInput.value) {
+          const ratio = active.origWidth / active.origHeight;
+          dom.widthInput.value = Math.max(1, Math.round(dom.heightInput.value * ratio));
+        }
+        updatePreviewStats();
+        syncCanvasFromInputs();
+      });
+    }
 
-    dom.resizeBtn.addEventListener('click', resizeAll);
-    dom.downloadBtn.addEventListener('click', downloadCurrent);
-    dom.downloadAllBtn.addEventListener('click', downloadAll);
-    dom.resetBtn.addEventListener('click', resetTool);
+    // Interactive Canvas Pointer & Touch Events (Laptop Cursor & Mobile Touch Finger Support)
+    if (dom.resizeCanvas) {
+      dom.resizeCanvas.addEventListener('mousedown', onPointerDown);
+      window.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('mouseup', onPointerUp);
+
+      dom.resizeCanvas.addEventListener('touchstart', onTouchStart, { passive: false });
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', onPointerUp);
+    }
+
+    if (dom.resizeBtn) dom.resizeBtn.addEventListener('click', resizeAll);
+    if (dom.cropBtn) dom.cropBtn.addEventListener('click', cropSelection);
+    if (dom.downloadBtn) dom.downloadBtn.addEventListener('click', downloadCurrent);
+    if (dom.downloadAllBtn) dom.downloadAllBtn.addEventListener('click', downloadAll);
+    if (dom.resetBtn) dom.resetBtn.addEventListener('click', resetTool);
   }
 
   async function handleFiles(newFiles) {
@@ -151,6 +193,7 @@ const ImageResizer = (() => {
           file,
           name: file.name,
           dataUrl,
+          img,
           origWidth: img.naturalWidth,
           origHeight: img.naturalHeight,
           origSize: file.size,
@@ -167,7 +210,7 @@ const ImageResizer = (() => {
       activeIndex = 0;
       updateActiveFile();
       renderFileList();
-      Utils.showToast(`Loaded ${valid.length} image(s). Adjust settings and click Resize!`, 'success');
+      Utils.showToast(`Loaded ${valid.length} image(s). Drag handles on canvas or use inputs to resize!`, 'success');
     } catch (err) {
       console.error(err);
       Utils.showToast('Error loading images: ' + err.message, 'error');
@@ -183,7 +226,7 @@ const ImageResizer = (() => {
 
     dom.origDimsText.textContent = `${active.origWidth} × ${active.origHeight} px`;
     dom.origSizeText.textContent = Utils.formatBytes(active.origSize);
-    dom.previewImg.src = active.resizedUrl || active.dataUrl;
+    if (dom.previewImg) dom.previewImg.src = active.resizedUrl || active.dataUrl;
 
     if (active.resizedBlob) {
       dom.newDimsText.textContent = `${active.resizedWidth} × ${active.resizedHeight} px`;
@@ -196,6 +239,7 @@ const ImageResizer = (() => {
     }
 
     updateDimensionsFromMode();
+    initResizeCanvas();
 
     if (files.length > 1) {
       dom.downloadAllBtn.classList.remove('hidden');
@@ -204,21 +248,276 @@ const ImageResizer = (() => {
     }
   }
 
+  function initResizeCanvas() {
+    const active = files[activeIndex];
+    if (!active || !dom.resizeCanvas) return;
+
+    const maxW = 680;
+    const maxH = 460;
+
+    let displayW = active.origWidth;
+    let displayH = active.origHeight;
+
+    if (displayW > maxW || displayH > maxH) {
+      const scaleX = maxW / displayW;
+      const scaleY = maxH / displayH;
+      canvasScale = Math.min(scaleX, scaleY);
+      displayW = Math.round(displayW * canvasScale);
+      displayH = Math.round(displayH * canvasScale);
+    } else {
+      canvasScale = 1;
+    }
+
+    dom.resizeCanvas.width = displayW;
+    dom.resizeCanvas.height = displayH;
+
+    syncCanvasFromInputs();
+  }
+
+  function syncCanvasFromInputs() {
+    const active = files[activeIndex];
+    if (!active || !dom.resizeCanvas) return;
+
+    const userW = parseInt(dom.widthInput.value, 10) || active.origWidth;
+    const userH = parseInt(dom.heightInput.value, 10) || active.origHeight;
+
+    const displayW = Math.min(dom.resizeCanvas.width, Math.round(userW * canvasScale));
+    const displayH = Math.min(dom.resizeCanvas.height, Math.round(userH * canvasScale));
+
+    resizeRect = {
+      x: Math.round((dom.resizeCanvas.width - displayW) / 2),
+      y: Math.round((dom.resizeCanvas.height - displayH) / 2),
+      w: Math.max(20, displayW),
+      h: Math.max(20, displayH)
+    };
+
+    drawResizeCanvas();
+  }
+
+  function drawResizeCanvas() {
+    const active = files[activeIndex];
+    if (!active || !dom.resizeCanvas) return;
+
+    const canvas = dom.resizeCanvas;
+    const ctx = canvas.getContext('2d');
+
+    // 1. Draw base image scaled to display canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(active.img, 0, 0, canvas.width, canvas.height);
+
+    // 2. Darken area outside target resize box
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+    ctx.fillRect(0, 0, canvas.width, resizeRect.y);
+    ctx.fillRect(0, resizeRect.y + resizeRect.h, canvas.width, canvas.height - (resizeRect.y + resizeRect.h));
+    ctx.fillRect(0, resizeRect.y, resizeRect.x, resizeRect.h);
+    ctx.fillRect(resizeRect.x + resizeRect.w, resizeRect.y, canvas.width - (resizeRect.x + resizeRect.w), resizeRect.h);
+
+    // 3. Glowing bounding box
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(resizeRect.x, resizeRect.y, resizeRect.w, resizeRect.h);
+
+    // 4. Handles (Corners & Middle Edges)
+    const handleSize = 12;
+    ctx.fillStyle = '#3b82f6';
+
+    const corners = [
+      { x: resizeRect.x, y: resizeRect.y }, // NW
+      { x: resizeRect.x + resizeRect.w, y: resizeRect.y }, // NE
+      { x: resizeRect.x + resizeRect.w, y: resizeRect.y + resizeRect.h }, // SE
+      { x: resizeRect.x, y: resizeRect.y + resizeRect.h }, // SW
+      { x: resizeRect.x + resizeRect.w / 2, y: resizeRect.y + resizeRect.h }, // S
+      { x: resizeRect.x + resizeRect.w, y: resizeRect.y + resizeRect.h / 2 }  // E
+    ];
+
+    corners.forEach(c => {
+      ctx.fillRect(c.x - handleSize / 2, c.y - handleSize / 2, handleSize, handleSize);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(c.x - handleSize / 2, c.y - handleSize / 2, handleSize, handleSize);
+    });
+
+    // 5. Dimension Badge on top of resize box
+    const realW = Math.round(resizeRect.w / canvasScale);
+    const realH = Math.round(resizeRect.h / canvasScale);
+    const badgeText = `${realW} × ${realH} px`;
+
+    ctx.font = 'bold 12px sans-serif';
+    const textWidth = ctx.measureText(badgeText).width;
+    const badgeX = Math.max(5, resizeRect.x + (resizeRect.w - textWidth - 16) / 2);
+    const badgeY = Math.max(22, resizeRect.y - 8);
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY - 14, textWidth + 16, 20, 4);
+      ctx.fill();
+    } else {
+      ctx.fillRect(badgeX, badgeY - 14, textWidth + 16, 20);
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(badgeText, badgeX + 8, badgeY);
+  }
+
+  function getCanvasCoords(e) {
+    const rect = dom.resizeCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * (dom.resizeCanvas.width / rect.width),
+      y: (clientY - rect.top) * (dom.resizeCanvas.height / rect.height)
+    };
+  }
+
+  function onPointerDown(e) {
+    if (!files[activeIndex] || !dom.resizeCanvas) return;
+    const coords = getCanvasCoords(e);
+    const hSize = 20;
+
+    // Check handle collision
+    if (Math.abs(coords.x - resizeRect.x) < hSize && Math.abs(coords.y - resizeRect.y) < hSize) {
+      dragMode = 'nw';
+    } else if (Math.abs(coords.x - (resizeRect.x + resizeRect.w)) < hSize && Math.abs(coords.y - resizeRect.y) < hSize) {
+      dragMode = 'ne';
+    } else if (Math.abs(coords.x - (resizeRect.x + resizeRect.w)) < hSize && Math.abs(coords.y - (resizeRect.y + resizeRect.h)) < hSize) {
+      dragMode = 'se';
+    } else if (Math.abs(coords.x - resizeRect.x) < hSize && Math.abs(coords.y - (resizeRect.y + resizeRect.h)) < hSize) {
+      dragMode = 'sw';
+    } else if (Math.abs(coords.x - (resizeRect.x + resizeRect.w / 2)) < hSize && Math.abs(coords.y - (resizeRect.y + resizeRect.h)) < hSize) {
+      dragMode = 's';
+    } else if (Math.abs(coords.x - (resizeRect.x + resizeRect.w)) < hSize && Math.abs(coords.y - (resizeRect.y + resizeRect.h / 2)) < hSize) {
+      dragMode = 'e';
+    } else if (coords.x >= resizeRect.x && coords.x <= resizeRect.x + resizeRect.w && coords.y >= resizeRect.y && coords.y <= resizeRect.y + resizeRect.h) {
+      dragMode = 'move';
+    } else {
+      dragMode = null;
+      return;
+    }
+
+    isDragging = true;
+    dragStart = {
+      x: coords.x,
+      y: coords.y,
+      rectX: resizeRect.x,
+      rectY: resizeRect.y,
+      rectW: resizeRect.w,
+      rectH: resizeRect.h
+    };
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging || !dom.resizeCanvas) return;
+    const coords = getCanvasCoords(e);
+    const dx = coords.x - dragStart.x;
+    const dy = coords.y - dragStart.y;
+    const active = files[activeIndex];
+    const lockRatio = dom.aspectRatioCheck ? dom.aspectRatioCheck.checked : true;
+    const ratio = active ? (active.origWidth / active.origHeight) : 1;
+
+    if (dragMode === 'move') {
+      let newX = dragStart.rectX + dx;
+      let newY = dragStart.rectY + dy;
+      newX = Math.max(0, Math.min(dom.resizeCanvas.width - resizeRect.w, newX));
+      newY = Math.max(0, Math.min(dom.resizeCanvas.height - resizeRect.h, newY));
+      resizeRect.x = newX;
+      resizeRect.y = newY;
+    } else if (dragMode === 'se') {
+      let newW = Math.max(20, Math.min(dom.resizeCanvas.width - dragStart.rectX, dragStart.rectW + dx));
+      let newH = lockRatio ? Math.round(newW / ratio) : Math.max(20, Math.min(dom.resizeCanvas.height - dragStart.rectY, dragStart.rectH + dy));
+      resizeRect.w = newW;
+      resizeRect.h = newH;
+    } else if (dragMode === 'e') {
+      let newW = Math.max(20, Math.min(dom.resizeCanvas.width - dragStart.rectX, dragStart.rectW + dx));
+      let newH = lockRatio ? Math.round(newW / ratio) : resizeRect.h;
+      resizeRect.w = newW;
+      resizeRect.h = newH;
+    } else if (dragMode === 's') {
+      let newH = Math.max(20, Math.min(dom.resizeCanvas.height - dragStart.rectY, dragStart.rectH + dy));
+      let newW = lockRatio ? Math.round(newH * ratio) : resizeRect.w;
+      resizeRect.w = newW;
+      resizeRect.h = newH;
+    } else if (dragMode === 'sw') {
+      let newX = Math.max(0, Math.min(dragStart.rectX + dragStart.rectW - 20, dragStart.rectX + dx));
+      let newW = (dragStart.rectX + dragStart.rectW) - newX;
+      let newH = lockRatio ? Math.round(newW / ratio) : Math.max(20, Math.min(dom.resizeCanvas.height - dragStart.rectY, dragStart.rectH + dy));
+      resizeRect.x = newX;
+      resizeRect.w = newW;
+      resizeRect.h = newH;
+    } else if (dragMode === 'ne') {
+      let newY = Math.max(0, Math.min(dragStart.rectY + dragStart.rectH - 20, dragStart.rectY + dy));
+      let newH = (dragStart.rectY + dragStart.rectH) - newY;
+      let newW = lockRatio ? Math.round(newH * ratio) : Math.max(20, Math.min(dom.resizeCanvas.width - dragStart.rectX, dragStart.rectW + dx));
+      resizeRect.y = newY;
+      resizeRect.h = newH;
+      resizeRect.w = newW;
+    } else if (dragMode === 'nw') {
+      let newX = Math.max(0, Math.min(dragStart.rectX + dragStart.rectW - 20, dragStart.rectX + dx));
+      let newY = Math.max(0, Math.min(dragStart.rectY + dragStart.rectH - 20, dragStart.rectY + dy));
+      let newW = (dragStart.rectX + dragStart.rectW) - newX;
+      let newH = lockRatio ? Math.round(newW / ratio) : (dragStart.rectY + dragStart.rectH) - newY;
+      resizeRect.x = newX;
+      resizeRect.y = newY;
+      resizeRect.w = newW;
+      resizeRect.h = newH;
+    }
+
+    updateInputsFromRect();
+    drawResizeCanvas();
+  }
+
+  function updateInputsFromRect() {
+    const active = files[activeIndex];
+    if (!active) return;
+    const realW = Math.max(1, Math.round(resizeRect.w / canvasScale));
+    const realH = Math.max(1, Math.round(resizeRect.h / canvasScale));
+
+    if (dom.widthInput) dom.widthInput.value = realW;
+    if (dom.heightInput) dom.heightInput.value = realH;
+
+    if (resizeMode === 'percentage' && dom.pctSlider && dom.pctVal) {
+      const pct = Math.round((realW / active.origWidth) * 100);
+      dom.pctSlider.value = pct;
+      dom.pctVal.textContent = pct + '%';
+    }
+
+    updatePreviewStats();
+  }
+
+  function onPointerUp() {
+    isDragging = false;
+    dragMode = null;
+  }
+
+  function onTouchStart(e) {
+    if (e.touches.length === 1) {
+      e.preventDefault();
+      onPointerDown(e);
+    }
+  }
+
+  function onTouchMove(e) {
+    if (isDragging && e.touches.length === 1) {
+      e.preventDefault();
+      onPointerMove(e);
+    }
+  }
+
   function updateDimensionsFromMode() {
     const active = files[activeIndex];
     if (!active) return;
 
-    if (resizeMode === 'percentage') {
+    if (resizeMode === 'percentage' && dom.pctSlider) {
       const pct = parseInt(dom.pctSlider.value, 10) / 100;
       const targetW = Math.max(1, Math.round(active.origWidth * pct));
       const targetH = Math.max(1, Math.round(active.origHeight * pct));
-      dom.widthInput.value = targetW;
-      dom.heightInput.value = targetH;
+      if (dom.widthInput) dom.widthInput.value = targetW;
+      if (dom.heightInput) dom.heightInput.value = targetH;
     } else {
-      if (!dom.widthInput.value || dom.widthInput.value <= 0) {
+      if (dom.widthInput && (!dom.widthInput.value || dom.widthInput.value <= 0)) {
         dom.widthInput.value = active.origWidth;
       }
-      if (!dom.heightInput.value || dom.heightInput.value <= 0) {
+      if (dom.heightInput && (!dom.heightInput.value || dom.heightInput.value <= 0)) {
         dom.heightInput.value = active.origHeight;
       }
     }
@@ -226,6 +525,7 @@ const ImageResizer = (() => {
   }
 
   function updatePreviewStats() {
+    if (!dom.widthInput || !dom.heightInput || !dom.newDimsText) return;
     const w = parseInt(dom.widthInput.value, 10);
     const h = parseInt(dom.heightInput.value, 10);
     if (w && h) {
@@ -234,6 +534,7 @@ const ImageResizer = (() => {
   }
 
   function renderFileList() {
+    if (!dom.fileList) return;
     dom.fileList.innerHTML = '';
     if (files.length <= 1) {
       dom.fileList.classList.add('hidden');
@@ -326,11 +627,11 @@ const ImageResizer = (() => {
     Utils.setProcessing(true);
     showProgress(10, 'Resizing image(s)...');
 
-    const format = dom.formatSelect.value;
+    const format = dom.formatSelect ? dom.formatSelect.value : 'original';
     const active = files[activeIndex];
-    const userTargetW = parseInt(dom.widthInput.value, 10) || active.origWidth;
-    const userTargetH = parseInt(dom.heightInput.value, 10) || active.origHeight;
-    const pct = parseInt(dom.pctSlider.value, 10) / 100;
+    const userTargetW = parseInt(dom.widthInput ? dom.widthInput.value : active.origWidth, 10) || active.origWidth;
+    const userTargetH = parseInt(dom.heightInput ? dom.heightInput.value : active.origHeight, 10) || active.origHeight;
+    const pct = parseInt(dom.pctSlider ? dom.pctSlider.value : 100, 10) / 100;
 
     try {
       for (let i = 0; i < files.length; i++) {
@@ -343,12 +644,10 @@ const ImageResizer = (() => {
           targetW = Math.max(1, Math.round(item.origWidth * pct));
           targetH = Math.max(1, Math.round(item.origHeight * pct));
         } else {
-          // If single image or active image, use exact user dimensions
           if (i === activeIndex) {
             targetW = userTargetW;
             targetH = userTargetH;
           } else {
-            // For batch images with different dimensions, apply proportional scaling
             const scaleFactor = userTargetW / active.origWidth;
             targetW = Math.max(1, Math.round(item.origWidth * scaleFactor));
             targetH = Math.max(1, Math.round(item.origHeight * scaleFactor));
@@ -371,6 +670,65 @@ const ImageResizer = (() => {
     } catch (err) {
       console.error(err);
       Utils.showToast('Resize failed: ' + err.message, 'error');
+    } finally {
+      Utils.setProcessing(false);
+      hideProgress();
+    }
+  }
+
+  async function cropSelection() {
+    const active = files[activeIndex];
+    if (!active) return;
+
+    Utils.setProcessing(true);
+    showProgress(30, 'Cropping selected area...');
+
+    try {
+      const realX = Math.round(resizeRect.x / canvasScale);
+      const realY = Math.round(resizeRect.y / canvasScale);
+      const realW = Math.round(resizeRect.w / canvasScale);
+      const realH = Math.round(resizeRect.h / canvasScale);
+
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = realW;
+      outCanvas.height = realH;
+      const ctx = outCanvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      ctx.drawImage(active.img, realX, realY, realW, realH, 0, 0, realW, realH);
+
+      const format = dom.formatSelect ? dom.formatSelect.value : 'original';
+      let mime = 'image/jpeg';
+      let ext = 'jpg';
+      if (format === 'png') { mime = 'image/png'; ext = 'png'; }
+      else if (format === 'webp') { mime = 'image/webp'; ext = 'webp'; }
+      else if (format === 'original') {
+        mime = active.file.type || 'image/jpeg';
+        ext = Utils.getExtension(active.name) || 'jpg';
+      }
+
+      showProgress(70, 'Encoding cropped selection...');
+      const blob = await Utils.canvasToBlob(outCanvas, mime, 0.9);
+      if (active.resizedUrl) URL.revokeObjectURL(active.resizedUrl);
+
+      active.resizedBlob = blob;
+      active.resizedUrl = URL.createObjectURL(blob);
+      active.resizedWidth = realW;
+      active.resizedHeight = realH;
+      active.outputExt = ext;
+
+      const newImg = await Utils.loadImage(active.resizedUrl);
+      active.img = newImg;
+      active.origWidth = realW;
+      active.origHeight = realH;
+
+      updateActiveFile();
+      renderFileList();
+      Utils.showToast(`Cropped selection to ${realW} × ${realH} px! Click Download Image to save.`, 'success');
+    } catch (err) {
+      console.error(err);
+      Utils.showToast('Crop failed: ' + err.message, 'error');
     } finally {
       Utils.setProcessing(false);
       hideProgress();
@@ -411,14 +769,17 @@ const ImageResizer = (() => {
     });
     files = [];
     activeIndex = 0;
-    dom.emptyState.classList.remove('hidden');
-    dom.workspace.classList.add('hidden');
-    dom.downloadBtn.disabled = true;
-    dom.previewImg.src = '';
-    dom.origDimsText.textContent = '-';
-    dom.origSizeText.textContent = '-';
-    dom.newDimsText.textContent = '-';
-    dom.newSizeText.textContent = '-';
+    isDragging = false;
+    dragMode = null;
+
+    if (dom.emptyState) dom.emptyState.classList.remove('hidden');
+    if (dom.workspace) dom.workspace.classList.add('hidden');
+    if (dom.downloadBtn) dom.downloadBtn.disabled = true;
+    if (dom.previewImg) dom.previewImg.src = '';
+    if (dom.origDimsText) dom.origDimsText.textContent = '-';
+    if (dom.origSizeText) dom.origSizeText.textContent = '-';
+    if (dom.newDimsText) dom.newDimsText.textContent = '-';
+    if (dom.newSizeText) dom.newSizeText.textContent = '-';
   }
 
   function showProgress(percent, text) {
