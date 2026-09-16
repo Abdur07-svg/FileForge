@@ -4771,3 +4771,163 @@ input.form-control.input-success {
   transform: scale(1);
 }
 
+/* ==========================================================================
+   MOBILE-ONLY HOW TO USE TOOL GUIDE COMPONENT
+   ========================================================================== */
+
+.tool-guide-wrapper {
+  margin-top: 32px;
+  margin-bottom: 24px;
+}
+
+.tool-guide-details {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.tool-guide-details[open] {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.tool-guide-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  outline: none;
+}
+
+.tool-guide-summary::-webkit-details-marker {
+  display: none;
+}
+
+.tool-guide-summary .guide-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-guide-summary .guide-title::before {
+  content: '💡';
+  font-size: 1rem;
+}
+
+.tool-guide-summary .summary-chevron {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.tool-guide-details[open] .summary-chevron {
+  transform: rotate(180deg);
+  color: var(--color-primary-light);
+}
+
+.tool-guide-content {
+  padding: 0 18px 18px 18px;
+  border-top: 1px solid var(--border-subtle);
+  animation: fadeInDown 200ms ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tool-guide-steps {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guide-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.guide-step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  color: var(--color-primary-light);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.8rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.guide-step-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.guide-step-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.guide-step-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.guide-step-desc strong {
+  color: var(--color-primary-light);
+  font-weight: 700;
+}
+
+/* --- Mobile & APK Tool Guide Visibility Rules --- */
+
+/* Desktop Screens (width > 768px): Hide tool guide wrapper */
+@media (min-width: 769px) {
+  .tool-guide-wrapper {
+    display: none !important;
+  }
+}
+
+/* Mobile Screens, DevTools Emulator & Android APK (width <= 768px) */
+@media (max-width: 768px) {
+  .tool-guide-wrapper {
+    display: block !important;
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+
+  /* When an active tool view is visible, hide generic site footer on mobile */
+  body.has-active-tool .site-footer {
+    display: none !important;
+  }
+}
+
+
+

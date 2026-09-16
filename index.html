@@ -1508,9 +1508,9 @@
 
                   <!-- Preset Pill Buttons -->
                   <div class="preset-pill-group">
-                    <button type="button" class="preset-pill ic-preset-btn" data-pct="50">Low</button>
-                    <button type="button" class="preset-pill ic-preset-btn active" data-pct="75">Balanced</button>
-                    <button type="button" class="preset-pill ic-preset-btn" data-pct="90">High</button>
+                    <button type="button" class="preset-pill ic-preset-btn" data-pct="40">Low</button>
+                    <button type="button" class="preset-pill ic-preset-btn active" data-pct="65">Balanced</button>
+                    <button type="button" class="preset-pill ic-preset-btn" data-pct="80">High</button>
                   </div>
                 </div>
 
@@ -1537,12 +1537,12 @@
                     <div class="form-group">
                       <div class="form-label">
                         <span>Quality Percentage</span>
-                        <span id="ic-quality-val" class="range-val-badge">75%</span>
+                        <span id="ic-quality-val" class="range-val-badge">65%</span>
                       </div>
                       <div class="slider-number-row">
-                        <input type="range" id="ic-quality" class="range-slider" min="10" max="100" value="75">
+                        <input type="range" id="ic-quality" class="range-slider" min="10" max="100" value="65">
                         <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
-                          <input type="number" id="ic-quality-num" class="form-control slider-number-input" min="10" max="100" value="75" aria-label="Quality percentage number">
+                          <input type="number" id="ic-quality-num" class="form-control slider-number-input" min="10" max="100" value="65" aria-label="Quality percentage number">
                           <span style="font-weight: 700; color: var(--text-secondary);">%</span>
                         </div>
                       </div>
@@ -4132,6 +4132,21 @@
           </div>
         </div>
 
+        <!-- Mobile How to Use Tool Guide Wrapper (Dynamically Populated) -->
+        <div id="tool-guide-wrapper" class="tool-guide-wrapper">
+          <details id="tool-guide-details" class="tool-guide-details">
+            <summary id="tool-guide-summary" class="tool-guide-summary">
+              <span id="tool-guide-title" class="guide-title">How to use this tool</span>
+              <svg class="summary-chevron" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+            </summary>
+            <div id="tool-guide-content" class="tool-guide-content">
+              <ol id="tool-guide-steps" class="tool-guide-steps"></ol>
+            </div>
+          </details>
+        </div>
+
       </div>
     </section>
 
@@ -4805,6 +4820,7 @@
   <script src="js/file-previewer.js"></script>
   <script src="js/file-renamer.js"></script>
   <script src="js/batch-processor.js"></script>
+  <script src="js/tool-guides.js"></script>
   <script src="js/app.js?v=1.0.4"></script>
 </body>
 </html>

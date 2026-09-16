@@ -1154,6 +1154,7 @@ const App = (() => {
     // Complete reset of previous tool state when returning to homepage
     resetAllToolStates();
     activeToolId = null;
+    document.body.classList.remove('has-active-tool');
     if (updateHash) history.pushState(null, '', window.location.pathname);
 
     // Show homepage sections
@@ -1182,10 +1183,16 @@ const App = (() => {
 
     activeToolId = toolId;
     window.location.hash = toolId;
+    document.body.classList.add('has-active-tool');
 
     // Find tool definition
     const tool = TOOLS_DATA.find(t => t.id === toolId);
     if (!tool) return;
+
+    // Render mobile How-To guide for the current active tool
+    if (window.ToolGuides) {
+      window.ToolGuides.renderGuide(toolId);
+    }
 
     // Hide home sections
     document.getElementById('hero-section').classList.add('hidden');

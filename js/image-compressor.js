@@ -320,7 +320,34 @@ const ImageCompressor = (() => {
 
     ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
-    const blob = await Utils.canvasToBlob(canvas, outputMime, quality);
+    let blob = await Utils.canvasToBlob(canvas, outputMime, quality);
+
+    // Smart Compression Check:
+    // If output size is larger than original file and dimensions are unchanged,
+    // apply intelligent fallback (e.g. WebP for PNG, or iterative quality tuning for JPEG/WebP)
+    if (blob.size >= fileItem.originalSize && targetWidth === fileItem.originalWidth && targetHeight === fileItem.originalHeight) {
+      if (outputMime === 'image/png' && format === 'original') {
+        // HTML5 canvas ignores quality for PNG. Try WebP as high-efficiency lossy alternative
+        const webpBlob = await Utils.canvasToBlob(canvas, 'image/webp', Math.min(quality, 0.75));
+        if (webpBlob.size < fileItem.originalSize) {
+          blob = webpBlob;
+          outputMime = 'image/webp';
+        }
+      } else if (outputMime === 'image/jpeg' || outputMime === 'image/webp') {
+        // Iteratively tune quality downward until file size is reduced
+        let tryQuality = quality;
+        while (blob.size >= fileItem.originalSize && tryQuality > 0.15) {
+          tryQuality -= 0.15;
+          const lowerBlob = await Utils.canvasToBlob(canvas, outputMime, tryQuality);
+          if (lowerBlob.size < blob.size) {
+            blob = lowerBlob;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
     return {
       blob,
       width: targetWidth,
