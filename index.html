@@ -4762,6 +4762,46 @@
     </div>
   </div>
 
+  <!-- FileForge Mobile APK Info Modal (Desktop & iOS) -->
+  <div id="apk-info-modal" class="modal-container hidden" role="dialog" aria-modal="true" aria-labelledby="apk-modal-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="apk-modal-title">
+          <svg style="width: 22px; height: 22px; color: var(--color-primary-light);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          <span>FileForge Mobile</span>
+        </h3>
+        <button type="button" class="modal-close-btn" aria-label="Close modal" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="text-align: center; padding: 24px 20px;">
+        <p id="apk-modal-message-1" style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 8px; font-weight: 600;">
+          This APK is designed specifically for mobile/Android devices.
+        </p>
+        <p id="apk-modal-message-2" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
+          Please use FileForge directly in your desktop browser.
+        </p>
+
+        <button type="button" id="apk-modal-disabled-download-btn" class="btn btn-primary btn-block" disabled aria-disabled="true" style="opacity: 0.45; cursor: not-allowed; pointer-events: none; margin-bottom: 8px;">
+          Download APK
+        </button>
+        <div id="apk-modal-device-tag" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">
+          Mobile devices only
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: center;">
+        <button type="button" class="btn btn-secondary modal-close-btn-text" style="min-width: 120px;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 

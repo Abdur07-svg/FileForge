@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FileForge Mobile — Fast & Private File Tools</title>
+  <meta name="description" content="Lightweight, fast, 100% private mobile file tools. Compress, convert, merge, and split files on your Android device.">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+
+  <!-- Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Core Mobile Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Offline Local Libraries (100% Bundled for APK & WebView) -->
+  <script src="vendor/pdf-lib.min.js"></script>
+  <script src="vendor/pdf.min.js"></script>
+  <script src="vendor/jszip.min.js"></script>
+</head>
+<body>
+
+  <div class="mobile-app-wrap">
+    
+    <!-- Top Bar -->
+    <header class="mobile-header">
+      <a href="#" class="mobile-brand mobile-home-btn" aria-label="FileForge Mobile Home">
+        <img src="assets/logo.svg" alt="FileForge Logo" class="mobile-brand-logo">
+        <span class="mobile-brand-name">FileForge</span>
+      </a>
+      <div class="mobile-badge-private">
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"/></svg>
+        <span>100% Local</span>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="mobile-main">
+      
+      <!-- ==========================================
+           1. HOME SCREEN VIEW
+           ========================================== -->
+      <div id="mobile-home-view">
+        <div class="mobile-hero-tagline">
+          <h1 class="hero-tagline-title">Mobile File Tools</h1>
+          <p class="hero-tagline-sub">Simple • Private • Processed on your device</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mobile-search-wrap">
+          <svg class="mobile-search-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+          </svg>
+          <input type="text" id="mobile-search-input" class="mobile-search-input" placeholder="Search tools..." autocomplete="off">
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div class="mobile-filter-chips" style="margin-top: 14px;">
+          <button type="button" class="mobile-filter-chip active" data-filter="all">All Tools</button>
+          <button type="button" class="mobile-filter-chip" data-filter="pdf">PDF Tools</button>
+          <button type="button" class="mobile-filter-chip" data-filter="image">Image Tools</button>
+          <button type="button" class="mobile-filter-chip" data-filter="archive">ZIP & Archives</button>
+        </div>
+
+        <!-- Dynamic Tool Cards -->
+        <div id="mobile-tool-grid" class="mobile-tool-grid" style="margin-top: 14px;"></div>
+        
+        <div id="mobile-search-empty" class="mobile-search-empty hidden" style="text-align:center; padding: 24px 0; color: var(--text-muted);">
+          No matching tools found.
+        </div>
+      </div>
+
+      <!-- ==========================================
+           2. TOOL VIEWS CONTAINER
+           ========================================== -->
+      <div id="mobile-tool-container" class="hidden">
+
+        <!-- --- TOOL 1: Image Compressor --- -->
+        <div id="tool-view-image-compressor" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">Image Compressor</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-image-compressor">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="upload-title">+ Select Image</div>
+            <div class="upload-sub">Supports JPG, PNG, WebP</div>
+            <input type="file" id="input-image-compressor" class="mobile-file-input hidden" accept="image/*">
+          </label>
+
+          <div id="selected-image-compressor" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">🖼️</div>
+              <div class="file-info-meta">
+                <div id="name-image-compressor" class="file-info-name">image.jpg</div>
+                <div id="size-image-compressor" class="file-info-size">0 KB</div>
+              </div>
+            </div>
+
+            <div class="mobile-control-group">
+              <div class="mobile-control-label">
+                <span>Compression Quality</span>
+                <span id="val-quality-image-compressor" class="text-primary font-bold">75%</span>
+              </div>
+              <div class="mobile-slider-wrap">
+                <input type="range" id="quality-image-compressor" class="mobile-slider" min="0.1" max="0.95" step="0.05" value="0.75">
+              </div>
+            </div>
+
+            <button type="button" id="btn-image-compressor" class="btn btn-primary btn-block">Compress Image</button>
+
+            <div id="result-image-compressor" class="mobile-result-box hidden">
+              <div class="result-header">✓ Compressed Successfully</div>
+              <div id="stats-image-compressor" class="result-stats-row"></div>
+              <img id="preview-image-compressor" class="mobile-preview-thumb" alt="Preview">
+              <button type="button" id="dl-image-compressor" class="btn btn-success btn-block">Download Compressed Image</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use Image Compressor</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select Image</strong> and choose a photo from your gallery.</li>
+                <li>Adjust the <strong>Compression Quality</strong> slider.</li>
+                <li>Tap <strong>Compress Image</strong>.</li>
+                <li>Review the size savings and tap <strong>Download Compressed Image</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 2: PDF Compressor --- -->
+        <div id="tool-view-pdf-compressor" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">PDF Compressor</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-pdf-compressor">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6m-3 3 3 3 3-3"/></svg>
+            </div>
+            <div class="upload-title">+ Select PDF Document</div>
+            <div class="upload-sub">Reduces PDF file size on your device</div>
+            <input type="file" id="input-pdf-compressor" class="mobile-file-input hidden" accept="application/pdf">
+          </label>
+
+          <div id="selected-pdf-compressor" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">📄</div>
+              <div class="file-info-meta">
+                <div id="name-pdf-compressor" class="file-info-name">document.pdf</div>
+                <div id="size-pdf-compressor" class="file-info-size">0 KB</div>
+              </div>
+            </div>
+
+            <div class="mobile-control-group">
+              <label class="mobile-control-label">Compression Level</label>
+              <select id="level-pdf-compressor" class="mobile-select">
+                <option value="medium" selected>Balanced (Recommended)</option>
+                <option value="extreme">High Compression (Smallest size)</option>
+                <option value="low">Light Compression (Best quality)</option>
+              </select>
+            </div>
+
+            <div id="progress-pdf-compressor" class="mobile-progress-wrap hidden">
+              <div class="mobile-progress-bar-bg">
+                <div id="bar-pdf-compressor" class="mobile-progress-bar-fill"></div>
+              </div>
+              <div id="text-progress-pdf-compressor" class="mobile-progress-text">Compressing...</div>
+            </div>
+
+            <button type="button" id="btn-pdf-compressor" class="btn btn-primary btn-block">Compress PDF</button>
+
+            <div id="result-pdf-compressor" class="mobile-result-box hidden">
+              <div class="result-header">✓ PDF Compressed</div>
+              <div id="stats-pdf-compressor" class="result-stats-row"></div>
+              <button type="button" id="dl-pdf-compressor" class="btn btn-success btn-block">Download Compressed PDF</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use PDF Compressor</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select PDF Document</strong> to pick your file.</li>
+                <li>Choose your preferred <strong>Compression Level</strong>.</li>
+                <li>Tap <strong>Compress PDF</strong> and wait for local page processing.</li>
+                <li>Tap <strong>Download Compressed PDF</strong> to save the result.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 3: Image to PDF --- -->
+        <div id="tool-view-image-to-pdf" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">Image to PDF</h2>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <label class="btn btn-secondary btn-block" style="cursor: pointer;">
+              <span>+ Add Images</span>
+              <input type="file" id="input-image-to-pdf" class="mobile-file-input hidden" accept="image/*" multiple>
+            </label>
+          </div>
+
+          <div class="mobile-file-selected" style="margin-top: 12px;">
+            <div id="list-image-to-pdf" class="mobile-dynamic-list">
+              <div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">
+                No images added. Tap <strong>+ Add Images</strong> to start.
+              </div>
+            </div>
+
+            <!-- Progressive Disclosure: Page Settings -->
+            <div class="mobile-accordion open" style="margin-top: 8px;">
+              <div class="mobile-accordion-header">
+                <span>Page Layout & Sizing</span>
+                <span class="mobile-accordion-icon">▾</span>
+              </div>
+              <div class="mobile-accordion-body">
+                <div class="mobile-control-group" style="margin-bottom: 8px;">
+                  <label class="mobile-control-label">Page Size</label>
+                  <select id="size-image-to-pdf" class="mobile-select">
+                    <option value="a4" selected>A4 Standard</option>
+                    <option value="letter">US Letter</option>
+                    <option value="fit">Fit Page to Image Dimensions</option>
+                  </select>
+                </div>
+                <div class="mobile-control-group" style="margin-bottom: 8px;">
+                  <label class="mobile-control-label">Default Page Orientation</label>
+                  <select id="orient-image-to-pdf" class="mobile-select">
+                    <option value="auto" selected>Auto (Matches each image)</option>
+                    <option value="portrait">Portrait</option>
+                    <option value="landscape">Landscape</option>
+                  </select>
+                </div>
+                <div class="mobile-control-group">
+                  <label class="mobile-control-label">Page Margins</label>
+                  <select id="margin-image-to-pdf" class="mobile-select">
+                    <option value="none" selected>No Margins (Edge to Edge)</option>
+                    <option value="small">Small Margin</option>
+                    <option value="medium">Medium Margin</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" id="btn-image-to-pdf" class="btn btn-primary btn-block" disabled>Create PDF</button>
+
+            <div id="result-image-to-pdf" class="mobile-result-box hidden">
+              <div class="result-header">✓ PDF Ready!</div>
+              <button type="button" id="dl-image-to-pdf" class="btn btn-success btn-block">Download PDF Document</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use Image to PDF</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Add Images</strong> to select photos.</li>
+                <li>Use <strong>↑</strong> and <strong>↓</strong> to arrange page order.</li>
+                <li>Optionally set individual page orientations (Auto/Portrait/Landscape).</li>
+                <li>Tap <strong>Create PDF</strong> and then <strong>Download PDF Document</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 4: PDF to JPG --- -->
+        <div id="tool-view-pdf-to-jpg" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">PDF to JPG</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-pdf-to-jpg">
+            <div class="upload-icon">📄</div>
+            <div class="upload-title">+ Select PDF</div>
+            <div class="upload-sub">Converts PDF pages into high-res JPGs</div>
+            <input type="file" id="input-pdf-to-jpg" class="mobile-file-input hidden" accept="application/pdf">
+          </label>
+
+          <div id="selected-pdf-to-jpg" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">📄</div>
+              <div class="file-info-meta">
+                <div id="name-pdf-to-jpg" class="file-info-name">doc.pdf</div>
+                <div id="size-pdf-to-jpg" class="file-info-size">0 KB</div>
+              </div>
+            </div>
+
+            <div id="progress-pdf-to-jpg" class="mobile-progress-wrap hidden">
+              <div class="mobile-progress-bar-bg">
+                <div id="bar-pdf-to-jpg" class="mobile-progress-bar-fill"></div>
+              </div>
+              <div id="text-progress-pdf-to-jpg" class="mobile-progress-text">Rendering...</div>
+            </div>
+
+            <button type="button" id="btn-pdf-to-jpg" class="btn btn-primary btn-block">Convert to JPG</button>
+
+            <div id="result-pdf-to-jpg" class="mobile-result-box hidden">
+              <div class="result-header">✓ Pages Converted</div>
+              <div id="gallery-pdf-to-jpg" class="mobile-gallery-grid"></div>
+              <button type="button" id="dl-all-pdf-to-jpg" class="btn btn-success btn-block">Download All as ZIP</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use PDF to JPG</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select PDF</strong> to load a document.</li>
+                <li>Tap <strong>Convert to JPG</strong>.</li>
+                <li>Download individual images or tap <strong>Download All as ZIP</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 5: PDF to PNG --- -->
+        <div id="tool-view-pdf-to-png" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">PDF to PNG</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-pdf-to-png">
+            <div class="upload-icon">📄</div>
+            <div class="upload-title">+ Select PDF</div>
+            <div class="upload-sub">Converts PDF pages into lossless PNGs</div>
+            <input type="file" id="input-pdf-to-png" class="mobile-file-input hidden" accept="application/pdf">
+          </label>
+
+          <div id="selected-pdf-to-png" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">📄</div>
+              <div class="file-info-meta">
+                <div id="name-pdf-to-png" class="file-info-name">doc.pdf</div>
+                <div id="size-pdf-to-png" class="file-info-size">0 KB</div>
+              </div>
+            </div>
+
+            <div id="progress-pdf-to-png" class="mobile-progress-wrap hidden">
+              <div class="mobile-progress-bar-bg">
+                <div id="bar-pdf-to-png" class="mobile-progress-bar-fill"></div>
+              </div>
+              <div id="text-progress-pdf-to-png" class="mobile-progress-text">Rendering...</div>
+            </div>
+
+            <button type="button" id="btn-pdf-to-png" class="btn btn-primary btn-block">Convert to PNG</button>
+
+            <div id="result-pdf-to-png" class="mobile-result-box hidden">
+              <div class="result-header">✓ Pages Converted</div>
+              <div id="gallery-pdf-to-png" class="mobile-gallery-grid"></div>
+              <button type="button" id="dl-all-pdf-to-png" class="btn btn-success btn-block">Download All as ZIP</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use PDF to PNG</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select PDF</strong>.</li>
+                <li>Tap <strong>Convert to PNG</strong>.</li>
+                <li>Save pages individually or tap <strong>Download All as ZIP</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 6: JPG to PNG --- -->
+        <div id="tool-view-jpg-to-png" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">JPG to PNG</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-jpg-to-png">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-title">+ Select JPG Image</div>
+            <input type="file" id="input-jpg-to-png" class="mobile-file-input hidden" accept="image/jpeg,image/jpg">
+          </label>
+
+          <div id="selected-jpg-to-png" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">🖼️</div>
+              <div class="file-info-meta">
+                <div id="name-jpg-to-png" class="file-info-name">image.jpg</div>
+                <div id="size-jpg-to-png" class="file-info-size">0 KB</div>
+              </div>
+            </div>
+
+            <button type="button" id="btn-jpg-to-png" class="btn btn-primary btn-block">Convert to PNG</button>
+
+            <div id="result-jpg-to-png" class="mobile-result-box hidden">
+              <div class="result-header">✓ Converted to PNG</div>
+              <img id="preview-jpg-to-png" class="mobile-preview-thumb" alt="Preview">
+              <button type="button" id="dl-jpg-to-png" class="btn btn-success btn-block">Download PNG Image</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use JPG to PNG</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select JPG Image</strong>.</li>
+                <li>Tap <strong>Convert to PNG</strong>.</li>
+                <li>Tap <strong>Download PNG Image</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 7: PNG to JPG --- -->
+        <div id="tool-view-png-to-jpg" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">PNG to JPG</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-png-to-jpg">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-title">+ Select PNG Image</div>
+            <input type="file" id="input-png-to-jpg" class="mobile-file-input hidden" accept="image/png">
+          </label>
+
+          <div id="selected-png-to-jpg" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">🖼️</div>
+              <div class="file-info-meta">
+                <div id="name-png-to-jpg" class="file-info-name">image.png</div>
+                <div id="size-png-to-jpg" class="file-info-size">0 KB</div>
+              </div>
+            </div>
+
+            <button type="button" id="btn-png-to-jpg" class="btn btn-primary btn-block">Convert to JPG</button>
+
+            <div id="result-png-to-jpg" class="mobile-result-box hidden">
+              <div class="result-header">✓ Converted to JPG</div>
+              <img id="preview-png-to-jpg" class="mobile-preview-thumb" alt="Preview">
+              <button type="button" id="dl-png-to-jpg" class="btn btn-success btn-block">Download JPG Image</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use PNG to JPG</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select PNG Image</strong>.</li>
+                <li>Tap <strong>Convert to JPG</strong>.</li>
+                <li>Tap <strong>Download JPG Image</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 8: Image Resizer --- -->
+        <div id="tool-view-image-resizer" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">Image Resizer</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-image-resizer">
+            <div class="upload-icon">📐</div>
+            <div class="upload-title">+ Select Image to Resize</div>
+            <input type="file" id="input-image-resizer" class="mobile-file-input hidden" accept="image/*">
+          </label>
+
+          <div id="selected-image-resizer" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">🖼️</div>
+              <div class="file-info-meta">
+                <div id="name-image-resizer" class="file-info-name">photo.jpg</div>
+                <div id="dims-image-resizer" class="file-info-size">1920 × 1080 px</div>
+              </div>
+            </div>
+
+            <div class="mobile-control-group">
+              <label class="mobile-control-label">Quick Scale Preset</label>
+              <select id="scale-image-resizer" class="mobile-select">
+                <option value="">Custom Dimensions</option>
+                <option value="75">75% of original</option>
+                <option value="50">50% of original</option>
+                <option value="25">25% of original</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <div class="mobile-control-group" style="flex: 1;">
+                <label class="mobile-control-label">Width (px)</label>
+                <input type="number" id="width-image-resizer" class="mobile-input">
+              </div>
+              <div class="mobile-control-group" style="flex: 1;">
+                <label class="mobile-control-label">Height (px)</label>
+                <input type="number" id="height-image-resizer" class="mobile-input">
+              </div>
+            </div>
+
+            <button type="button" id="btn-image-resizer" class="btn btn-primary btn-block">Resize Image</button>
+
+            <div id="result-image-resizer" class="mobile-result-box hidden">
+              <div class="result-header">✓ Resized Successfully</div>
+              <div id="result-dims-image-resizer" class="text-secondary font-bold"></div>
+              <img id="preview-image-resizer" class="mobile-preview-thumb" alt="Preview">
+              <button type="button" id="dl-image-resizer" class="btn btn-success btn-block">Download Resized Image</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use Image Resizer</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select Image to Resize</strong>.</li>
+                <li>Enter new dimensions or select a percentage preset.</li>
+                <li>Tap <strong>Resize Image</strong>.</li>
+                <li>Tap <strong>Download Resized Image</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 9: Image Converter --- -->
+        <div id="tool-view-image-converter" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">Image Converter</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-image-converter">
+            <div class="upload-icon">🔄</div>
+            <div class="upload-title">+ Select Image</div>
+            <div class="upload-sub">Convert to JPG, PNG, or WebP</div>
+            <input type="file" id="input-image-converter" class="mobile-file-input hidden" accept="image/*">
+          </label>
+
+          <div id="selected-image-converter" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">🖼️</div>
+              <div class="file-info-meta">
+                <div id="name-image-converter" class="file-info-name">image.png</div>
+                <div id="size-image-converter" class="file-info-size">0 KB</div>
+              </div>
+            </div>
+
+            <div class="mobile-control-group">
+              <label class="mobile-control-label">Target Format</label>
+              <select id="format-image-converter" class="mobile-select">
+                <option value="image/png">PNG (Lossless)</option>
+                <option value="image/jpeg">JPG (Standard)</option>
+                <option value="image/webp">WebP (Modern Compact)</option>
+              </select>
+            </div>
+
+            <button type="button" id="btn-image-converter" class="btn btn-primary btn-block">Convert Image</button>
+
+            <div id="result-image-converter" class="mobile-result-box hidden">
+              <div class="result-header">✓ Converted Successfully</div>
+              <img id="preview-image-converter" class="mobile-preview-thumb" alt="Preview">
+              <button type="button" id="dl-image-converter" class="btn btn-success btn-block">Download Converted Image</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use Image Converter</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select Image</strong>.</li>
+                <li>Choose your <strong>Target Format</strong>.</li>
+                <li>Tap <strong>Convert Image</strong>.</li>
+                <li>Tap <strong>Download Converted Image</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 10: PDF Merger --- -->
+        <div id="tool-view-pdf-merger" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">PDF Merger</h2>
+          </div>
+
+          <label class="btn btn-secondary btn-block" style="cursor: pointer;">
+            <span>+ Add PDF Files</span>
+            <input type="file" id="input-pdf-merger" class="mobile-file-input hidden" accept="application/pdf" multiple>
+          </label>
+
+          <div class="mobile-file-selected" style="margin-top: 12px;">
+            <div id="list-pdf-merger" class="mobile-dynamic-list">
+              <div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">
+                Add at least 2 PDF files to combine them.
+              </div>
+            </div>
+
+            <button type="button" id="btn-pdf-merger" class="btn btn-primary btn-block" disabled>Merge PDFs</button>
+
+            <div id="result-pdf-merger" class="mobile-result-box hidden">
+              <div class="result-header">✓ PDFs Merged</div>
+              <div id="info-pdf-merger" class="text-secondary font-bold"></div>
+              <button type="button" id="dl-pdf-merger" class="btn btn-success btn-block">Download Merged PDF</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use PDF Merger</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Add PDF Files</strong> to select 2 or more files.</li>
+                <li>Use <strong>↑</strong> and <strong>↓</strong> to change the document sequence.</li>
+                <li>Tap <strong>Merge PDFs</strong>.</li>
+                <li>Tap <strong>Download Merged PDF</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 11: PDF Splitter --- -->
+        <div id="tool-view-pdf-splitter" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">PDF Splitter</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-pdf-splitter">
+            <div class="upload-icon">✂️</div>
+            <div class="upload-title">+ Select PDF to Split</div>
+            <input type="file" id="input-pdf-splitter" class="mobile-file-input hidden" accept="application/pdf">
+          </label>
+
+          <div id="selected-pdf-splitter" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">📄</div>
+              <div class="file-info-meta">
+                <div id="name-pdf-splitter" class="file-info-name">document.pdf</div>
+                <div id="size-pdf-splitter" class="file-info-size">0 KB</div>
+              </div>
+            </div>
+
+            <div class="mobile-control-group">
+              <label class="mobile-control-label">Page Range to Extract</label>
+              <input type="text" id="range-pdf-splitter" class="mobile-input" placeholder="e.g. 1-3, 5, 8-10">
+            </div>
+
+            <button type="button" id="btn-pdf-splitter" class="btn btn-primary btn-block">Split PDF</button>
+
+            <div id="result-pdf-splitter" class="mobile-result-box hidden">
+              <div class="result-header">✓ PDF Split Ready</div>
+              <button type="button" id="dl-pdf-splitter" class="btn btn-success btn-block">Download Split PDF</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use PDF Splitter</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select PDF to Split</strong>.</li>
+                <li>Type page numbers or ranges (e.g. <code>1-3, 5</code>).</li>
+                <li>Tap <strong>Split PDF</strong>.</li>
+                <li>Tap <strong>Download Split PDF</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 12: PDF Page Extractor --- -->
+        <div id="tool-view-pdf-page-extractor" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">PDF Page Extractor</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-pdf-page-extractor">
+            <div class="upload-icon">📑</div>
+            <div class="upload-title">+ Select PDF</div>
+            <div class="upload-sub">Tap pages visually to extract them</div>
+            <input type="file" id="input-pdf-page-extractor" class="mobile-file-input hidden" accept="application/pdf">
+          </label>
+
+          <div id="selected-pdf-page-extractor" class="mobile-file-selected hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="text-secondary font-bold" style="font-size:0.82rem;">Select pages to extract:</span>
+              <button type="button" id="all-pdf-page-extractor" class="btn btn-xs btn-secondary">Select All</button>
+            </div>
+
+            <div id="thumbs-pdf-page-extractor" class="mobile-gallery-grid"></div>
+
+            <button type="button" id="btn-pdf-page-extractor" class="btn btn-primary btn-block" disabled>Extract Pages</button>
+
+            <div id="result-pdf-page-extractor" class="mobile-result-box hidden">
+              <div class="result-header">✓ Pages Extracted</div>
+              <button type="button" id="dl-pdf-page-extractor" class="btn btn-success btn-block">Download Extracted PDF</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use PDF Page Extractor</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select PDF</strong>.</li>
+                <li>Tap the page thumbnails you want to keep.</li>
+                <li>Tap <strong>Extract Pages</strong>.</li>
+                <li>Tap <strong>Download Extracted PDF</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 13: ZIP File Creator --- -->
+        <div id="tool-view-zip-creator" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">ZIP File Creator</h2>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="add-files-zip-creator" class="btn btn-secondary btn-block">+ Add Files</button>
+            <button type="button" id="add-folder-zip-creator" class="btn btn-secondary btn-block">+ Add Folder</button>
+            <input type="file" id="input-zip-creator" class="mobile-file-input hidden" multiple>
+            <input type="file" id="input-folder-zip-creator" class="mobile-file-input hidden" webkitdirectory directory multiple>
+          </div>
+
+          <div class="mobile-file-selected" style="margin-top: 12px;">
+            <div id="list-zip-creator" class="mobile-dynamic-list">
+              <div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">
+                Add files or a folder to package into a ZIP.
+              </div>
+            </div>
+
+            <div class="mobile-control-group">
+              <label class="mobile-control-label">ZIP Filename</label>
+              <input type="text" id="name-input-zip-creator" class="mobile-input" value="archive.zip">
+            </div>
+
+            <button type="button" id="btn-zip-creator" class="btn btn-primary btn-block" disabled>Create ZIP Archive</button>
+
+            <div id="result-zip-creator" class="mobile-result-box hidden">
+              <div class="result-header">✓ ZIP Created</div>
+              <button type="button" id="dl-zip-creator" class="btn btn-success btn-block">Download ZIP File</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use ZIP File Creator</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Add Files</strong> or <strong>+ Add Folder</strong>.</li>
+                <li>Optionally edit the <strong>ZIP Filename</strong>.</li>
+                <li>Tap <strong>Create ZIP Archive</strong>.</li>
+                <li>Tap <strong>Download ZIP File</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 14: ZIP File Extractor --- -->
+        <div id="tool-view-zip-extractor" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">ZIP File Extractor</h2>
+          </div>
+
+          <label class="mobile-upload-box" id="upload-zip-extractor">
+            <div class="upload-icon">📦</div>
+            <div class="upload-title">+ Select ZIP Archive</div>
+            <div class="upload-sub">Inspect and extract files safely</div>
+            <input type="file" id="input-zip-extractor" class="mobile-file-input hidden" accept=".zip,application/zip">
+          </label>
+
+          <div id="selected-zip-extractor" class="mobile-file-selected hidden">
+            <div class="file-info-card">
+              <div class="file-info-icon">📦</div>
+              <div class="file-info-meta">
+                <div id="name-zip-extractor" class="file-info-name">archive.zip</div>
+              </div>
+            </div>
+
+            <div class="text-secondary font-bold" style="font-size: 0.82rem;">Archive Contents:</div>
+            <div id="list-zip-extractor" class="mobile-dynamic-list"></div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use ZIP File Extractor</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select ZIP Archive</strong>.</li>
+                <li>Browse the files and folders inside.</li>
+                <li>Tap <strong>Download</strong> on any file to extract it.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- --- TOOL 15: Download All as ZIP --- -->
+        <div id="tool-view-download-all-zip" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <h2 class="mobile-tool-header-title">Download All as ZIP</h2>
+          </div>
+
+          <label class="btn btn-secondary btn-block" style="cursor: pointer;">
+            <span>+ Select Files to Bundle</span>
+            <input type="file" id="input-download-all-zip" class="mobile-file-input hidden" multiple>
+          </label>
+
+          <div class="mobile-file-selected" style="margin-top: 12px;">
+            <div id="list-download-all-zip" class="mobile-dynamic-list">
+              <div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">
+                Select any files you wish to compress into one ZIP download.
+              </div>
+            </div>
+
+            <div class="mobile-control-group">
+              <label class="mobile-control-label">Output Archive Name</label>
+              <input type="text" id="name-download-all-zip" class="mobile-input" value="bundle.zip">
+            </div>
+
+            <button type="button" id="btn-download-all-zip" class="btn btn-primary btn-block" disabled>Package & Download as ZIP</button>
+
+            <div id="result-download-all-zip" class="mobile-result-box hidden">
+              <div class="result-header">✓ ZIP Ready!</div>
+              <button type="button" id="dl-download-all-zip" class="btn btn-success btn-block">Download ZIP Bundle</button>
+            </div>
+          </div>
+
+          <div class="mobile-accordion" style="margin-top: 20px;">
+            <div class="mobile-accordion-header">
+              <span>How to use Download All as ZIP</span>
+              <span class="mobile-accordion-icon">▾</span>
+            </div>
+            <div class="mobile-accordion-body">
+              <ol class="guide-step-list">
+                <li>Tap <strong>+ Select Files to Bundle</strong>.</li>
+                <li>Review the file list.</li>
+                <li>Tap <strong>Package & Download as ZIP</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mobile-footer">
+      <div>FileForge Mobile • 100% Client-Side Privacy</div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="mobile-toast-container" class="mobile-toast-container" aria-live="polite"></div>
+
+  </div>
+
+  <!-- Mobile JS Modules -->
+  <script src="js/utils.js"></script>
+  <script src="js/image-engine.js"></script>
+  <script src="js/pdf-engine.js"></script>
+  <script src="js/image-to-pdf.js"></script>
+  <script src="js/zip-engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
