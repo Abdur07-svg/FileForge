@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">FileForge</string>
-    <string name="file_provider_authority">com.fileforge.app.fileprovider</string>
-</resources>

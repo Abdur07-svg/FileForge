@@ -111,27 +111,10 @@ const Utils = (() => {
   }
 
   /**
-   * Trigger single file download (Browser & Native Android APK)
+   * Trigger single file download
    */
   function downloadBlob(blob, filename) {
     filename = sanitizeFilename(filename, 'downloaded_file');
-
-    // Native Android APK Bridge Integration
-    if (window.FileForgeAndroid && typeof window.FileForgeAndroid.saveFile === 'function') {
-      try {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64Data = reader.result;
-          if (base64Data && typeof base64Data === 'string') {
-            window.FileForgeAndroid.saveFile(base64Data, filename, blob.type || 'application/octet-stream');
-          }
-        };
-        reader.readAsDataURL(blob);
-        return;
-      } catch (err) {
-        console.warn('Android bridge save fallback:', err);
-      }
-    }
 
     // Standard Browser File Download
     const url = URL.createObjectURL(blob);
