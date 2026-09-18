@@ -152,17 +152,26 @@ const ImageCompressor = (() => {
     });
 
     // Action buttons
-    dom.compressBtn.addEventListener('click', processAll);
+    dom.compressBtn.addEventListener('click', handleCompressClick);
     dom.downloadBtn.addEventListener('click', downloadCurrent);
     dom.downloadAllBtn.addEventListener('click', downloadAll);
     dom.resetBtn.addEventListener('click', resetTool);
+  }
+
+  function handleCompressClick() {
+    if (currentFiles.length === 0) return;
+    if (currentFiles.length === 1) {
+      compressCurrentFile();
+    } else {
+      processAll();
+    }
   }
 
   let autoCompressTimer = null;
   function debounceAutoCompress() {
     clearTimeout(autoCompressTimer);
     autoCompressTimer = setTimeout(() => {
-      if (currentFiles.length > 0) {
+      if (currentFiles.length > 0 && currentFiles[activeIndex] && currentFiles[activeIndex].compressedBlob) {
         compressCurrentFile();
       }
     }, 280);
@@ -211,8 +220,12 @@ const ImageCompressor = (() => {
       activeIndex = 0;
       updateActiveFileControls();
       renderFileList();
-      await compressCurrentFile();
-      Utils.showToast(`Loaded ${validImages.length} image(s). Ready to compress!`, 'success');
+      
+      // Ensure download button remains disabled upon initial upload until user compresses
+      if (dom.downloadBtn) dom.downloadBtn.disabled = true;
+      if (dom.downloadAllBtn) dom.downloadAllBtn.disabled = true;
+      
+      Utils.showToast(`Loaded ${validImages.length} image(s). Adjust settings and click "Compress Image".`, 'info');
     } catch (err) {
       console.error(err);
       Utils.showToast('Failed to load image: ' + err.message, 'error');
@@ -233,8 +246,35 @@ const ImageCompressor = (() => {
     dom.origSizeText.textContent = Utils.formatBytes(active.originalSize);
     dom.previewBefore.src = active.originalDataUrl;
 
+    if (active.compressedBlob) {
+      dom.previewAfter.src = active.compressedUrl;
+      dom.compSizeText.textContent = Utils.formatBytes(active.compressedBlob.size);
+      dom.compDimensionsText.textContent = `${active.compressedWidth} × ${active.compressedHeight} px`;
+      dom.downloadBtn.disabled = false;
+      const reduction = Utils.calculateReduction(active.originalSize, active.compressedBlob.size);
+      if (reduction > 0) {
+        dom.savedBadge.textContent = `-${reduction}%`;
+        dom.savedBadge.className = 'metric-badge badge-success';
+      } else if (reduction === 0) {
+        dom.savedBadge.textContent = `0%`;
+        dom.savedBadge.className = 'metric-badge badge-neutral';
+      } else {
+        dom.savedBadge.textContent = `+${Math.abs(reduction)}%`;
+        dom.savedBadge.className = 'metric-badge badge-warning';
+      }
+    } else {
+      dom.previewAfter.src = '';
+      dom.compSizeText.textContent = '-';
+      dom.compDimensionsText.textContent = '-';
+      dom.savedBadge.textContent = '-';
+      dom.savedBadge.className = 'metric-badge badge-neutral';
+      dom.downloadBtn.disabled = true;
+    }
+
     if (currentFiles.length > 1) {
       dom.downloadAllBtn.classList.remove('hidden');
+      const allCompressed = currentFiles.every(f => f.compressedBlob);
+      dom.downloadAllBtn.disabled = !allCompressed;
     } else {
       dom.downloadAllBtn.classList.add('hidden');
     }
@@ -254,7 +294,7 @@ const ImageCompressor = (() => {
       chip.innerHTML = `
         <img src="${item.originalDataUrl}" class="chip-thumb" alt="thumb">
         <span class="chip-name" title="${item.name}">${item.name}</span>
-        <span class="chip-size">${Utils.formatBytes(item.compressedBlob ? item.compressedBlob.size : item.originalSize)}</span>
+        <span class="chip-size">${item.compressedBlob ? Utils.formatBytes(item.compressedBlob.size) : Utils.formatBytes(item.originalSize)}</span>
         <button type="button" class="chip-remove" title="Remove">&times;</button>
       `;
 
@@ -267,7 +307,6 @@ const ImageCompressor = (() => {
         activeIndex = idx;
         renderFileList();
         updateActiveFileControls();
-        compressCurrentFile();
       });
 
       dom.fileList.appendChild(chip);
@@ -288,7 +327,6 @@ const ImageCompressor = (() => {
     }
     renderFileList();
     updateActiveFileControls();
-    compressCurrentFile();
   }
 
   async function compressSingle(fileItem, quality, format, targetWidth, targetHeight) {
@@ -302,14 +340,25 @@ const ImageCompressor = (() => {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // Handle format specifics (e.g. transparent PNG to JPEG requires background fill)
+    // Handle format specifics strictly based on user selection or source file
     let outputMime = 'image/jpeg';
-    if (format === 'png') outputMime = 'image/png';
-    else if (format === 'webp') outputMime = 'image/webp';
-    else if (format === 'original') {
-      outputMime = fileItem.file.type || 'image/jpeg';
-      if (outputMime === 'image/gif' || outputMime === 'image/svg+xml') {
+    if (format === 'png') {
+      outputMime = 'image/png';
+    } else if (format === 'webp') {
+      outputMime = 'image/webp';
+    } else if (format === 'jpeg') {
+      outputMime = 'image/jpeg';
+    } else if (format === 'original') {
+      const fname = (fileItem.name || '').toLowerCase();
+      const ftype = (fileItem.file && fileItem.file.type) || '';
+      if (ftype === 'image/png' || fname.endsWith('.png')) {
         outputMime = 'image/png';
+      } else if (ftype === 'image/webp' || fname.endsWith('.webp')) {
+        outputMime = 'image/webp';
+      } else if (ftype === 'image/jpeg' || fname.endsWith('.jpg') || fname.endsWith('.jpeg')) {
+        outputMime = 'image/jpeg';
+      } else {
+        outputMime = ftype || 'image/jpeg';
       }
     }
 
@@ -322,19 +371,9 @@ const ImageCompressor = (() => {
 
     let blob = await Utils.canvasToBlob(canvas, outputMime, quality);
 
-    // Smart Compression Check:
-    // If output size is larger than original file and dimensions are unchanged,
-    // apply intelligent fallback (e.g. WebP for PNG, or iterative quality tuning for JPEG/WebP)
+    // Iterative quality tuning for JPEG and WebP when dimensions are unchanged
     if (blob.size >= fileItem.originalSize && targetWidth === fileItem.originalWidth && targetHeight === fileItem.originalHeight) {
-      if (outputMime === 'image/png' && format === 'original') {
-        // HTML5 canvas ignores quality for PNG. Try WebP as high-efficiency lossy alternative
-        const webpBlob = await Utils.canvasToBlob(canvas, 'image/webp', Math.min(quality, 0.75));
-        if (webpBlob.size < fileItem.originalSize) {
-          blob = webpBlob;
-          outputMime = 'image/webp';
-        }
-      } else if (outputMime === 'image/jpeg' || outputMime === 'image/webp') {
-        // Iteratively tune quality downward until file size is reduced
+      if (outputMime === 'image/jpeg' || outputMime === 'image/webp') {
         let tryQuality = quality;
         while (blob.size >= fileItem.originalSize && tryQuality > 0.15) {
           tryQuality -= 0.15;
@@ -360,6 +399,9 @@ const ImageCompressor = (() => {
     const active = currentFiles[activeIndex];
     if (!active) return;
 
+    Utils.setProcessing(true);
+    showProgress(30, 'Compressing active image...');
+
     const quality = parseInt(dom.qualitySlider.value, 10) / 100;
     const format = dom.formatSelect.value;
     const targetWidth = parseInt(dom.widthInput.value, 10) || active.originalWidth;
@@ -379,34 +421,22 @@ const ImageCompressor = (() => {
       active.outputMime = result.mime;
 
       // Update UI
-      dom.previewAfter.src = active.compressedUrl;
-      dom.compSizeText.textContent = Utils.formatBytes(result.blob.size);
-      dom.compDimensionsText.textContent = `${result.width} × ${result.height} px`;
-
-      const reduction = Utils.calculateReduction(active.originalSize, result.blob.size);
-      if (reduction > 0) {
-        dom.savedBadge.textContent = `-${reduction}%`;
-        dom.savedBadge.className = 'metric-badge badge-success';
-      } else if (reduction === 0) {
-        dom.savedBadge.textContent = `0%`;
-        dom.savedBadge.className = 'metric-badge badge-neutral';
-      } else {
-        dom.savedBadge.textContent = `+${Math.abs(reduction)}%`;
-        dom.savedBadge.className = 'metric-badge badge-warning';
-      }
-
-      dom.downloadBtn.disabled = false;
+      updateActiveFileControls();
       renderFileList();
+      Utils.showToast('Image compressed successfully! Click Download Image to save.', 'success');
     } catch (err) {
       console.error('Compression error:', err);
       Utils.showToast('Compression error: ' + err.message, 'error');
+    } finally {
+      Utils.setProcessing(false);
+      hideProgress();
     }
   }
 
   async function processAll() {
     if (currentFiles.length === 0) return;
     Utils.setProcessing(true);
-    showProgress(10, 'Compressing all images...');
+    showProgress(10, 'Compressing image(s)...');
 
     const quality = parseInt(dom.qualitySlider.value, 10) / 100;
     const format = dom.formatSelect.value;
@@ -417,7 +447,6 @@ const ImageCompressor = (() => {
         const pct = Math.round(((i + 1) / currentFiles.length) * 100);
         showProgress(pct, `Compressing (${i + 1}/${currentFiles.length}): ${item.name}`);
 
-        // If dimensions were adjusted for this active item, scale proportionally or keep original aspect
         let w = item.originalWidth;
         let h = item.originalHeight;
         if (i === activeIndex) {
@@ -435,8 +464,8 @@ const ImageCompressor = (() => {
       }
 
       updateActiveFileControls();
-      compressCurrentFile();
-      Utils.showToast('All images compressed successfully!', 'success');
+      renderFileList();
+      Utils.showToast(`Compressed ${currentFiles.length} image(s) successfully! Ready to download.`, 'success');
     } catch (err) {
       console.error(err);
       Utils.showToast('Batch compression failed: ' + err.message, 'error');

@@ -11,7 +11,13 @@ const MobileImageEngine = (() => {
     const quality = options.quality !== undefined ? options.quality : 0.75;
     const maxWidth = options.maxWidth || null;
     const maxHeight = options.maxHeight || null;
-    const outputFormat = options.format || 'image/jpeg';
+    
+    let outputFormat = options.format;
+    if (!outputFormat) {
+      if (file.type === 'image/png' || /\.png$/i.test(file.name)) outputFormat = 'image/png';
+      else if (file.type === 'image/webp' || /\.webp$/i.test(file.name)) outputFormat = 'image/webp';
+      else outputFormat = 'image/jpeg';
+    }
 
     const dataUrl = await MobileUtils.readFileAsDataURL(file);
     const img = await MobileUtils.loadImageFromSrc(dataUrl);

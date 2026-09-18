@@ -560,8 +560,17 @@ const MobileApp = (() => {
 
         try {
           const quality = parseFloat(qualitySlider.value);
-          const format = currentFile.type === 'image/png' ? 'image/png' : 'image/jpeg';
+          let format = 'image/jpeg';
+          let ext = 'jpg';
+          if (currentFile.type === 'image/png' || /\.png$/i.test(currentFile.name)) {
+            format = 'image/png';
+            ext = 'png';
+          } else if (currentFile.type === 'image/webp' || /\.webp$/i.test(currentFile.name)) {
+            format = 'image/webp';
+            ext = 'webp';
+          }
           compressedResult = await MobileImageEngine.compressImage(currentFile, { quality, format });
+          compressedResult.ext = ext;
 
           resultStats.innerHTML = `
             <div class="stat-pill"><span class="label">Original:</span> <strong>${MobileUtils.formatBytes(compressedResult.originalSize)}</strong></div>
@@ -584,7 +593,7 @@ const MobileApp = (() => {
     if (downloadBtn) {
       downloadBtn.addEventListener('click', () => {
         if (compressedResult && compressedResult.blob) {
-          const ext = currentFile.type === 'image/png' ? 'png' : 'jpg';
+          const ext = compressedResult.ext || 'jpg';
           MobileUtils.downloadBlob(compressedResult.blob, `${MobileUtils.getBaseName(currentFile.name)}_compressed.${ext}`);
         }
       });
@@ -593,7 +602,7 @@ const MobileApp = (() => {
     if (shareBtn) {
       shareBtn.addEventListener('click', () => {
         if (compressedResult && compressedResult.blob) {
-          const ext = currentFile.type === 'image/png' ? 'png' : 'jpg';
+          const ext = compressedResult.ext || 'jpg';
           MobileUtils.shareBlob(compressedResult.blob, `${MobileUtils.getBaseName(currentFile.name)}_compressed.${ext}`, 'Compressed Image');
         }
       });

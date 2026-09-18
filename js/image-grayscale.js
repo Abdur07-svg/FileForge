@@ -57,22 +57,22 @@ const ImageGrayscale = (() => {
       dom.fileInput.value = '';
     });
 
-    if (dom.modeSelect) dom.modeSelect.addEventListener('change', processGrayscale);
+    if (dom.modeSelect) dom.modeSelect.addEventListener('change', () => { if (processedBlob) processGrayscale(); else drawOriginalPreview(); });
     if (dom.contrastSlider) {
       dom.contrastSlider.addEventListener('input', (e) => {
         if (dom.contrastVal) dom.contrastVal.textContent = `${e.target.value}%`;
-        processGrayscale();
+        if (processedBlob) processGrayscale();
       });
     }
     if (dom.brightnessSlider) {
       dom.brightnessSlider.addEventListener('input', (e) => {
         if (dom.brightnessVal) dom.brightnessVal.textContent = `${e.target.value}%`;
-        processGrayscale();
+        if (processedBlob) processGrayscale();
       });
     }
-    if (dom.formatSelect) dom.formatSelect.addEventListener('change', processGrayscale);
+    if (dom.formatSelect) dom.formatSelect.addEventListener('change', () => { if (processedBlob) processGrayscale(); });
 
-    dom.applyBtn.addEventListener('click', processGrayscale);
+    dom.applyBtn.addEventListener('click', () => processGrayscale(true));
     dom.downloadBtn.addEventListener('click', downloadImage);
     dom.resetBtn.addEventListener('click', resetTool);
   }
@@ -100,6 +100,7 @@ const ImageGrayscale = (() => {
 
       originalImage = img;
       currentFile = file;
+      processedBlob = null;
 
       dom.fileNameText.textContent = file.name;
       dom.fileSizeText.textContent = Utils.formatBytes(file.size);
@@ -107,9 +108,13 @@ const ImageGrayscale = (() => {
 
       dom.emptyState.classList.add('hidden');
       dom.workspace.classList.remove('hidden');
+      dom.downloadBtn.classList.add('hidden');
+      dom.downloadBtn.disabled = true;
+      dom.applyBtn.classList.remove('hidden');
+      dom.applyBtn.disabled = false;
 
-      processGrayscale();
-      Utils.showToast(`Loaded "${file.name}". Ready to apply grayscale filter.`, 'info');
+      drawOriginalPreview();
+      Utils.showToast(`Loaded "${file.name}". Adjust settings and click "Apply Grayscale Filter".`, 'info');
     } catch (err) {
       console.error(err);
       Utils.showToast('Failed to load image: ' + err.message, 'error');
@@ -120,7 +125,16 @@ const ImageGrayscale = (() => {
     }
   }
 
-  function processGrayscale() {
+  function drawOriginalPreview() {
+    if (!originalImage || !dom.previewCanvas) return;
+    const canvas = dom.previewCanvas;
+    const ctx = canvas.getContext('2d');
+    canvas.width = originalImage.naturalWidth;
+    canvas.height = originalImage.naturalHeight;
+    ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+  }
+
+  function processGrayscale(isExplicit = false) {
     if (!originalImage || !dom.previewCanvas) return;
 
     const canvas = dom.previewCanvas;
@@ -193,6 +207,9 @@ const ImageGrayscale = (() => {
       if (dom.downloadBtn) {
         dom.downloadBtn.disabled = false;
         dom.downloadBtn.classList.remove('hidden');
+      }
+      if (isExplicit) {
+        Utils.showToast('Grayscale filter applied! Click Download Image to save.', 'success');
       }
     }, format, 0.92);
   }
