@@ -147,10 +147,21 @@ const MobileApp = (() => {
   }
 
   /**
+  // Centralized Application Constants
+  const APP_CONFIG = {
+    APP_NAME: 'FileForge',
+    MOBILE_APP_NAME: 'FileForge Mobile',
+    APP_VERSION: '1.0.0',
+    COPYRIGHT_YEAR: '2026',
+    LAST_UPDATED: 'September 18, 2026',
+    CONTACT_EMAIL: 'support@fileforge.app'
+  };
+
+  /**
    * User UI Preferences (Theme, Haptic, Exit Confirmation)
    */
   function initPreferences() {
-    const savedTheme = localStorage.getItem('fileforge_mobile_theme') || 'dark';
+    const savedTheme = localStorage.getItem('fileforge_mobile_theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     const themeToggle = document.getElementById('toggle-dark-mode');
     if (themeToggle) {
@@ -2760,12 +2771,58 @@ const MobileApp = (() => {
 
   // Handle native Android back event called from Android MainActivity
   function handleAndroidBack() {
+    // Priority 1: Close open modal / dialog overlays
+    const openModals = document.querySelectorAll('.mobile-modal-overlay:not(.hidden)');
+    if (openModals.length > 0) {
+      openModals.forEach(m => m.classList.add('hidden'));
+      return true;
+    }
+
+    // Priority 1b: Close exit modal if open
     if (isExitModalOpen()) {
       hideExitModal();
       return true;
     }
 
+    // Priority 2: Close open advanced editor / crop panel
+    const cropPanel = document.getElementById('panel-i2p-crop');
+    if (cropPanel && !cropPanel.classList.contains('hidden')) {
+      cropPanel.classList.add('hidden');
+      return true;
+    }
+
     const hash = (window.location.hash || '').replace('#', '').trim();
+
+    // Priority 3: Result screen -> Tool screen (if in a tool and a result box is visible)
+    if (hash && hash !== 'home' && hash !== 'settings' && !['about', 'privacy', 'terms', 'licenses'].includes(hash)) {
+      const activeToolView = document.getElementById(`tool-view-${hash}`);
+      if (activeToolView) {
+        const visibleResult = activeToolView.querySelector('.mobile-result-box:not(.hidden)');
+        if (visibleResult) {
+          visibleResult.classList.add('hidden');
+          return true;
+        }
+      }
+    }
+
+    // Priority 5: Settings / About / Privacy / Terms / Licenses -> previous screen
+    if (['about', 'privacy', 'terms', 'licenses'].includes(hash)) {
+      window.location.hash = '#settings';
+      return true;
+    }
+
+    if (hash === 'settings') {
+      window.location.hash = '';
+      return true;
+    }
+
+    // Priority 4: Tool screen -> Home
+    if (hash && hash !== 'home') {
+      window.location.hash = '';
+      return true;
+    }
+
+    // Priority 6: Home -> Exit FileForge according to Confirm Before Exit
     if (!hash || hash === 'home') {
       const confirmExit = localStorage.getItem('fileforge_mobile_confirm_exit') !== 'false';
       if (confirmExit) {
@@ -2775,13 +2832,7 @@ const MobileApp = (() => {
       return false;
     }
 
-    if (['about', 'privacy', 'terms', 'licenses'].includes(hash)) {
-      window.location.hash = '#settings';
-      return true;
-    }
-
-    window.location.hash = '';
-    return true;
+    return false;
   }
 
   return {

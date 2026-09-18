@@ -4274,9 +4274,10 @@
           <div class="footer-col">
             <h4>Privacy &amp; Legal</h4>
             <ul>
-              <li><a href="#" class="open-privacy-link">Privacy Policy</a></li>
               <li><a href="#" class="open-about-link">About FileForge</a></li>
-              <li><a href="#" class="open-terms-link">Terms of Service</a></li>
+              <li><a href="#" class="open-privacy-link">Privacy Policy</a></li>
+              <li><a href="#" class="open-terms-link">Terms of Use</a></li>
+              <li><a href="#" class="open-licenses-link">Open Source Licenses</a></li>
             </ul>
           </div>
         </div>
@@ -4472,18 +4473,18 @@
             </div>
           </div>
 
-          <!-- Auto Crop Switch -->
-          <div class="form-group" style="margin-bottom: 8px;">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; user-select: none;">
-              <input type="checkbox" id="i2p-sig-autocrop" checked>
-              <span>Auto-trim empty margins around signature</span>
+          <!-- Auto Crop Ink Bounds -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.84rem; cursor: pointer; color: var(--text-secondary);">
+              <input type="checkbox" id="i2p-sig-autocrop" checked style="accent-color: var(--color-primary); width: 16px; height: 16px;">
+              <span>Auto-trim empty paper borders</span>
             </label>
           </div>
 
-          <!-- Legal Disclaimer Notice -->
-          <div class="signature-disclaimer-box" style="margin-top: 14px;">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="flex-shrink:0; margin-top:2px; color: var(--color-warning);"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-            <span><strong>Disclaimer:</strong> FileForge’s Signature feature only places a user-provided signature image onto a document. It does not create, verify, authenticate, or certify a legally valid digital signature or electronic signature.</span>
+          <!-- Signature Disclaimer Notice -->
+          <div class="signature-disclaimer-box" style="margin-top: 12px; padding: 10px 12px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-sm); font-size: 0.74rem; line-height: 1.45; color: var(--text-secondary);">
+            <strong style="color: var(--color-warning);">Disclaimer:</strong> FileForge's Signature feature only places a user-provided signature image onto a document. It does not create, verify, authenticate, or certify a legally valid digital signature or electronic signature. Users are solely responsible for using signatures only with proper authorization and for complying with applicable laws and requirements.
+            <div style="margin-top: 4px; color: var(--text-muted);">Use only your own signature or a signature you are authorized to use.</div>
           </div>
         </div>
       </div>
@@ -4518,135 +4519,10 @@
     </div>
   </div>
 
-  <!-- Privacy Policy Modal -->
-  <div id="privacy-modal" class="modal-container hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop"></div>
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">
-          <svg style="width: 24px; height: 24px; color: var(--color-success);" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd" />
-          </svg>
-          <span>Privacy Policy &amp; Security Guarantee</span>
-        </h3>
-        <button type="button" class="modal-close-btn" aria-label="Close modal" title="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-callout callout-success">
-          <strong>Zero-Knowledge Client-Side Architecture:</strong> Your files never leave your device. All 50 PDF, image, and archive tools run entirely in your local browser memory (RAM).
-        </div>
-
-        <h4>1. 100% Client-Side Privacy</h4>
-        <p>
-          Unlike conventional online file converters that upload your confidential PDFs, contracts, financial statements, and personal photos to remote cloud servers, <strong>FileForge processes 100% of your data locally inside your web browser</strong>.
-        </p>
-
-        <h4>2. Data Collection &amp; Handling</h4>
-        <ul>
-          <li><strong>Zero Server Uploads:</strong> Files selected or dropped into FileForge are read directly into browser memory (<code>ArrayBuffer</code>, <code>HTML5 Canvas</code>, <code>Blob</code>). Zero bytes of file content are transmitted across the internet.</li>
-          <li><strong>No Database or Cloud Storage:</strong> We do not operate any server-side database or file repository. Once you close or refresh your browser tab, all temporary memory allocations are immediately destroyed by the browser garbage collector.</li>
-          <li><strong>Zero Tracking &amp; No Profiling:</strong> We do not track user identities, document filenames, page counts, or file metadata.</li>
-          <li><strong>Local Preferences Only:</strong> The only information saved locally on your device is your UI theme choice (Dark Mode or Light Mode), stored safely in your browser's local storage (<code>fileforge_theme</code>).</li>
-        </ul>
-
-        <h4>3. How You Can Verify Our Privacy Guarantee</h4>
-        <p>
-          You do not need to take our word for it. You can independently verify our zero-upload guarantee at any time:
-        </p>
-        <ol>
-          <li>Open your browser's Developer Tools by pressing <code>F12</code> or right-clicking anywhere and choosing <strong>Inspect</strong>.</li>
-          <li>Select the <strong>Network</strong> tab and check the <strong>Fetch/XHR</strong> filter.</li>
-          <li>Upload, compress, or convert any file in FileForge.</li>
-          <li>Observe that <strong>no HTTP POST or file upload network requests occur</strong>. You can even disconnect your internet entirely after opening the site and all 50 tools will continue to function!</li>
-        </ol>
-
-        <h4>4. Compliance &amp; Regulatory Standards</h4>
-        <p>
-          Because FileForge does not collect, process, or store any personal data on external servers, it is inherently compliant with the <strong>EU General Data Protection Regulation (GDPR)</strong>, the <strong>California Consumer Privacy Act (CCPA)</strong>, and HIPAA data confidentiality principles.
-        </p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary modal-close-btn-text">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Terms of Service Modal -->
-  <div id="terms-modal" class="modal-container hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop"></div>
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">
-          <svg style="width: 24px; height: 24px; color: var(--color-primary-light);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <polyline points="10 9 9 9 8 9"></polyline>
-          </svg>
-          <span>Terms of Service</span>
-        </h3>
-        <button type="button" class="modal-close-btn" aria-label="Close modal" title="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-callout">
-          <strong>Plain English Summary:</strong> FileForge is 100% free for everyone (personal, commercial, or academic). You retain complete ownership and copyright of all your files.
-        </div>
-
-        <h4>1. Acceptance of Terms</h4>
-        <p>
-          By accessing or using FileForge, you acknowledge and agree to these Terms of Service. FileForge is an open, client-side utility suite provided completely free without mandatory registration, subscriptions, or hidden paywalls.
-        </p>
-
-        <h4>2. Permitted &amp; Commercial Use</h4>
-        <p>
-          You are permitted to use FileForge for an unlimited number of operations. You may use FileForge for:
-        </p>
-        <ul>
-          <li>Personal, household, and educational tasks.</li>
-          <li>Commercial, business, corporate, and governmental workflows.</li>
-          <li>Processing sensitive legal, financial, and confidential documents where third-party cloud upload is strictly prohibited.</li>
-        </ul>
-
-        <h4>3. Intellectual Property &amp; Ownership Rights</h4>
-        <p>
-          <strong>You retain complete, exclusive ownership and copyright</strong> of all documents, images, and files that you process using FileForge. Because all operations execute locally within your browser, FileForge acquires zero licenses, rights, or claims over your intellectual property.
-        </p>
-
-        <h4>4. User Responsibility &amp; File Safety</h4>
-        <p>
-          Because FileForge operates client-side without server storage:
-        </p>
-        <ul>
-          <li>You are encouraged to keep original backup copies of your files before applying irreversible transformations (such as lossy compression or page deletion).</li>
-          <li>FileForge does not maintain historical file copies or cloud backups. Once you close your browser, un-downloaded results cannot be recovered.</li>
-        </ul>
-
-        <h4>5. Disclaimer of Warranties</h4>
-        <p>
-          FileForge is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, either express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, or non-infringement.
-        </p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary modal-close-btn-text">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- About Modal -->
+  <!-- About FileForge Modal -->
   <div id="about-modal" class="modal-container hidden" role="dialog" aria-modal="true">
     <div class="modal-backdrop"></div>
-    <div class="modal-card">
+    <div class="modal-card" style="max-width: 650px;">
       <div class="modal-header">
         <h3 class="modal-title">
           <svg style="width: 24px; height: 24px; color: var(--color-primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -4663,52 +4539,326 @@
           </svg>
         </button>
       </div>
-      <div class="modal-body">
-        <div class="modal-callout callout-success">
-          <strong>Next-Generation Web Utilities:</strong> Combining the ease of modern SaaS web applications with the absolute privacy and speed of local desktop software.
+      <div class="modal-body" style="font-size: 0.9rem; line-height: 1.65; color: var(--text-secondary);">
+        <p style="margin-bottom: 12px; color: var(--text-primary);">
+          FileForge is a browser-based file utility platform designed to make everyday file conversion, compression, editing, and file management simple and convenient.
+        </p>
+        <p style="margin-bottom: 12px;">
+          FileForge provides tools for working with PDFs, images, ZIP files, and other supported file formats. Depending on the tool and platform, users can compress, convert, resize, merge, split, extract, preview, organize, and process files directly on their device.
+        </p>
+        <p style="margin-bottom: 12px;">
+          Our goal is to provide a simple and practical file-processing experience without requiring users to create an account or use complicated software.
+        </p>
+        <div style="background: var(--bg-surface-elevated); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">FileForge is designed around:</div>
+          <ul style="margin: 0; padding-left: 18px; color: var(--text-secondary);">
+            <li>Simple and easy-to-use tools</li>
+            <li>Fast file processing</li>
+            <li>Local, browser-based processing where supported</li>
+            <li>No unnecessary account creation</li>
+            <li>No unnecessary permissions</li>
+            <li>Clean and user-friendly interface</li>
+            <li>Desktop and mobile support</li>
+          </ul>
+        </div>
+        <p style="margin-bottom: 12px;">
+          Many FileForge tools process files directly inside the browser or on the device. The exact processing method may vary depending on the tool, browser, operating system, and third-party libraries used.
+        </p>
+        <p style="margin-bottom: 12px;">
+          FileForge Mobile is the dedicated Android version of FileForge, optimized for touch devices and frequently used file-processing tools.
+        </p>
+        <p style="margin-bottom: 12px;">
+          Users remain responsible for the files they select, process, download, share, or otherwise use with FileForge.
+        </p>
+        <p style="margin-bottom: 12px;">
+          Always keep an original copy of important files before compression, conversion, editing, splitting, merging, or other processing.
+        </p>
+        <p style="margin-bottom: 16px;">
+          FileForge is a file utility tool and does not guarantee that every generated file will preserve every feature, structure, metadata field, formatting element, or functionality of the original file.
+        </p>
+        <div style="border-top: 1px solid var(--border-color); padding-top: 12px; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <strong>Version:</strong> 1.0.0 &bull; <strong>Copyright:</strong> &copy; 2026 FileForge
+          </div>
+          <button type="button" class="btn btn-xs btn-secondary open-licenses-link">Open Source Licenses</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-close-btn-text">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy Policy Modal -->
+  <div id="privacy-modal" class="modal-container hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg style="width: 24px; height: 24px; color: var(--color-success);" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd" />
+          </svg>
+          <span>Privacy Policy</span>
+        </h3>
+        <button type="button" class="modal-close-btn" aria-label="Close modal" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="font-size: 0.88rem; line-height: 1.6; color: var(--text-secondary);">
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">Last Updated: March 2026</div>
+
+        <p style="margin-bottom: 12px; color: var(--text-primary);">
+          FileForge respects your privacy. This Privacy Policy explains how FileForge handles files, information, preferences, and other data when you use FileForge.
+        </p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">1. Files You Select</h4>
+        <p>FileForge is designed so that many file-processing operations can be performed directly in your browser or on your device.</p>
+        <p>For tools that support local processing:</p>
+        <ul>
+          <li>Files are processed on your device.</li>
+          <li>Files are not intentionally uploaded to a FileForge server for processing.</li>
+          <li>Temporary processing data may exist in memory while the tool is being used.</li>
+          <li>Temporary data should be released when it is no longer required.</li>
+        </ul>
+        <p>The exact processing method may vary depending on the tool and implementation.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">2. File Storage</h4>
+        <p>FileForge does not intentionally store uploaded files permanently as part of its normal local-processing workflow.</p>
+        <p>Downloaded files are controlled by the browser or Android operating system after export.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">3. Personal Information</h4>
+        <p>Core FileForge tools do not require users to provide:</p>
+        <ul>
+          <li>Name</li>
+          <li>Address</li>
+          <li>Phone number</li>
+          <li>Government ID</li>
+          <li>Password</li>
+          <li>Payment information</li>
+        </ul>
+        <p>unless an optional future service specifically requires such information.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">4. Local Preferences</h4>
+        <p>FileForge may store basic UI preferences locally, such as:</p>
+        <ul>
+          <li>Dark Mode</li>
+          <li>Haptic Feedback preference</li>
+          <li>Confirm Before Exit preference</li>
+        </ul>
+        <p>These preferences are separate from uploaded files.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">5. No File Persistence</h4>
+        <p>Do not use localStorage, sessionStorage, IndexedDB, or similar persistent browser storage to save:</p>
+        <ul>
+          <li>Uploaded files</li>
+          <li>Generated PDFs</li>
+          <li>Images</li>
+          <li>PDF passwords</li>
+          <li>Signatures</li>
+          <li>Extracted document contents</li>
+          <li>User documents</li>
+        </ul>
+        <p>unless explicitly required by a future feature and clearly disclosed.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">6. Cookies, Analytics and Tracking</h4>
+        <p>The core FileForge application should not require tracking cookies or unnecessary analytics.</p>
+        <p>If analytics, advertisements, external services, or other tracking technologies are introduced later, update this Privacy Policy accordingly.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">7. Third-Party Libraries</h4>
+        <p>FileForge may use open-source libraries such as:</p>
+        <ul>
+          <li>PDF.js</li>
+          <li>pdf-lib</li>
+          <li>JSZip</li>
+        </ul>
+        <p>These libraries may have their own licenses and documentation.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">8. External Links</h4>
+        <p>FileForge may contain links to external websites. Once users leave FileForge, the external website's privacy policy and terms apply.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">9. Security</h4>
+        <p>FileForge is designed to minimize unnecessary file transfer.</p>
+        <p>However, no website, browser, operating system, or software can guarantee complete security.</p>
+        <p>Users should avoid processing highly sensitive documents on any service unless they understand the associated risks.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">10. Changes</h4>
+        <p>This Privacy Policy may be updated when FileForge features or data practices change.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">11. Contact</h4>
+        <p>Email: <a href="mailto:support@fileforge.app" style="color: var(--color-primary);">support@fileforge.app</a></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-close-btn-text">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terms of Use Modal -->
+  <div id="terms-modal" class="modal-container hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg style="width: 24px; height: 24px; color: var(--color-primary-light);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <span>Terms of Use</span>
+        </h3>
+        <button type="button" class="modal-close-btn" aria-label="Close modal" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="font-size: 0.88rem; line-height: 1.6; color: var(--text-secondary);">
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">Last Updated: March 2026</div>
+
+        <p style="margin-bottom: 12px; color: var(--text-primary); font-weight: 600;">
+          By using FileForge, you agree to these Terms of Use.
+        </p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">1. Use of FileForge</h4>
+        <p>FileForge provides tools for processing, converting, compressing, editing, organizing, and previewing supported files.</p>
+        <p>FileForge may only be used for lawful purposes.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">2. Your Files</h4>
+        <p>You are responsible for files you select, process, download, or share using FileForge.</p>
+        <p>You must have the necessary rights, ownership, permission, or authorization to use any file you process.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">3. Prohibited Use</h4>
+        <p>Users must not use FileForge to:</p>
+        <ul>
+          <li>Process files for unlawful activities</li>
+          <li>Violate another person's rights</li>
+          <li>Distribute content without authorization</li>
+          <li>Introduce malicious software</li>
+          <li>Attack or damage the service</li>
+          <li>Abuse or overload the service</li>
+          <li>Circumvent reasonable security controls</li>
+          <li>Perform activities prohibited by applicable law</li>
+        </ul>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">4. File Processing</h4>
+        <p>Conversion and compression may change:</p>
+        <ul>
+          <li>File size</li>
+          <li>Image quality</li>
+          <li>Metadata</li>
+          <li>Formatting</li>
+          <li>Fonts</li>
+          <li>Transparency</li>
+          <li>PDF structure</li>
+          <li>Compatibility</li>
+          <li>Other document properties</li>
+        </ul>
+        <p>FileForge does not guarantee that output will be identical to the original file.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">5. Important Files</h4>
+        <p>Users should maintain an original backup before processing important files.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">6. Generated Results</h4>
+        <p>Users are responsible for checking generated files before using or distributing them.</p>
+        <p>FileForge does not guarantee that generated files are suitable for every professional, legal, academic, financial, medical, government, or business purpose.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">7. Availability</h4>
+        <p>FileForge features may be changed, updated, temporarily unavailable, or discontinued.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">8. Third-Party Software</h4>
+        <p>Some functionality may depend on third-party open-source libraries.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">9. External Services</h4>
+        <p>FileForge may link to external websites or services. FileForge does not control those services.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">10. Intellectual Property</h4>
+        <p>The FileForge name, branding, interface, original code, design, and associated materials are protected by applicable intellectual-property laws except where third-party open-source licenses apply.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">11. Limitation of Responsibility</h4>
+        <p>To the extent permitted by applicable law, FileForge is not responsible for loss resulting from:</p>
+        <ul>
+          <li>Incorrect use</li>
+          <li>Unsupported files</li>
+          <li>Unexpected conversion results</li>
+          <li>Device or browser problems</li>
+          <li>Operating-system limitations</li>
+          <li>Third-party software</li>
+          <li>Download or storage problems</li>
+          <li>User actions</li>
+        </ul>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">12. Changes</h4>
+        <p>These Terms may be updated when FileForge changes.</p>
+
+        <h4 style="color: var(--text-primary); margin-top: 14px; margin-bottom: 6px;">13. Contact</h4>
+        <p>Email: <a href="mailto:support@fileforge.app" style="color: var(--color-primary);">support@fileforge.app</a></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-close-btn-text">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Open Source Licenses Modal -->
+  <div id="licenses-modal" class="modal-container hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg style="width: 24px; height: 24px; color: var(--color-accent);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+          <span>Open Source Licenses</span>
+        </h3>
+        <button type="button" class="modal-close-btn" aria-label="Close modal" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="font-size: 0.88rem; line-height: 1.6; color: var(--text-secondary);">
+        <p style="margin-bottom: 14px;">
+          FileForge is built with appreciation for the open-source community. The following open-source libraries are bundled in this project:
+        </p>
+
+        <!-- PDF.js -->
+        <div style="background: var(--bg-surface-elevated); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="color: var(--text-primary);">PDF.js (Mozilla)</strong>
+            <span class="badge badge-neutral" style="font-size: 0.72rem;">Apache License 2.0</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Copyright &copy; Mozilla and individual contributors</div>
+          <div style="font-size: 0.76rem; color: var(--text-secondary);">Licensed under the Apache License, Version 2.0. You may obtain a copy of the License at <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary);">http://www.apache.org/licenses/LICENSE-2.0</a></div>
         </div>
 
-        <h4>Our Mission</h4>
-        <p>
-          Every day, millions of users upload private tax returns, employment contracts, medical records, and family photos to online converters, without knowing who stores their files or where their data goes.
-        </p>
-        <p>
-          <strong>FileForge was built to change that.</strong> Using state-of-the-art WebAssembly and modern browser APIs, FileForge brings <strong>50 professional document, image, and file utilities</strong> directly into your browser's JavaScript engine—delivering lightning-fast conversions with zero server uploads and zero privacy compromises.
-        </p>
+        <!-- pdf-lib -->
+        <div style="background: var(--bg-surface-elevated); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="color: var(--text-primary);">pdf-lib</strong>
+            <span class="badge badge-neutral" style="font-size: 0.72rem;">MIT License</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Copyright &copy; 2019 Andrew Dillon</div>
+          <div style="font-size: 0.76rem; color: var(--text-secondary);">Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files to deal in the Software without restriction.</div>
+        </div>
 
-        <h4>Complete 50-Tool Suite Breakdown</h4>
-        <ul>
-          <li><strong>15 PDF Tools:</strong> Compress, Merge, Split, Rotate, Password Protect &amp; Encrypt, Delete Pages, Reorder Pages, Extract Pages, Watermark, Page Numbers, PDF to JPG, PDF to PNG, PDF to Text, Crop PDF, Grayscale PDF, Metadata Editor.</li>
-          <li><strong>28 Image Tools:</strong> Lossless/Lossy Compressor, Resizer, Format Converter (JPG, PNG, WebP, GIF, BMP, SVG), Cropper, Rotate, Flip, Watermark, Grayscale, Color Picker, Base64 encoder/decoder, Metadata Remover, and Preview Tool.</li>
-          <li><strong>7 File Utilities:</strong> ZIP Creator, ZIP Extractor, File Size &amp; SHA-256 Checksum Analyzer, Universal File Previewer, Batch Renamer, Batch Multi-Action Processor, Download All as ZIP.</li>
-        </ul>
-
-        <h4>Engineered for Speed &amp; Privacy</h4>
-        <p>
-          FileForge is engineered with pure vanilla HTML5, CSS3, and JavaScript, leveraging verified open-source client-side engines:
-        </p>
-        <ul>
-          <li><strong>PDF-Lib:</strong> Enables creating, merging, splitting, protecting, and compressing PDF files entirely in browser memory.</li>
-          <li><strong>Mozilla PDF.js:</strong> Powerful rendering engine developed by Mozilla that rasterizes PDF pages into HTML5 canvas pixels.</li>
-          <li><strong>HTML5 Canvas &amp; Blob Pipelines:</strong> Native browser APIs for real-time lossy and lossless image compression, resizing, and transparency handling.</li>
-          <li><strong>JSZip Engine:</strong> High-performance DEFLATE compression engine that compiles multiple converted documents into ZIP packages in RAM.</li>
-        </ul>
-
-        <h4>Key Advantages of FileForge</h4>
-        <ul>
-          <li><strong>⚡ Zero Upload Waiting:</strong> No waiting to upload 50MB files over slow connections. Processing begins instantly on your local CPU.</li>
-          <li><strong>🔒 100% Confidential:</strong> Safe for NDAs, bank statements, personal identification, and proprietary code.</li>
-          <li><strong>♾️ Unlimited &amp; Uncapped:</strong> No daily file conversion quotas, no premium accounts, and no paid file size paywalls.</li>
-          <li><strong>📱 Responsive &amp; Adaptive:</strong> Crafted with a mobile-first design system that feels native on desktops, tablets, and mobile screens.</li>
-          <li><strong>🌙 Dark &amp; Light Themes:</strong> Carefully balanced color palettes with ambient glows and high visual ergonomics.</li>
-        </ul>
-
-        <h4>Frequently Asked Questions (FAQ)</h4>
-        <p><strong>Q: Does FileForge require an internet connection?</strong><br>
-        A: Once the webpage is loaded and cached by your browser, FileForge can process files even if you disconnect from the internet.</p>
-
-        <p><strong>Q: Are my original files altered or deleted?</strong><br>
-        A: Never. FileForge operates strictly on in-memory copies. Your original files on your computer or phone remain 100% untouched.</p>
+        <!-- JSZip -->
+        <div style="background: var(--bg-surface-elevated); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="color: var(--text-primary);">JSZip</strong>
+            <span class="badge badge-neutral" style="font-size: 0.72rem;">MIT License / GPLv3</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Copyright &copy; 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso</div>
+          <div style="font-size: 0.76rem; color: var(--text-secondary);">Dual licensed under the MIT License and GPLv3. Distributed under the MIT license terms.</div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary modal-close-btn-text">Close</button>
@@ -4726,7 +4876,7 @@
             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
             <polyline points="22,6 12,13 2,6"></polyline>
           </svg>
-          <span>Contact & Support</span>
+          <span>Contact &amp; Support</span>
         </h3>
         <button type="button" class="modal-close-btn" aria-label="Close modal" title="Close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -4735,25 +4885,16 @@
           </svg>
         </button>
       </div>
-      <div class="modal-body">
-        <div class="modal-callout">
-          <strong>Community & Open Support:</strong> Have feedback, suggested tools, or noticed a bug? We would love to hear from you.
-        </div>
-
-        <h4>Get in Touch</h4>
-        <p>
-          FileForge is an open, privacy-first community initiative. If you have questions, would like to report an issue with a specific PDF format, or want to suggest new file tools, reach out to us:
+      <div class="modal-body" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary);">
+        <p style="margin-bottom: 12px;">
+          Have feedback, need assistance, or want to report an issue? Reach out to us directly:
         </p>
-
-        <ul>
-          <li><strong>Email:</strong> <code>support@fileforge.local</code></li>
-          <li><strong>Bug Reports & Tool Requests:</strong> Submit suggestions directly to our open-source maintainers.</li>
-          <li><strong>Community Guidelines:</strong> We welcome contributions from developers, designers, and privacy advocates worldwide.</li>
-        </ul>
-
-        <h4>Enterprise & Self-Hosting</h4>
-        <p>
-          Because FileForge requires no server software, databases, or API keys, it can be deployed on any static web server, GitHub Pages, or internal corporate intranet with zero configuration.
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 14px;">
+          <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Email Support</div>
+          <div><a href="mailto:support@fileforge.app" style="color: var(--color-primary); font-weight: 600;">support@fileforge.app</a></div>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted);">
+          FileForge is committed to 100% private, client-side document processing.
         </p>
       </div>
       <div class="modal-footer">
