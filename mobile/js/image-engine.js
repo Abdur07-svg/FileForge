@@ -46,6 +46,22 @@ const MobileImageEngine = (() => {
 
     ctx.drawImage(img, 0, 0, width, height);
 
+    if (outputFormat === 'image/png') {
+      const imgData = ctx.getImageData(0, 0, width, height);
+      const data = imgData.data;
+      let levels = quality >= 0.85 ? 64 : (quality >= 0.65 ? 32 : (quality >= 0.4 ? 16 : 8));
+      const step = 256 / levels;
+      const half = step / 2;
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 16) { data[i + 3] = 0; continue; }
+        data[i] = Math.min(255, Math.floor(data[i] / step) * step + half);
+        data[i + 1] = Math.min(255, Math.floor(data[i + 1] / step) * step + half);
+        data[i + 2] = Math.min(255, Math.floor(data[i + 2] / step) * step + half);
+        if (data[i + 3] > 240) data[i + 3] = 255;
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (!blob) {
@@ -53,17 +69,22 @@ const MobileImageEngine = (() => {
           return;
         }
 
+        let finalBlob = blob;
+        if (finalBlob.size > file.size && !maxWidth && !maxHeight) {
+          finalBlob = file;
+        }
+
         const originalSize = file.size;
-        const newSize = blob.size;
+        const newSize = finalBlob.size;
         const savingsPercent = originalSize > 0 
           ? Math.max(0, Math.round(((originalSize - newSize) / originalSize) * 100))
           : 0;
 
-        const previewUrl = URL.createObjectURL(blob);
+        const previewUrl = URL.createObjectURL(finalBlob);
         MobileUtils.trackUrl(previewUrl);
 
         resolve({
-          blob,
+          blob: finalBlob,
           originalSize,
           newSize,
           savingsPercent,

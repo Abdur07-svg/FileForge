@@ -329,6 +329,39 @@ const ImageCompressor = (() => {
     updateActiveFileControls();
   }
 
+  /**
+   * Adaptive Color Quantization for PNG images
+   * Reduces bit depth and palette variance so PNG deflate compression achieves high ratio
+   */
+  function applyPngQuantization(data, width, height, quality) {
+    // Quality mapping: 
+    // 0.85 - 1.0 -> 64 levels (6-bit)
+    // 0.65 - 0.85 -> 32 levels (5-bit)
+    // 0.40 - 0.65 -> 16 levels (4-bit)
+    // < 0.40 -> 8 levels (3-bit)
+    let levels = 32;
+    if (quality >= 0.85) levels = 64;
+    else if (quality >= 0.65) levels = 32;
+    else if (quality >= 0.40) levels = 16;
+    else levels = 8;
+
+    const step = 256 / levels;
+    const half = step / 2;
+    const len = data.length;
+
+    for (let i = 0; i < len; i += 4) {
+      const a = data[i + 3];
+      if (a < 16) {
+        data[i + 3] = 0;
+        continue;
+      }
+      data[i] = Math.min(255, Math.floor(data[i] / step) * step + half);
+      data[i + 1] = Math.min(255, Math.floor(data[i + 1] / step) * step + half);
+      data[i + 2] = Math.min(255, Math.floor(data[i + 2] / step) * step + half);
+      if (a > 240) data[i + 3] = 255;
+    }
+  }
+
   async function compressSingle(fileItem, quality, format, targetWidth, targetHeight) {
     const img = await Utils.loadImage(fileItem.originalDataUrl);
     const canvas = document.createElement('canvas');
@@ -369,11 +402,48 @@ const ImageCompressor = (() => {
 
     ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
-    let blob = await Utils.canvasToBlob(canvas, outputMime, quality);
+    let blob;
 
-    // Iterative quality tuning for JPEG and WebP when dimensions are unchanged
-    if (blob.size >= fileItem.originalSize && targetWidth === fileItem.originalWidth && targetHeight === fileItem.originalHeight) {
-      if (outputMime === 'image/jpeg' || outputMime === 'image/webp') {
+    if (outputMime === 'image/png') {
+      // For PNG: Apply adaptive color quantization to achieve true lossy PNG size reduction
+      const workCanvas = document.createElement('canvas');
+      workCanvas.width = targetWidth;
+      workCanvas.height = targetHeight;
+      const workCtx = workCanvas.getContext('2d');
+      workCtx.drawImage(canvas, 0, 0);
+
+      const imgData = workCtx.getImageData(0, 0, targetWidth, targetHeight);
+      applyPngQuantization(imgData.data, targetWidth, targetHeight, quality);
+      workCtx.putImageData(imgData, 0, 0);
+
+      blob = await Utils.canvasToBlob(workCanvas, 'image/png');
+
+      // If output is still larger than original and dimensions are unchanged, try stronger quantization
+      if (blob.size >= fileItem.originalSize && targetWidth === fileItem.originalWidth && targetHeight === fileItem.originalHeight) {
+        let testQuality = quality;
+        while (blob.size >= fileItem.originalSize && testQuality > 0.15) {
+          testQuality -= 0.2;
+          const freshData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+          applyPngQuantization(freshData.data, targetWidth, targetHeight, Math.max(0.1, testQuality));
+          workCtx.putImageData(freshData, 0, 0);
+          const lowerBlob = await Utils.canvasToBlob(workCanvas, 'image/png');
+          if (lowerBlob.size < blob.size) {
+            blob = lowerBlob;
+          } else {
+            break;
+          }
+        }
+
+        // Absolute Safety Guard: If original file was already hyper-optimized PNG, never increase size
+        if (blob.size > fileItem.originalSize && format === 'original') {
+          blob = fileItem.file;
+        }
+      }
+    } else {
+      // For JPEG and WebP: standard quality encoding with iterative tuning
+      blob = await Utils.canvasToBlob(canvas, outputMime, quality);
+
+      if (blob.size >= fileItem.originalSize && targetWidth === fileItem.originalWidth && targetHeight === fileItem.originalHeight) {
         let tryQuality = quality;
         while (blob.size >= fileItem.originalSize && tryQuality > 0.15) {
           tryQuality -= 0.15;
@@ -383,6 +453,11 @@ const ImageCompressor = (() => {
           } else {
             break;
           }
+        }
+
+        // Absolute Safety Guard: Never output larger file than original in original format mode
+        if (blob.size > fileItem.originalSize && format === 'original') {
+          blob = fileItem.file;
         }
       }
     }
