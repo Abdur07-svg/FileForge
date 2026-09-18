@@ -199,19 +199,36 @@ const MobileUtils = (() => {
       triggerHaptic('light');
 
       try {
-        // Standard Mobile Blob Download
-        const url = URL.createObjectURL(activeBlob);
-        trackUrl(url);
+        if (window.AndroidBridge && typeof window.AndroidBridge.saveFile === 'function') {
+          // Native Android APK Saving to Downloads/FileForge
+          const reader = new FileReader();
+          await new Promise((resolve, reject) => {
+            reader.onloadend = () => {
+              try {
+                window.AndroidBridge.saveFile(reader.result, finalFilename, activeBlob.type || activeMimeType);
+                resolve();
+              } catch (e) {
+                reject(e);
+              }
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(activeBlob);
+          });
+        } else {
+          // Standard Mobile Web Blob Download
+          const url = URL.createObjectURL(activeBlob);
+          trackUrl(url);
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = finalFilename;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          if (a.parentElement) a.parentElement.removeChild(a);
-          revokeUrl(url);
-        }, 1500);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = finalFilename;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (a.parentElement) a.parentElement.removeChild(a);
+            revokeUrl(url);
+          }, 1500);
+        }
 
         // Display Complete View
         const compFilename = document.getElementById('save-modal-complete-filename');
@@ -220,7 +237,11 @@ const MobileUtils = (() => {
 
         if (compFilename) compFilename.textContent = finalFilename;
         if (compMeta) compMeta.textContent = `${formatBytes(activeBlob.size)} • ${activeBlob.type || activeMimeType}`;
-        if (compLocation) compLocation.textContent = "Your file has been saved to your device's download location.";
+        if (compLocation) {
+          compLocation.textContent = window.AndroidBridge 
+            ? "Saved directly to your device storage in Downloads/FileForge." 
+            : "Your file has been saved to your device's download location.";
+        }
 
         triggerHaptic('success');
         showStep('complete');

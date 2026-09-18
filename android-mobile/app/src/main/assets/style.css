@@ -1186,7 +1186,8 @@ button, input, select, textarea {
    ========================================================================== */
 
 /* Full-Screen & Bottom-Sheet Mobile Modals */
-.mobile-modal-overlay {
+.mobile-modal-overlay,
+.mobile-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -1199,8 +1200,24 @@ button, input, select, textarea {
   animation: mobileModalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.mobile-modal-overlay.hidden {
+.mobile-modal-overlay.hidden,
+.mobile-modal-backdrop.hidden {
   display: none !important;
+}
+
+.mobile-modal-sheet {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  border-top-left-radius: var(--radius-xl, 20px);
+  border-top-right-radius: var(--radius-xl, 20px);
+  padding: 20px 18px 28px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: mobileSheetSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 @keyframes mobileModalFadeIn {
