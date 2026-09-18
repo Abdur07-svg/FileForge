@@ -3,6 +3,7 @@ import sys
 import subprocess
 import shutil
 import zipfile
+from PIL import Image, ImageDraw
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ANDROID_HOME = os.environ.get('ANDROID_HOME', os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Android', 'Sdk'))
@@ -52,12 +53,128 @@ def run_cmd(cmd, cwd=BASE_DIR):
             print(res.stdout.strip())
     return res
 
+def generate_crisp_icons():
+    """Generates ultra high-definition, anti-aliased Android launcher icons"""
+    scale = 2
+    master_size = 512 * scale
+    W, H = master_size, master_size
+
+    def create_master_icon(is_round=False):
+        # 1. Vibrant Background Gradient
+        grad = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+        for y in range(H):
+            for x in range(W):
+                t = (x + y) / (W + H)
+                if t < 0.5:
+                    p = t / 0.5
+                    r = int(99 + p * (139 - 99))
+                    g = int(102 + p * (92 - 102))
+                    b = int(241 + p * (246 - 241))
+                else:
+                    p = (t - 0.5) / 0.5
+                    r = int(139 + p * (236 - 139))
+                    g = int(92 + p * (72 - 92))
+                    b = int(246 + p * (153 - 246))
+                grad.putpixel((x, y), (r, g, b, 255))
+
+        mask = Image.new('L', (W, H), 0)
+        draw_mask = ImageDraw.Draw(mask)
+        margin = int(W * (3.5 / 48))
+        if is_round:
+            draw_mask.ellipse([margin, margin, W - margin, H - margin], fill=255)
+        else:
+            rx = int(W * (12 / 48))
+            draw_mask.rounded_rectangle([margin, margin, W - margin, H - margin], radius=rx, fill=255)
+
+        bg = Image.composite(grad, Image.new('RGBA', (W, H), (0,0,0,0)), mask)
+
+        def pt(x, y):
+            return (int(x * W / 48), int(y * H / 48))
+
+        # Document / File Sheet
+        doc_layer = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+        doc_draw = ImageDraw.Draw(doc_layer)
+        doc_points = [
+            pt(16, 12), pt(27, 12), pt(34, 19), pt(34, 34),
+            pt(32, 36), pt(16, 36), pt(14, 34), pt(14, 14)
+        ]
+        doc_draw.polygon(doc_points, fill=(255, 255, 255, 250))
+
+        # Corner fold detail
+        fold_back = [pt(27, 12), pt(34, 19), pt(28, 19), pt(27, 18)]
+        doc_draw.polygon(fold_back, fill=(203, 213, 225, 255))
+
+        # Lightning / Forge Bolt
+        bolt_points = [
+            pt(25, 20.5), pt(18.5, 28), pt(24, 28), pt(23, 33.5),
+            pt(29.5, 26), pt(24, 26), pt(25, 20.5)
+        ]
+        bolt_mask = Image.new('L', (W, H), 0)
+        b_draw = ImageDraw.Draw(bolt_mask)
+        b_draw.polygon(bolt_points, fill=255)
+
+        flame_grad = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+        for y in range(int(12 * H / 48), int(36 * H / 48)):
+            p = (y - (12 * H / 48)) / (24 * H / 48)
+            p = max(0.0, min(1.0, p))
+            r = int(245 + p * (239 - 245))
+            g = int(158 + p * (68 - 158))
+            b = int(11 + p * (68 - 11))
+            for x in range(W):
+                flame_grad.putpixel((x, y), (r, g, b, 255))
+
+        bolt_img = Image.composite(flame_grad, Image.new('RGBA', (W, H), (0,0,0,0)), bolt_mask)
+
+        final = Image.alpha_composite(bg, doc_layer)
+        final = Image.alpha_composite(final, bolt_img)
+        return final
+
+    sq_master = create_master_icon(is_round=False)
+    rd_master = create_master_icon(is_round=True)
+
+    # Save to all Android density buckets
+    density_map = {
+        'mipmap-mdpi': 48,
+        'mipmap-hdpi': 72,
+        'mipmap-xhdpi': 96,
+        'mipmap-xxhdpi': 144,
+        'mipmap-xxxhdpi': 192,
+    }
+
+    for folder, size in density_map.items():
+        folder_path = os.path.join(RES_DIR, folder)
+        os.makedirs(folder_path, exist_ok=True)
+        sq_img = sq_master.resize((size, size), Image.Resampling.LANCZOS)
+        rd_img = rd_master.resize((size, size), Image.Resampling.LANCZOS)
+        sq_img.save(os.path.join(folder_path, 'ic_launcher.png'), 'PNG')
+        rd_img.save(os.path.join(folder_path, 'ic_launcher_round.png'), 'PNG')
+
+    # Also save to drawable and assets
+    drawable_path = os.path.join(RES_DIR, 'drawable')
+    os.makedirs(drawable_path, exist_ok=True)
+    icon_512 = sq_master.resize((512, 512), Image.Resampling.LANCZOS)
+    icon_512_rd = rd_master.resize((512, 512), Image.Resampling.LANCZOS)
+    icon_512.save(os.path.join(drawable_path, 'ic_launcher.png'), 'PNG')
+    icon_512_rd.save(os.path.join(drawable_path, 'ic_launcher_round.png'), 'PNG')
+
+    # Save to project assets
+    for target_dir in [os.path.join(BASE_DIR, 'assets', 'icons'), os.path.join(MOBILE_DIR, 'assets', 'icons')]:
+        os.makedirs(target_dir, exist_ok=True)
+        icon_512.save(os.path.join(target_dir, 'icon-512x512.png'), 'PNG')
+        sq_master.resize((192, 192), Image.Resampling.LANCZOS).save(os.path.join(target_dir, 'icon-192x192.png'), 'PNG')
+        sq_master.resize((180, 180), Image.Resampling.LANCZOS).save(os.path.join(target_dir, 'apple-touch-icon.png'), 'PNG')
+
+    print("Ultra high-definition launcher icons generated for all densities!")
+
 def setup_android_source_files():
     os.makedirs(os.path.join(JAVA_SRC, 'com', 'fileforge', 'mobile'), exist_ok=True)
     os.makedirs(os.path.join(RES_DIR, 'values'), exist_ok=True)
     os.makedirs(os.path.join(RES_DIR, 'layout'), exist_ok=True)
     os.makedirs(os.path.join(RES_DIR, 'xml'), exist_ok=True)
     os.makedirs(os.path.join(RES_DIR, 'drawable'), exist_ok=True)
+
+    # Generate all high-res Android mipmap and drawable icons
+    generate_crisp_icons()
 
     # 1. AndroidManifest.xml
     with open(MANIFEST, 'w', encoding='utf-8') as f:
@@ -71,9 +188,9 @@ def setup_android_source_files():
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FileForge"
         android:usesCleartextTraffic="true">
@@ -315,10 +432,7 @@ public class MainActivity extends Activity {
     }
 }''')
 
-    # Copy logo as drawable ic_launcher
-    logo_src = os.path.join(MOBILE_DIR, 'assets', 'icons', 'favicon-32x32.png')
-    if os.path.exists(logo_src):
-        shutil.copy2(logo_src, os.path.join(RES_DIR, 'drawable', 'ic_launcher.png'))
+
 
 def sync_mobile_assets():
     if os.path.exists(ASSETS_DIR):
