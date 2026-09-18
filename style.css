@@ -196,10 +196,27 @@ button {
   font-weight: 800;
   font-size: 1.32rem;
   letter-spacing: -0.025em;
-  text-decoration: none;
+  text-decoration: none !important;
   white-space: nowrap;
   flex-shrink: 0;
   line-height: 1;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none;
+}
+
+.brand-logo:focus,
+.brand-logo:focus-visible,
+.brand-logo:active,
+.brand-logo:hover,
+.footer-brand .brand-logo:focus,
+.footer-brand .brand-logo:focus-visible,
+.footer-brand .brand-logo:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .brand-logo-img {
@@ -208,6 +225,8 @@ button {
   border-radius: var(--radius-sm);
   display: block;
   flex-shrink: 0;
+  border: none !important;
+  outline: none !important;
 }
 
 .brand-name {
@@ -216,10 +235,13 @@ button {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  padding-right: 6px;
+  color: transparent;
+  padding-right: 12px;
   line-height: 1.25;
   font-weight: 800;
   letter-spacing: -0.02em;
+  border: none !important;
+  outline: none !important;
 }
 
 .nav-menu {
@@ -246,12 +268,32 @@ button {
 }
 
 .nav-link.active,
-.nav-home-link.active {
+.mobile-nav-item.active {
   color: var(--text-primary);
   background-color: var(--bg-surface-elevated);
   border-color: var(--border-subtle);
   font-weight: 600;
   box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2);
+}
+
+.brand-logo,
+.brand-logo.active,
+.brand-logo:focus,
+.brand-logo:focus-visible,
+.brand-logo:active,
+.brand-logo:hover,
+.footer-brand .brand-logo,
+.footer-brand .brand-logo.active,
+.footer-brand .brand-logo:focus,
+.footer-brand .brand-logo:focus-visible,
+.footer-brand .brand-logo:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  text-decoration: none !important;
 }
 
 /* --- Navigation Dropdown Menus --- */

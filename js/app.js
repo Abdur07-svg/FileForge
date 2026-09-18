@@ -641,7 +641,7 @@ const App = (() => {
     });
 
     // Logo & Home links
-    document.querySelectorAll('.nav-home-link').forEach(link => {
+    document.querySelectorAll('.nav-home-link, .brand-home-link, .brand-logo').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         closeAllDropdowns();
@@ -1243,7 +1243,7 @@ const App = (() => {
   }
 
   function updateNavActiveState(isHome = true) {
-    document.querySelectorAll('.nav-home-link').forEach(link => {
+    document.querySelectorAll('.nav-link.nav-home-link, .mobile-nav-item.nav-home-link').forEach(link => {
       if (isHome) {
         link.classList.add('active');
         link.setAttribute('aria-current', 'page');
