@@ -152,6 +152,7 @@ const MobileApp = (() => {
     APP_NAME: 'FileForge',
     MOBILE_APP_NAME: 'FileForge Mobile',
     APP_VERSION: '1.0.0',
+    DEVELOPER: 'Abdur',
     COPYRIGHT_YEAR: '2026',
     LAST_UPDATED: 'September 18, 2026',
     CONTACT_EMAIL: 'support@fileforge.app'
