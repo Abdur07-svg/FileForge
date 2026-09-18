@@ -86,7 +86,9 @@
            ========================================== -->
       <div id="mobile-settings-view" class="mobile-view-enter hidden">
         <div class="mobile-tool-nav">
-          <button type="button" class="mobile-back-btn" aria-label="Back to Home">←</button>
+          <button type="button" class="mobile-back-btn" aria-label="Back to Home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
           <h2 class="mobile-tool-header-title">Settings</h2>
         </div>
 
@@ -181,7 +183,9 @@
            ========================================== -->
       <div id="mobile-about-view" class="mobile-view-enter hidden">
         <div class="mobile-tool-nav">
-          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">←</button>
+          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
           <h2 class="mobile-tool-header-title">About FileForge</h2>
         </div>
 
@@ -216,7 +220,9 @@
            ========================================== -->
       <div id="mobile-privacy-view" class="mobile-view-enter hidden">
         <div class="mobile-tool-nav">
-          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">←</button>
+          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
           <h2 class="mobile-tool-header-title">Privacy Policy</h2>
         </div>
 
@@ -252,7 +258,9 @@
            ========================================== -->
       <div id="mobile-terms-view" class="mobile-view-enter hidden">
         <div class="mobile-tool-nav">
-          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">←</button>
+          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
           <h2 class="mobile-tool-header-title">Terms of Use</h2>
         </div>
 
@@ -288,7 +296,9 @@
            ========================================== -->
       <div id="mobile-licenses-view" class="mobile-view-enter hidden">
         <div class="mobile-tool-nav">
-          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">←</button>
+          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
           <h2 class="mobile-tool-header-title">Open Source Licenses</h2>
         </div>
 
@@ -322,18 +332,20 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 1: Image Compressor --- -->
         <div id="tool-view-image-compressor" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">Image Compressor</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-image-compressor">
+          <div class="mobile-upload-box" id="upload-image-compressor" tabindex="0" role="button">
             <div class="upload-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </div>
             <div class="upload-title">+ Select Image</div>
             <div class="upload-sub">Supports JPG, PNG, WebP</div>
             <input type="file" id="input-image-compressor" class="mobile-file-input hidden" accept="image/*">
-          </label>
+          </div>
 
           <div id="selected-image-compressor" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -342,6 +354,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                 <div id="name-image-compressor" class="file-info-name">image.jpg</div>
                 <div id="size-image-compressor" class="file-info-size">0 KB</div>
               </div>
+              <button type="button" id="change-image-compressor" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
             <div class="mobile-control-group">
@@ -386,18 +399,20 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 2: PDF Compressor --- -->
         <div id="tool-view-pdf-compressor" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">PDF Compressor</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-pdf-compressor">
+          <div class="mobile-upload-box" id="upload-pdf-compressor" tabindex="0" role="button">
             <div class="upload-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6m-3 3 3 3 3-3"/></svg>
             </div>
             <div class="upload-title">+ Select PDF Document</div>
             <div class="upload-sub">Reduces PDF file size on your device</div>
             <input type="file" id="input-pdf-compressor" class="mobile-file-input hidden" accept="application/pdf">
-          </label>
+          </div>
 
           <div id="selected-pdf-compressor" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -406,6 +421,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                 <div id="name-pdf-compressor" class="file-info-name">document.pdf</div>
                 <div id="size-pdf-compressor" class="file-info-size">0 KB</div>
               </div>
+              <button type="button" id="change-pdf-compressor" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
             <div class="mobile-control-group">
@@ -455,27 +471,59 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 3: Image to PDF --- -->
         <div id="tool-view-image-to-pdf" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">Image to PDF</h2>
           </div>
 
           <div style="display: flex; gap: 8px;">
-            <label class="btn btn-secondary btn-block" style="cursor: pointer;">
-              <span>+ Add Images</span>
-              <input type="file" id="input-image-to-pdf" class="mobile-file-input hidden" accept="image/*" multiple>
-            </label>
+            <button type="button" id="btn-trigger-image-to-pdf" class="btn btn-secondary btn-block">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Add Images</span>
+            </button>
+            <input type="file" id="input-image-to-pdf" class="mobile-file-input hidden" accept="image/*" multiple>
           </div>
 
-          <div class="mobile-file-selected" style="margin-top: 12px;">
+          <div id="selected-image-to-pdf" class="mobile-multi-selected" style="margin-top: 12px;">
             <div id="list-image-to-pdf" class="mobile-dynamic-list">
               <div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">
-                No images added. Tap <strong>+ Add Images</strong> to start.
+                No images added yet. Tap <strong>+ Add Images</strong> to start.
               </div>
             </div>
 
-            <div class="mobile-accordion open" style="margin-top: 8px;">
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+              <button type="button" id="btn-open-signature-modal" class="btn btn-secondary btn-block" style="flex: 1;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; flex-shrink: 0;"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+                <span id="label-signature-btn">Signature Studio</span>
+              </button>
+            </div>
+
+            <!-- Live PDF Page Preview Stage with Interactive Signature Placement -->
+            <div id="i2p-live-preview-box" class="mobile-pdf-preview-stage hidden">
+              <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; display: flex; justify-content: space-between; width: 100%;">
+                <span>PDF Page Preview</span>
+                <span id="i2p-preview-info" style="color: var(--color-primary);">Page 1 of 1</span>
+              </div>
+              <div class="mobile-pdf-preview-sheet">
+                <canvas id="mobile-i2p-preview-canvas" class="mobile-pdf-preview-canvas"></canvas>
+                <!-- Draggable Signature Overlay on Preview -->
+                <div id="mobile-i2p-sig-overlay" class="mobile-sig-overlay hidden">
+                  <img id="mobile-i2p-sig-img" alt="Signature" />
+                  <button type="button" id="mobile-i2p-sig-del" class="mobile-sig-delete-btn" title="Remove Signature">✕</button>
+                  <div id="mobile-i2p-sig-handle" class="mobile-sig-resize-handle" title="Drag to Resize"></div>
+                </div>
+              </div>
+              <div class="mobile-preview-nav-row">
+                <button type="button" id="btn-i2p-prev-page" class="btn btn-xs btn-secondary" disabled>◀ Prev Page</button>
+                <div style="font-size: 0.78rem; color: var(--text-muted);" id="i2p-sig-status-hint">Drag signature to move</div>
+                <button type="button" id="btn-i2p-next-page" class="btn btn-xs btn-secondary" disabled>Next Page ▶</button>
+              </div>
+            </div>
+
+            <div class="mobile-accordion open" style="margin-top: 10px;">
               <div class="mobile-accordion-header">
-                <span>Page Layout & Sizing</span>
+                <span>Page Layout &amp; Sizing</span>
                 <span class="mobile-accordion-icon">▾</span>
               </div>
               <div class="mobile-accordion-body">
@@ -484,6 +532,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                   <select id="size-image-to-pdf" class="mobile-select">
                     <option value="a4" selected>A4 Standard</option>
                     <option value="letter">US Letter</option>
+                    <option value="legal">US Legal</option>
                     <option value="fit">Fit Page to Image Dimensions</option>
                   </select>
                 </div>
@@ -499,17 +548,19 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                   <label class="mobile-control-label">Page Margins</label>
                   <select id="margin-image-to-pdf" class="mobile-select">
                     <option value="none" selected>No Margins (Edge to Edge)</option>
-                    <option value="small">Small Margin</option>
-                    <option value="medium">Medium Margin</option>
+                    <option value="small">Small Margin (18 pt)</option>
+                    <option value="medium">Medium Margin (36 pt)</option>
+                    <option value="large">Large Margin (54 pt)</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            <button type="button" id="btn-image-to-pdf" class="btn btn-primary btn-block" disabled>Create PDF</button>
+            <button type="button" id="btn-image-to-pdf" class="btn btn-primary btn-block" style="margin-top: 12px;" disabled>Create PDF</button>
 
             <div id="result-image-to-pdf" class="mobile-result-box hidden">
               <div class="result-header">✓ PDF Ready!</div>
+              <div id="meta-image-to-pdf" class="file-info-size" style="margin-bottom: 8px;"></div>
               <div class="result-actions-row">
                 <button type="button" id="dl-image-to-pdf" class="btn btn-success">Download PDF</button>
                 <button type="button" id="share-image-to-pdf" class="btn btn-secondary">Share</button>
@@ -536,16 +587,18 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 4: PDF to JPG --- -->
         <div id="tool-view-pdf-to-jpg" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">PDF to JPG</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-pdf-to-jpg">
+          <div class="mobile-upload-box" id="upload-pdf-to-jpg" tabindex="0" role="button">
             <div class="upload-icon">📄</div>
             <div class="upload-title">+ Select PDF</div>
             <div class="upload-sub">Converts PDF pages into high-res JPGs</div>
             <input type="file" id="input-pdf-to-jpg" class="mobile-file-input hidden" accept="application/pdf">
-          </label>
+          </div>
 
           <div id="selected-pdf-to-jpg" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -554,6 +607,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                 <div id="name-pdf-to-jpg" class="file-info-name">doc.pdf</div>
                 <div id="size-pdf-to-jpg" class="file-info-size">0 KB</div>
               </div>
+              <button type="button" id="change-pdf-to-jpg" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
             <div id="progress-pdf-to-jpg" class="mobile-progress-wrap hidden">
@@ -593,16 +647,18 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 5: PDF to PNG --- -->
         <div id="tool-view-pdf-to-png" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">PDF to PNG</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-pdf-to-png">
+          <div class="mobile-upload-box" id="upload-pdf-to-png" tabindex="0" role="button">
             <div class="upload-icon">📄</div>
             <div class="upload-title">+ Select PDF</div>
             <div class="upload-sub">Converts PDF pages into lossless PNGs</div>
             <input type="file" id="input-pdf-to-png" class="mobile-file-input hidden" accept="application/pdf">
-          </label>
+          </div>
 
           <div id="selected-pdf-to-png" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -611,6 +667,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                 <div id="name-pdf-to-png" class="file-info-name">doc.pdf</div>
                 <div id="size-pdf-to-png" class="file-info-size">0 KB</div>
               </div>
+              <button type="button" id="change-pdf-to-png" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
             <div id="progress-pdf-to-png" class="mobile-progress-wrap hidden">
@@ -650,15 +707,17 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 6: JPG to PNG --- -->
         <div id="tool-view-jpg-to-png" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">JPG to PNG</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-jpg-to-png">
+          <div class="mobile-upload-box" id="upload-jpg-to-png" tabindex="0" role="button">
             <div class="upload-icon">🖼️</div>
             <div class="upload-title">+ Select JPG Image</div>
             <input type="file" id="input-jpg-to-png" class="mobile-file-input hidden" accept="image/jpeg,image/jpg">
-          </label>
+          </div>
 
           <div id="selected-jpg-to-png" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -667,6 +726,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                 <div id="name-jpg-to-png" class="file-info-name">image.jpg</div>
                 <div id="size-jpg-to-png" class="file-info-size">0 KB</div>
               </div>
+              <button type="button" id="change-jpg-to-png" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
             <button type="button" id="btn-jpg-to-png" class="btn btn-primary btn-block">Convert to PNG</button>
@@ -699,15 +759,17 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 7: PNG to JPG --- -->
         <div id="tool-view-png-to-jpg" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">PNG to JPG</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-png-to-jpg">
+          <div class="mobile-upload-box" id="upload-png-to-jpg" tabindex="0" role="button">
             <div class="upload-icon">🖼️</div>
             <div class="upload-title">+ Select PNG Image</div>
             <input type="file" id="input-png-to-jpg" class="mobile-file-input hidden" accept="image/png">
-          </label>
+          </div>
 
           <div id="selected-png-to-jpg" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -716,6 +778,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                 <div id="name-png-to-jpg" class="file-info-name">image.png</div>
                 <div id="size-png-to-jpg" class="file-info-size">0 KB</div>
               </div>
+              <button type="button" id="change-png-to-jpg" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
             <button type="button" id="btn-png-to-jpg" class="btn btn-primary btn-block">Convert to JPG</button>
@@ -745,18 +808,21 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
           </div>
         </div>
 
-        <!-- --- TOOL 8: Image Resizer --- -->
+        <!-- --- TOOL 8: Image Resizer (Interactive Touch / Finger Scaling) --- -->
         <div id="tool-view-image-resizer" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">Image Resizer</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-image-resizer">
+          <div class="mobile-upload-box" id="upload-image-resizer" tabindex="0" role="button">
             <div class="upload-icon">📐</div>
             <div class="upload-title">+ Select Image to Resize</div>
+            <div class="upload-sub">Supports JPG, PNG, WebP</div>
             <input type="file" id="input-image-resizer" class="mobile-file-input hidden" accept="image/*">
-          </label>
+          </div>
 
           <div id="selected-image-resizer" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -765,30 +831,68 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                 <div id="name-image-resizer" class="file-info-name">photo.jpg</div>
                 <div id="dims-image-resizer" class="file-info-size">1920 × 1080 px</div>
               </div>
+              <button type="button" id="change-image-resizer" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
-            <div class="mobile-control-group">
-              <label class="mobile-control-label">Quick Scale Preset</label>
-              <select id="scale-image-resizer" class="mobile-select">
-                <option value="">Custom Dimensions</option>
-                <option value="75">75% of original</option>
-                <option value="50">50% of original</option>
-                <option value="25">25% of original</option>
-              </select>
-            </div>
-
-            <div style="display: flex; gap: 8px;">
-              <div class="mobile-control-group" style="flex: 1;">
-                <label class="mobile-control-label">Width (px)</label>
-                <input type="number" id="width-image-resizer" class="mobile-input">
+            <!-- Touch / Finger Interactive Resizing Card -->
+            <div class="touch-resize-container">
+              <div class="touch-resize-header">
+                <span>Touch / Finger Live Resize</span>
+                <span id="badge-pct-image-resizer" class="touch-resize-badge">100%</span>
               </div>
-              <div class="mobile-control-group" style="flex: 1;">
-                <label class="mobile-control-label">Height (px)</label>
-                <input type="number" id="height-image-resizer" class="mobile-input">
+
+              <!-- Interactive Touch Canvas Preview with Corner Drag Handle -->
+              <div id="box-touch-resizer" class="touch-preview-box">
+                <div id="wrapper-touch-image" class="touch-image-wrapper">
+                  <img id="thumb-touch-resizer" class="touch-preview-image" alt="Resize Preview">
+                  <div id="handle-touch-resizer" class="touch-resize-handle" title="Drag to resize with finger">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Smooth Finger Slider -->
+              <div class="mobile-control-group" style="margin-top: 14px;">
+                <div class="mobile-control-label">
+                  <span>Scale with Finger:</span>
+                  <span id="val-slider-image-resizer" class="text-primary font-bold">100%</span>
+                </div>
+                <div class="mobile-slider-wrap">
+                  <input type="range" id="slider-image-resizer" class="mobile-slider" min="10" max="200" step="1" value="100">
+                </div>
+              </div>
+
+              <!-- Quick Presets -->
+              <div class="touch-preset-chips">
+                <button type="button" class="touch-preset-btn" data-scale="25">25%</button>
+                <button type="button" class="touch-preset-btn" data-scale="50">50%</button>
+                <button type="button" class="touch-preset-btn" data-scale="75">75%</button>
+                <button type="button" class="touch-preset-btn active" data-scale="100">100%</button>
+                <button type="button" class="touch-preset-btn" data-scale="150">150%</button>
+                <button type="button" class="touch-preset-btn" data-scale="200">200%</button>
+              </div>
+
+              <!-- Aspect Ratio Lock & Exact Pixel Inputs -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; margin-bottom: 6px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" id="lock-ratio-image-resizer" checked style="accent-color: var(--color-primary); width: 16px; height: 16px;">
+                  <span>Lock Aspect Ratio (Proportions)</span>
+                </label>
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <div class="mobile-control-group" style="flex: 1;">
+                  <label class="mobile-control-label">Width (px)</label>
+                  <input type="number" id="width-image-resizer" class="mobile-input" min="1">
+                </div>
+                <div class="mobile-control-group" style="flex: 1;">
+                  <label class="mobile-control-label">Height (px)</label>
+                  <input type="number" id="height-image-resizer" class="mobile-input" min="1">
+                </div>
               </div>
             </div>
 
-            <button type="button" id="btn-image-resizer" class="btn btn-primary btn-block">Resize Image</button>
+            <button type="button" id="btn-image-resizer" class="btn btn-primary btn-block" style="margin-top: 14px;">Resize &amp; Save Image</button>
 
             <div id="result-image-resizer" class="mobile-result-box hidden">
               <div class="result-header">✓ Resized Successfully</div>
@@ -809,8 +913,8 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
             <div class="mobile-accordion-body">
               <ol class="guide-step-list">
                 <li>Tap <strong>+ Select Image to Resize</strong>.</li>
-                <li>Enter new dimensions or select a percentage preset.</li>
-                <li>Tap <strong>Resize Image</strong>.</li>
+                <li>Drag the glowing <strong>Touch Handle</strong> with your finger or use the <strong>Scale Slider</strong>.</li>
+                <li>Tap <strong>Resize &amp; Save Image</strong>.</li>
                 <li>Tap <strong>Download</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
@@ -820,16 +924,18 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 9: Image Converter --- -->
         <div id="tool-view-image-converter" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">Image Converter</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-image-converter">
+          <div class="mobile-upload-box" id="upload-image-converter" tabindex="0" role="button">
             <div class="upload-icon">🔄</div>
             <div class="upload-title">+ Select Image</div>
             <div class="upload-sub">Convert to JPG, PNG, or WebP</div>
             <input type="file" id="input-image-converter" class="mobile-file-input hidden" accept="image/*">
-          </label>
+          </div>
 
           <div id="selected-image-converter" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -838,6 +944,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                 <div id="name-image-converter" class="file-info-name">image.png</div>
                 <div id="size-image-converter" class="file-info-size">0 KB</div>
               </div>
+              <button type="button" id="change-image-converter" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
             <div class="mobile-control-group">
@@ -880,23 +987,28 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 10: PDF Merger --- -->
         <div id="tool-view-pdf-merger" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">PDF Merger</h2>
           </div>
 
-          <label class="btn btn-secondary btn-block" style="cursor: pointer;">
-            <span>+ Add PDF Files</span>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="btn-trigger-pdf-merger" class="btn btn-secondary btn-block">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Add PDF Files</span>
+            </button>
             <input type="file" id="input-pdf-merger" class="mobile-file-input hidden" accept="application/pdf" multiple>
-          </label>
+          </div>
 
-          <div class="mobile-file-selected" style="margin-top: 12px;">
+          <div id="selected-pdf-merger" class="mobile-multi-selected" style="margin-top: 12px;">
             <div id="list-pdf-merger" class="mobile-dynamic-list">
               <div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">
                 Add at least 2 PDF files to combine them.
               </div>
             </div>
 
-            <button type="button" id="btn-pdf-merger" class="btn btn-primary btn-block" disabled>Merge PDFs</button>
+            <button type="button" id="btn-pdf-merger" class="btn btn-primary btn-block" style="margin-top: 12px;" disabled>Merge PDFs</button>
 
             <div id="result-pdf-merger" class="mobile-result-box hidden">
               <div class="result-header">✓ PDFs Merged</div>
@@ -927,15 +1039,17 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 11: PDF Splitter --- -->
         <div id="tool-view-pdf-splitter" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">PDF Splitter</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-pdf-splitter">
+          <div class="mobile-upload-box" id="upload-pdf-splitter" tabindex="0" role="button">
             <div class="upload-icon">✂️</div>
             <div class="upload-title">+ Select PDF to Split</div>
             <input type="file" id="input-pdf-splitter" class="mobile-file-input hidden" accept="application/pdf">
-          </label>
+          </div>
 
           <div id="selected-pdf-splitter" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -944,6 +1058,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
                 <div id="name-pdf-splitter" class="file-info-name">document.pdf</div>
                 <div id="size-pdf-splitter" class="file-info-size">0 KB</div>
               </div>
+              <button type="button" id="change-pdf-splitter" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
             <div class="mobile-control-group">
@@ -981,16 +1096,18 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 12: PDF Page Extractor --- -->
         <div id="tool-view-pdf-page-extractor" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">PDF Page Extractor</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-pdf-page-extractor">
+          <div class="mobile-upload-box" id="upload-pdf-page-extractor" tabindex="0" role="button">
             <div class="upload-icon">📑</div>
             <div class="upload-title">+ Select PDF</div>
             <div class="upload-sub">Tap pages visually to extract them</div>
             <input type="file" id="input-pdf-page-extractor" class="mobile-file-input hidden" accept="application/pdf">
-          </label>
+          </div>
 
           <div id="selected-pdf-page-extractor" class="mobile-file-selected hidden">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1030,7 +1147,9 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 13: ZIP File Creator --- -->
         <div id="tool-view-zip-creator" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">ZIP File Creator</h2>
           </div>
 
@@ -1041,14 +1160,14 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
             <input type="file" id="input-folder-zip-creator" class="mobile-file-input hidden" webkitdirectory directory multiple>
           </div>
 
-          <div class="mobile-file-selected" style="margin-top: 12px;">
+          <div id="selected-zip-creator" class="mobile-multi-selected" style="margin-top: 12px;">
             <div id="list-zip-creator" class="mobile-dynamic-list">
               <div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">
                 Add files or a folder to package into a ZIP.
               </div>
             </div>
 
-            <div class="mobile-control-group">
+            <div class="mobile-control-group" style="margin-top: 10px;">
               <label class="mobile-control-label">ZIP Filename</label>
               <input type="text" id="name-input-zip-creator" class="mobile-input" value="archive.zip">
             </div>
@@ -1083,16 +1202,18 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 14: ZIP File Extractor --- -->
         <div id="tool-view-zip-extractor" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">ZIP File Extractor</h2>
           </div>
 
-          <label class="mobile-upload-box" id="upload-zip-extractor">
+          <div class="mobile-upload-box" id="upload-zip-extractor" tabindex="0" role="button">
             <div class="upload-icon">📦</div>
             <div class="upload-title">+ Select ZIP Archive</div>
             <div class="upload-sub">Inspect and extract files safely</div>
             <input type="file" id="input-zip-extractor" class="mobile-file-input hidden" accept=".zip,application/zip">
-          </label>
+          </div>
 
           <div id="selected-zip-extractor" class="mobile-file-selected hidden">
             <div class="file-info-card">
@@ -1100,9 +1221,10 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
               <div class="file-info-meta">
                 <div id="name-zip-extractor" class="file-info-name">archive.zip</div>
               </div>
+              <button type="button" id="change-zip-extractor" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
-            <div class="text-secondary font-bold" style="font-size: 0.82rem;">Archive Contents:</div>
+            <div class="text-secondary font-bold" style="font-size: 0.82rem; margin-top: 10px;">Archive Contents:</div>
             <div id="list-zip-extractor" class="mobile-dynamic-list"></div>
           </div>
 
@@ -1124,23 +1246,28 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
         <!-- --- TOOL 15: Download All as ZIP --- -->
         <div id="tool-view-download-all-zip" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
-            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">←</button>
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
             <h2 class="mobile-tool-header-title">Download All as ZIP</h2>
           </div>
 
-          <label class="btn btn-secondary btn-block" style="cursor: pointer;">
-            <span>+ Select Files to Bundle</span>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="btn-trigger-download-all-zip" class="btn btn-secondary btn-block">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              <span>+ Select Files to Bundle</span>
+            </button>
             <input type="file" id="input-download-all-zip" class="mobile-file-input hidden" multiple>
-          </label>
+          </div>
 
-          <div class="mobile-file-selected" style="margin-top: 12px;">
+          <div id="selected-download-all-zip" class="mobile-multi-selected" style="margin-top: 12px;">
             <div id="list-download-all-zip" class="mobile-dynamic-list">
               <div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">
                 Select any files you wish to compress into one ZIP download.
               </div>
             </div>
 
-            <div class="mobile-control-group">
+            <div class="mobile-control-group" style="margin-top: 10px;">
               <label class="mobile-control-label">Output Archive Name</label>
               <input type="text" id="name-download-all-zip" class="mobile-input" value="bundle.zip">
             </div>
@@ -1179,6 +1306,156 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
     <footer class="mobile-footer">
       <div>FileForge Mobile • 100% Client-Side Privacy</div>
     </footer>
+
+    <!-- Image Editor (Transform, Crop & Filter Presets) Modal -->
+    <div id="mobile-i2p-editor-modal" class="mobile-modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="mobile-modal-dialog">
+        <div class="mobile-modal-header">
+          <div class="mobile-modal-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--color-primary);"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            <span>Edit Image</span>
+          </div>
+          <button type="button" id="btn-close-i2p-editor" class="btn-icon" aria-label="Close" style="width: 30px; height: 30px; border-radius: 50%;">✕</button>
+        </div>
+
+        <div class="mobile-modal-body">
+          <!-- Live Interactive Canvas Stage with Touch Crop Overlay -->
+          <div id="mobile-i2p-canvas-stage" class="mobile-canvas-stage">
+            <canvas id="mobile-i2p-editor-canvas"></canvas>
+          </div>
+
+          <!-- Transform & Crop Toolbar -->
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Transform &amp; Crop</div>
+            <div class="mobile-editor-toolbar">
+              <button type="button" id="btn-i2p-toggle-crop" class="btn btn-sm btn-secondary" style="font-weight: 700;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 4px;"><path d="M6 2v14a2 2 0 0 0 2 2h14"></path><path d="M18 22V8a2 2 0 0 0-2-2H2"></path></svg>
+                Crop
+              </button>
+              <button type="button" id="btn-i2p-rotate-cw" class="btn-icon" title="Rotate 90° Clockwise">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              </button>
+              <button type="button" id="btn-i2p-rotate-ccw" class="btn-icon" title="Rotate 90° Counter-Clockwise">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; transform: scaleX(-1);"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              </button>
+              <button type="button" id="btn-i2p-flip-h" class="btn-icon" title="Flip Horizontal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><polyline points="8 6 3 12 8 18"></polyline><polyline points="16 6 21 12 16 18"></polyline><line x1="12" y1="2" x2="12" y2="22" stroke-dasharray="2 2"></line></svg>
+              </button>
+              <button type="button" id="btn-i2p-flip-v" class="btn-icon" title="Flip Vertical">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; transform: rotate(90deg);"><polyline points="8 6 3 12 8 18"></polyline><polyline points="16 6 21 12 16 18"></polyline><line x1="12" y1="2" x2="12" y2="22" stroke-dasharray="2 2"></line></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Crop Controls Panel -->
+          <div id="panel-i2p-crop" class="mobile-crop-panel hidden">
+            <div style="font-size: 0.76rem; font-weight: 700; color: var(--text-secondary);">Aspect Ratio:</div>
+            <div class="mobile-crop-ratios">
+              <button type="button" class="mobile-crop-ratio-btn active" data-ratio="free">Free</button>
+              <button type="button" class="mobile-crop-ratio-btn" data-ratio="1:1">1:1</button>
+              <button type="button" class="mobile-crop-ratio-btn" data-ratio="4:3">4:3</button>
+              <button type="button" class="mobile-crop-ratio-btn" data-ratio="16:9">16:9</button>
+              <button type="button" class="mobile-crop-ratio-btn" data-ratio="a4">A4</button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" id="btn-i2p-apply-crop" class="btn btn-xs btn-primary" style="flex: 1;">Apply Crop</button>
+              <button type="button" id="btn-i2p-reset-crop" class="btn btn-xs btn-secondary">Reset</button>
+              <button type="button" id="btn-i2p-cancel-crop" class="btn btn-xs btn-secondary">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Filter Presets (8 Visual Cards) -->
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Filter Presets</div>
+            <div id="row-i2p-filter-cards" class="mobile-filter-cards-scroll">
+              <!-- Dynamically populated with 8 thumbnail cards -->
+            </div>
+          </div>
+        </div>
+
+        <div class="mobile-modal-footer">
+          <button type="button" id="btn-i2p-discard-editor" class="btn btn-secondary" style="flex: 1;">Discard</button>
+          <button type="button" id="btn-i2p-save-editor" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signature Studio Modal -->
+    <div id="mobile-i2p-signature-modal" class="mobile-modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="mobile-modal-dialog">
+        <div class="mobile-modal-header">
+          <div class="mobile-modal-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--color-primary);"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path></svg>
+            <span>Signature Studio</span>
+          </div>
+          <button type="button" id="btn-close-i2p-sig" class="btn-icon" aria-label="Close" style="width: 30px; height: 30px; border-radius: 50%;">✕</button>
+        </div>
+
+        <div class="mobile-modal-body">
+          <!-- Upload Box / Change Button -->
+          <div id="box-i2p-sig-upload" class="mobile-upload-box" tabindex="0" role="button" style="padding: 16px 12px;">
+            <div class="upload-icon" style="font-size: 24px;">✍️</div>
+            <div class="upload-title" style="font-size: 0.95rem;">+ Upload Signature Photo</div>
+            <div class="upload-sub" style="font-size: 0.76rem;">Photo of handwritten signature on white paper</div>
+            <input type="file" id="input-i2p-sig" class="mobile-file-input hidden" accept="image/*">
+          </div>
+
+          <!-- Transparent Preview Stage -->
+          <div id="wrap-i2p-sig-preview" class="mobile-sig-preview-wrap checkerboard-bg hidden">
+            <canvas id="mobile-i2p-sig-canvas"></canvas>
+          </div>
+
+          <!-- Controls when loaded -->
+          <div id="controls-i2p-sig" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
+            <button type="button" id="btn-change-i2p-sig" class="btn btn-xs btn-secondary" style="align-self: center;">
+              Upload Different Photo
+            </button>
+
+            <!-- Sensitivity Slider -->
+            <div class="mobile-control-group">
+              <div class="mobile-control-label" style="display: flex; justify-content: space-between;">
+                <span>Background Removal Sensitivity</span>
+                <span id="badge-i2p-sig-sens" class="text-primary font-bold">45%</span>
+              </div>
+              <div class="mobile-slider-wrap">
+                <input type="range" id="slider-i2p-sig-sens" class="mobile-slider" min="10" max="95" value="45">
+              </div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Slide right for faint paper shadows; slide left if ink fades.</div>
+            </div>
+
+            <!-- Ink Color Options -->
+            <div>
+              <div class="mobile-control-label">Ink Color Option</div>
+              <div class="mobile-ink-options">
+                <button type="button" class="mobile-ink-chip active" data-color="original">
+                  <span class="mobile-ink-dot" style="background: linear-gradient(135deg, #1e293b, #3b82f6);"></span>
+                  <span>Original</span>
+                </button>
+                <button type="button" class="mobile-ink-chip" data-color="black">
+                  <span class="mobile-ink-dot" style="background: #111827;"></span>
+                  <span>Black</span>
+                </button>
+                <button type="button" class="mobile-ink-chip" data-color="blue">
+                  <span class="mobile-ink-dot" style="background: #1d4ed8;"></span>
+                  <span>Royal Blue</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Auto-Crop Paper Checkbox -->
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" id="check-i2p-sig-autocrop" checked style="accent-color: var(--color-primary); width: 16px; height: 16px;">
+              <span>Auto-trim empty paper borders</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="mobile-modal-footer">
+          <button type="button" id="btn-cancel-i2p-sig" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+          <button type="button" id="btn-apply-i2p-sig" class="btn btn-primary" style="flex: 1;" disabled>Apply Signature</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Exit Confirmation Bottom Modal Sheet -->
     <div id="mobile-exit-modal" class="mobile-modal-backdrop hidden">

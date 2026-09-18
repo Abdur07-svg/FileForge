@@ -377,33 +377,176 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-bottom: 12px;
+  padding: 4px 0 14px;
   border-bottom: 1px solid var(--border-color);
+  margin-bottom: 14px;
 }
 
 .mobile-back-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.mobile-back-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.3;
+  color: var(--text-primary);
+  transition: transform 0.18s ease;
+  pointer-events: none;
 }
 
 .mobile-back-btn:active {
-  background: var(--bg-surface-elevated);
+  transform: scale(0.92);
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--color-primary);
+}
+
+.mobile-back-btn:active svg {
+  transform: translateX(-3px);
+  color: var(--color-primary);
 }
 
 .mobile-tool-header-title {
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   font-weight: 800;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
+  margin: 0;
+}
+
+/* Touch & Finger Interactive Resizer */
+.touch-resize-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-top: 12px;
+}
+
+.touch-resize-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.touch-resize-badge {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--color-primary-light);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.touch-preview-box {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+  max-height: 280px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+.touch-image-wrapper {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 240px;
+  transition: width 0.05s ease, height 0.05s ease;
+}
+
+.touch-preview-image {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.touch-resize-handle {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.8), 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 10;
+  transition: transform 0.1s ease;
+}
+
+.touch-resize-handle:active {
+  transform: scale(1.25);
+  background: #4f46e5;
+}
+
+.touch-resize-handle svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.touch-preset-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.touch-preset-btn {
+  flex: 1;
+  min-width: 44px;
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.touch-preset-btn.active, .touch-preset-btn:active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
 }
 
 /* Upload Drop Box */
@@ -1022,6 +1165,397 @@ button, input, select, textarea {
   padding: 12px 14px;
   font-size: 0.82rem;
   color: var(--text-primary);
+}
+
+/* --- Responsive Breakpoints --- */
+@media (min-width: 601px) {
+  .mobile-app-wrap {
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+  }
+}
+
+/* ==========================================================================
+   IMAGE TO PDF — ADVANCED EDITOR, FILTER PRESETS & SIGNATURE STUDIO
+   ========================================================================== */
+
+/* Full-Screen & Bottom-Sheet Mobile Modals */
+.mobile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(4, 7, 14, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: mobileModalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-modal-overlay.hidden {
+  display: none !important;
+}
+
+@keyframes mobileModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mobile-modal-dialog {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  max-height: 92vh;
+  background: var(--bg-surface);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: mobileSheetSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mobileSheetSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.mobile-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-surface-elevated);
+}
+
+.mobile-modal-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mobile-modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface-elevated);
+  display: flex;
+  gap: 10px;
+}
+
+/* Canvas Stage in Modal */
+.mobile-canvas-stage {
+  width: 100%;
+  min-height: 220px;
+  max-height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
+}
+
+.mobile-canvas-stage canvas {
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Editor Action Bar (Rotate, Flip, Crop) */
+.mobile-editor-toolbar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.mobile-editor-toolbar .btn-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobile-editor-toolbar .btn-icon:active,
+.mobile-editor-toolbar .btn-icon.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+/* Crop Controls Panel */
+.mobile-crop-panel {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobile-crop-ratios {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.mobile-crop-ratio-btn {
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mobile-crop-ratio-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+/* Filter Preset Cards Scroll Row */
+.mobile-filter-cards-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-filter-card {
+  flex: 0 0 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobile-filter-card.active {
+  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.35);
+}
+
+.mobile-filter-card-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-filter-card-thumb canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobile-filter-card-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.mobile-filter-card.active .mobile-filter-card-name {
+  color: var(--color-primary);
+}
+
+/* Checkerboard Background for Transparency */
+.checkerboard-bg {
+  background-color: #1e293b;
+  background-image:
+    linear-gradient(45deg, #0f172a 25%, transparent 25%),
+    linear-gradient(-45deg, #0f172a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #0f172a 75%),
+    linear-gradient(-45deg, transparent 75%, #0f172a 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+/* Signature Studio Stage & Controls */
+.mobile-sig-preview-wrap {
+  width: 100%;
+  height: 160px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mobile-sig-preview-wrap canvas {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+}
+
+.mobile-ink-options {
+  display: flex;
+  gap: 8px;
+}
+
+.mobile-ink-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mobile-ink-chip.active {
+  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--text-primary);
+}
+
+.mobile-ink-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Live PDF Page Preview Stage with Signature Overlay */
+.mobile-pdf-preview-stage {
+  width: 100%;
+  background: #070a12;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin-top: 10px;
+}
+
+.mobile-pdf-preview-sheet {
+  position: relative;
+  display: inline-block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mobile-pdf-preview-canvas {
+  display: block;
+  background: #ffffff;
+}
+
+/* Signature Draggable/Resizable Overlay Box on Preview */
+.mobile-sig-overlay {
+  position: absolute;
+  border: 2px dashed #6366f1;
+  background: rgba(99, 102, 241, 0.15);
+  cursor: move;
+  touch-action: none;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.mobile-sig-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  display: block;
+}
+
+.mobile-sig-resize-handle {
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #6366f1;
+  border: 2px solid #ffffff;
+  cursor: nwse-resize;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.mobile-sig-delete-btn {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.mobile-preview-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .info-license-block {

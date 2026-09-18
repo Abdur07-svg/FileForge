@@ -1,13 +1,12 @@
 /**
  * FileForge Mobile - Main Application Controller
  * Handles Navigation, Settings, Theme & Haptic Toggles, Exit Confirmation,
- * Tool Search, Interactive Mobile Controllers, and Web Share API integration.
+ * Interactive Touch Image Resizer, Multi-File Selectors, and Web Share API.
  */
 const MobileApp = (() => {
 
   // Active state for currently opened tool
   let currentToolId = null;
-  let activeToolState = {};
 
   // Tool metadata definition (15 essential mobile tools)
   const TOOLS = [
@@ -64,7 +63,7 @@ const MobileApp = (() => {
       id: 'image-resizer',
       name: 'Image Resizer',
       category: 'image',
-      desc: 'Resize image dimensions & scale',
+      desc: 'Touch & drag resize with finger',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'
     },
     {
@@ -119,6 +118,20 @@ const MobileApp = (() => {
   ];
 
   /**
+   * Helper to attach safe, reliable file picker triggers on mobile / Android
+   */
+  function bindFileTrigger(triggerEl, inputEl) {
+    if (!triggerEl || !inputEl) return;
+    triggerEl.addEventListener('click', (e) => {
+      if (e.target !== inputEl) {
+        MobileUtils.triggerHaptic('light');
+        inputEl.value = '';
+        inputEl.click();
+      }
+    });
+  }
+
+  /**
    * Initialize App Shell, Settings, Event Listeners and Routing
    */
   function init() {
@@ -135,10 +148,8 @@ const MobileApp = (() => {
 
   /**
    * User UI Preferences (Theme, Haptic, Exit Confirmation)
-   * Only harmless UI states stored in localStorage. Never user files.
    */
   function initPreferences() {
-    // 1. Theme preference
     const savedTheme = localStorage.getItem('fileforge_mobile_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     const themeToggle = document.getElementById('toggle-dark-mode');
@@ -152,7 +163,6 @@ const MobileApp = (() => {
       });
     }
 
-    // 2. Haptic Feedback preference
     const hapticEnabled = localStorage.getItem('fileforge_mobile_haptic') !== 'false';
     const hapticToggle = document.getElementById('toggle-haptic');
     if (hapticToggle) {
@@ -163,7 +173,6 @@ const MobileApp = (() => {
       });
     }
 
-    // 3. Confirm Before Exit preference
     const exitConfirmEnabled = localStorage.getItem('fileforge_mobile_confirm_exit') !== 'false';
     const exitConfirmToggle = document.getElementById('toggle-confirm-exit');
     if (exitConfirmToggle) {
@@ -174,7 +183,6 @@ const MobileApp = (() => {
       });
     }
 
-    // 4. Header Settings button
     const settingsBtn = document.getElementById('btn-open-settings');
     if (settingsBtn) {
       settingsBtn.addEventListener('click', () => {
@@ -203,7 +211,6 @@ const MobileApp = (() => {
       confirmBtn.addEventListener('click', () => {
         MobileUtils.triggerHaptic('light');
         hideExitModal();
-        // If loaded in Android WebView with native bridge or window.close
         if (window.AndroidBridge && typeof window.AndroidBridge.closeApp === 'function') {
           window.AndroidBridge.closeApp();
         } else {
@@ -214,9 +221,7 @@ const MobileApp = (() => {
 
     if (modal) {
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          hideExitModal();
-        }
+        if (e.target === modal) hideExitModal();
       });
     }
   }
@@ -268,7 +273,6 @@ const MobileApp = (() => {
     window.addEventListener('hashchange', handleHashChange);
     window.addEventListener('popstate', handleHashChange);
 
-    // Bind all static back buttons
     document.querySelectorAll('#mobile-settings-view .mobile-back-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -356,7 +360,6 @@ const MobileApp = (() => {
 
     const homeView = document.getElementById('mobile-home-view');
     if (homeView) homeView.classList.remove('hidden');
-
     window.scrollTo(0, 0);
   }
 
@@ -367,7 +370,6 @@ const MobileApp = (() => {
 
     const settingsView = document.getElementById('mobile-settings-view');
     if (settingsView) settingsView.classList.remove('hidden');
-
     window.scrollTo(0, 0);
   }
 
@@ -378,7 +380,6 @@ const MobileApp = (() => {
 
     const docView = document.getElementById(viewId);
     if (docView) docView.classList.remove('hidden');
-
     window.scrollTo(0, 0);
   }
 
@@ -392,14 +393,11 @@ const MobileApp = (() => {
     const toolContainer = document.getElementById('mobile-tool-container');
     if (toolContainer) toolContainer.classList.remove('hidden');
 
-    // Hide all tool views, show active one
     document.querySelectorAll('.mobile-tool-view').forEach(v => v.classList.add('hidden'));
     const activeView = document.getElementById(`tool-view-${toolId}`);
     if (activeView) {
       activeView.classList.remove('hidden');
     }
-
-    // Scroll to top
     window.scrollTo(0, 0);
   }
 
@@ -408,23 +406,19 @@ const MobileApp = (() => {
    */
   function resetState() {
     MobileUtils.resetAllUrls();
-    activeToolState = {};
 
-    // Reset all file inputs
     document.querySelectorAll('.mobile-file-input').forEach(input => {
       input.value = '';
     });
 
-    // Reset all previews, upload states, and result blocks
+    // Reset single-file upload boxes and selected boxes
     document.querySelectorAll('.mobile-upload-box').forEach(box => box.classList.remove('hidden'));
     document.querySelectorAll('.mobile-file-selected').forEach(sec => sec.classList.add('hidden'));
     document.querySelectorAll('.mobile-result-box').forEach(box => box.classList.add('hidden'));
     document.querySelectorAll('.mobile-progress-wrap').forEach(p => p.classList.add('hidden'));
 
-    // Clear dynamic lists
-    document.querySelectorAll('.mobile-dynamic-list').forEach(list => {
-      list.innerHTML = '';
-    });
+    // Close any open overlays/modals
+    document.querySelectorAll('.mobile-modal-overlay').forEach(m => m.classList.add('hidden'));
   }
 
   /**
@@ -497,7 +491,6 @@ const MobileApp = (() => {
     initZipExtractor();
     initDownloadAllZip();
 
-    // Accordions / How-to guides
     document.querySelectorAll('.mobile-accordion-header').forEach(header => {
       header.addEventListener('click', () => {
         MobileUtils.triggerHaptic('light');
@@ -511,6 +504,7 @@ const MobileApp = (() => {
   function initImageCompressor() {
     const input = document.getElementById('input-image-compressor');
     const box = document.getElementById('upload-image-compressor');
+    const changeBtn = document.getElementById('change-image-compressor');
     const selectedSec = document.getElementById('selected-image-compressor');
     const fileNameEl = document.getElementById('name-image-compressor');
     const fileSizeEl = document.getElementById('size-image-compressor');
@@ -525,6 +519,9 @@ const MobileApp = (() => {
 
     let currentFile = null;
     let compressedResult = null;
+
+    bindFileTrigger(box, input);
+    bindFileTrigger(changeBtn, input);
 
     if (qualitySlider && qualityVal) {
       qualitySlider.addEventListener('input', () => {
@@ -599,6 +596,7 @@ const MobileApp = (() => {
   function initPdfCompressor() {
     const input = document.getElementById('input-pdf-compressor');
     const box = document.getElementById('upload-pdf-compressor');
+    const changeBtn = document.getElementById('change-pdf-compressor');
     const selectedSec = document.getElementById('selected-pdf-compressor');
     const fileNameEl = document.getElementById('name-pdf-compressor');
     const fileSizeEl = document.getElementById('size-pdf-compressor');
@@ -614,6 +612,9 @@ const MobileApp = (() => {
 
     let currentFile = null;
     let compressedPdfResult = null;
+
+    bindFileTrigger(box, input);
+    bindFileTrigger(changeBtn, input);
 
     if (input) {
       input.addEventListener('change', () => {
@@ -680,31 +681,112 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 3. Image to PDF Controller ---
+  // --- 3. Image to PDF Controller (Transform & Crop, Filter Presets, Signature Studio) ---
   function initImageToPdf() {
     const input = document.getElementById('input-image-to-pdf');
+    const triggerBtn = document.getElementById('btn-trigger-image-to-pdf');
     const imageListEl = document.getElementById('list-image-to-pdf');
-    const addMoreBtn = document.getElementById('add-more-image-to-pdf');
     const pageSizeSelect = document.getElementById('size-image-to-pdf');
     const orientationSelect = document.getElementById('orient-image-to-pdf');
     const marginSelect = document.getElementById('margin-image-to-pdf');
     const actionBtn = document.getElementById('btn-image-to-pdf');
     const resultBox = document.getElementById('result-image-to-pdf');
+    const metaEl = document.getElementById('meta-image-to-pdf');
     const downloadBtn = document.getElementById('dl-image-to-pdf');
     const shareBtn = document.getElementById('share-image-to-pdf');
 
+    // Live Preview & Signature Overlay DOM
+    const livePreviewBox = document.getElementById('i2p-live-preview-box');
+    const previewCanvas = document.getElementById('mobile-i2p-preview-canvas');
+    const previewInfo = document.getElementById('i2p-preview-info');
+    const prevPageBtn = document.getElementById('btn-i2p-prev-page');
+    const nextPageBtn = document.getElementById('btn-i2p-next-page');
+    const sigOverlay = document.getElementById('mobile-i2p-sig-overlay');
+    const sigImgEl = document.getElementById('mobile-i2p-sig-img');
+    const sigDelBtn = document.getElementById('mobile-i2p-sig-del');
+    const sigResizeHandle = document.getElementById('mobile-i2p-sig-handle');
+    const btnOpenSig = document.getElementById('btn-open-signature-modal');
+    const labelSigBtn = document.getElementById('label-signature-btn');
+
+    // Editor Modal DOM
+    const editorModal = document.getElementById('mobile-i2p-editor-modal');
+    const editorCloseBtn = document.getElementById('btn-close-i2p-editor');
+    const editorDiscardBtn = document.getElementById('btn-i2p-discard-editor');
+    const editorSaveBtn = document.getElementById('btn-i2p-save-editor');
+    const editorCanvas = document.getElementById('mobile-i2p-editor-canvas');
+    const editorToggleCropBtn = document.getElementById('btn-i2p-toggle-crop');
+    const editorRotateCw = document.getElementById('btn-i2p-rotate-cw');
+    const editorRotateCcw = document.getElementById('btn-i2p-rotate-ccw');
+    const editorFlipH = document.getElementById('btn-i2p-flip-h');
+    const editorFlipV = document.getElementById('btn-i2p-flip-v');
+    const editorCropPanel = document.getElementById('panel-i2p-crop');
+    const editorRatioBtns = document.querySelectorAll('.mobile-crop-ratio-btn');
+    const editorApplyCropBtn = document.getElementById('btn-i2p-apply-crop');
+    const editorResetCropBtn = document.getElementById('btn-i2p-reset-crop');
+    const editorCancelCropBtn = document.getElementById('btn-i2p-cancel-crop');
+    const editorFilterCardsRow = document.getElementById('row-i2p-filter-cards');
+
+    // Signature Studio Modal DOM
+    const sigModal = document.getElementById('mobile-i2p-signature-modal');
+    const sigCloseBtn = document.getElementById('btn-close-i2p-sig');
+    const sigCancelBtn = document.getElementById('btn-cancel-i2p-sig');
+    const sigApplyBtn = document.getElementById('btn-apply-i2p-sig');
+    const sigUploadBox = document.getElementById('box-i2p-sig-upload');
+    const sigInput = document.getElementById('input-i2p-sig');
+    const sigChangeBtn = document.getElementById('btn-change-i2p-sig');
+    const sigPreviewWrap = document.getElementById('wrap-i2p-sig-preview');
+    const sigCanvas = document.getElementById('mobile-i2p-sig-canvas');
+    const sigControlsBox = document.getElementById('controls-i2p-sig');
+    const sigSensSlider = document.getElementById('slider-i2p-sig-sens');
+    const sigSensBadge = document.getElementById('badge-i2p-sig-sens');
+    const sigInkChips = document.querySelectorAll('.mobile-ink-chip');
+    const sigAutoCropCheck = document.getElementById('check-i2p-sig-autocrop');
+
     let imageItems = [];
+    let activePreviewPage = 0;
     let generatedPdf = null;
+
+    // Editor Modal Temp State
+    let editingIndex = -1;
+    let editingImgObj = null;
+    let editorTempState = { crop: null, rotate: 0, flipH: false, flipV: false, filter: 'original' };
+    let editorCropActive = false;
+    let editorCropRatio = 'free';
+    let editorCropRect = { x: 20, y: 20, w: 200, h: 200 };
+    let isCropDragging = false;
+    let cropDragMode = null;
+    let cropDragStart = { x: 0, y: 0, rectX: 0, rectY: 0, rectW: 0, rectH: 0 };
+
+    // Signature State
+    let signatureRawImg = null;
+    let signatureExtracted = null; // { dataUrl, width, height, aspectRatio }
+    let signatureData = {
+      active: false,
+      dataUrl: null,
+      aspectRatio: 1,
+      relX: 0.60,
+      relY: 0.72,
+      relW: 0.30
+    };
+    let isSigDragging = false;
+    let isSigResizing = false;
+    let sigDragOrigin = { clientX: 0, clientY: 0, relX: 0, relY: 0, relW: 0 };
+
+    bindFileTrigger(triggerBtn, input);
+    bindFileTrigger(sigUploadBox, sigInput);
+    bindFileTrigger(sigChangeBtn, sigInput);
 
     function renderImageList() {
       if (!imageListEl) return;
       if (imageItems.length === 0) {
-        imageListEl.innerHTML = '<div class="mobile-empty-hint">No images selected yet. Tap + Add Images.</div>';
+        imageListEl.innerHTML = '<div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">No images added yet. Tap <strong>+ Add Images</strong> to start.</div>';
         if (actionBtn) actionBtn.disabled = true;
+        if (livePreviewBox) livePreviewBox.classList.add('hidden');
         return;
       }
 
       if (actionBtn) actionBtn.disabled = false;
+      if (livePreviewBox) livePreviewBox.classList.remove('hidden');
 
       imageListEl.innerHTML = imageItems.map((item, idx) => `
         <div class="mobile-reorder-item" data-idx="${idx}">
@@ -713,8 +795,12 @@ const MobileApp = (() => {
           </div>
           <div class="reorder-info">
             <div class="reorder-name">Page ${idx + 1}: ${item.file.name}</div>
-            <div class="reorder-size">${MobileUtils.formatBytes(item.file.size)}</div>
+            <div class="reorder-size">${item.width}×${item.height}px • ${item.editState.filter !== 'original' ? item.editState.filter : 'Normal'} ${item.editState.crop ? '• Cropped' : ''}</div>
             <div class="reorder-controls">
+              <button type="button" class="btn btn-xs btn-secondary btn-edit-page" data-idx="${idx}" style="font-weight: 700; color: var(--color-primary); gap: 4px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Edit / Filter
+              </button>
               <select class="mobile-select-sm item-orient-select" data-idx="${idx}">
                 <option value="auto" ${item.orientation === 'auto' ? 'selected' : ''}>Auto</option>
                 <option value="portrait" ${item.orientation === 'portrait' ? 'selected' : ''}>Portrait</option>
@@ -730,7 +816,16 @@ const MobileApp = (() => {
         </div>
       `).join('');
 
-      // Bind move & remove events
+      // Edit Button
+      imageListEl.querySelectorAll('.btn-edit-page').forEach(b => {
+        b.addEventListener('click', () => {
+          MobileUtils.triggerHaptic('light');
+          const idx = parseInt(b.dataset.idx, 10);
+          openEditorModal(idx);
+        });
+      });
+
+      // Move Up
       imageListEl.querySelectorAll('.btn-move-up').forEach(b => {
         b.addEventListener('click', () => {
           MobileUtils.triggerHaptic('light');
@@ -740,10 +835,12 @@ const MobileApp = (() => {
             imageItems[idx] = imageItems[idx - 1];
             imageItems[idx - 1] = tmp;
             renderImageList();
+            updateLivePreview();
           }
         });
       });
 
+      // Move Down
       imageListEl.querySelectorAll('.btn-move-down').forEach(b => {
         b.addEventListener('click', () => {
           MobileUtils.triggerHaptic('light');
@@ -753,61 +850,752 @@ const MobileApp = (() => {
             imageItems[idx] = imageItems[idx + 1];
             imageItems[idx + 1] = tmp;
             renderImageList();
+            updateLivePreview();
           }
         });
       });
 
+      // Remove
       imageListEl.querySelectorAll('.btn-remove').forEach(b => {
         b.addEventListener('click', () => {
           MobileUtils.triggerHaptic('light');
           const idx = parseInt(b.dataset.idx, 10);
           MobileUtils.revokeUrl(imageItems[idx].previewUrl);
           imageItems.splice(idx, 1);
+          if (activePreviewPage >= imageItems.length) activePreviewPage = Math.max(0, imageItems.length - 1);
           renderImageList();
+          updateLivePreview();
         });
       });
 
+      // Per-image orientation select
       imageListEl.querySelectorAll('.item-orient-select').forEach(sel => {
         sel.addEventListener('change', () => {
           const idx = parseInt(sel.dataset.idx, 10);
           imageItems[idx].orientation = sel.value;
+          updateLivePreview();
         });
       });
+
+      updateLivePreview();
     }
 
     if (input) {
-      input.addEventListener('change', () => {
+      input.addEventListener('change', async () => {
         if (input.files && input.files.length > 0) {
           MobileUtils.triggerHaptic('light');
-          Array.from(input.files).forEach(file => {
-            const previewUrl = URL.createObjectURL(file);
-            MobileUtils.trackUrl(previewUrl);
+          for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+            const dataUrl = await MobileUtils.readFileAsDataURL(file);
+            const img = await MobileUtils.loadImageFromSrc(dataUrl);
+
             imageItems.push({
               file,
-              previewUrl,
+              dataUrl,
+              previewUrl: dataUrl,
+              width: img.width,
+              height: img.height,
               orientation: 'auto',
-              rotation: 0
+              editState: {
+                crop: null,
+                rotate: 0,
+                flipH: false,
+                flipV: false,
+                filter: 'original'
+              }
             });
-          });
+          }
           renderImageList();
           input.value = '';
         }
       });
     }
 
-    if (addMoreBtn) {
-      addMoreBtn.addEventListener('click', () => {
-        MobileUtils.triggerHaptic('light');
-        if (input) input.click();
+    // =========================================================================
+    // LIVE PDF PAGE PREVIEW & INTERACTIVE SIGNATURE OVERLAY
+    // =========================================================================
+    async function updateLivePreview() {
+      if (!previewCanvas || imageItems.length === 0) return;
+      if (activePreviewPage >= imageItems.length) activePreviewPage = Math.max(0, imageItems.length - 1);
+
+      if (previewInfo) previewInfo.textContent = `Page ${activePreviewPage + 1} of ${imageItems.length}`;
+      if (prevPageBtn) prevPageBtn.disabled = activePreviewPage === 0;
+      if (nextPageBtn) nextPageBtn.disabled = activePreviewPage === imageItems.length - 1;
+
+      const curItem = imageItems[activePreviewPage];
+      if (!curItem) return;
+
+      const imgObj = await MobileUtils.loadImageFromSrc(curItem.dataUrl);
+
+      // Render onto an offscreen canvas
+      const offscreen = document.createElement('canvas');
+      MobileImageToPdf.renderEditedImageToCanvas(offscreen, imgObj, curItem.editState);
+
+      const maxDisplayW = 280;
+      const scale = Math.min(maxDisplayW / offscreen.width, 360 / offscreen.height, 1);
+      previewCanvas.width = Math.max(100, Math.round(offscreen.width * scale));
+      previewCanvas.height = Math.max(100, Math.round(offscreen.height * scale));
+
+      const ctx = previewCanvas.getContext('2d');
+      ctx.drawImage(offscreen, 0, 0, previewCanvas.width, previewCanvas.height);
+
+      renderSignatureOverlay();
+    }
+
+    function renderSignatureOverlay() {
+      if (!sigOverlay || !signatureData.active || !signatureData.dataUrl) {
+        if (sigOverlay) sigOverlay.classList.add('hidden');
+        return;
+      }
+
+      sigOverlay.classList.remove('hidden');
+      if (sigImgEl) sigImgEl.src = signatureData.dataUrl;
+
+      const cw = previewCanvas.width;
+      const ch = previewCanvas.height;
+      if (cw <= 0 || ch <= 0) return;
+
+      const pxW = Math.max(24, Math.round(cw * signatureData.relW));
+      const pxH = Math.max(12, Math.round(pxW / (signatureData.aspectRatio || 1)));
+      const pxX = Math.max(0, Math.min(cw - pxW, Math.round(cw * signatureData.relX)));
+      const pxY = Math.max(0, Math.min(ch - pxH, Math.round(ch * signatureData.relY)));
+
+      sigOverlay.style.left = `${pxX}px`;
+      sigOverlay.style.top = `${pxY}px`;
+      sigOverlay.style.width = `${pxW}px`;
+      sigOverlay.style.height = `${pxH}px`;
+    }
+
+    // Prev / Next Page Preview Navigation
+    if (prevPageBtn) {
+      prevPageBtn.addEventListener('click', () => {
+        if (activePreviewPage > 0) {
+          activePreviewPage--;
+          updateLivePreview();
+        }
       });
     }
 
+    if (nextPageBtn) {
+      nextPageBtn.addEventListener('click', () => {
+        if (activePreviewPage < imageItems.length - 1) {
+          activePreviewPage++;
+          updateLivePreview();
+        }
+      });
+    }
+
+    // Signature Drag on Live Preview
+    if (sigOverlay) {
+      sigOverlay.addEventListener('mousedown', onSigPointerDown);
+      sigOverlay.addEventListener('touchstart', onSigTouchStart, { passive: false });
+
+      if (sigResizeHandle) {
+        sigResizeHandle.addEventListener('mousedown', onSigResizeDown);
+        sigResizeHandle.addEventListener('touchstart', onSigResizeTouchStart, { passive: false });
+      }
+
+      if (sigDelBtn) {
+        sigDelBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          signatureData.active = false;
+          renderSignatureOverlay();
+          if (labelSigBtn) labelSigBtn.textContent = 'Signature Studio';
+          MobileUtils.showToast('Signature removed', 'info');
+        });
+      }
+    }
+
+    function onSigPointerDown(e) {
+      if (e.target === sigResizeHandle || e.target === sigDelBtn || isSigResizing) return;
+      isSigDragging = true;
+      sigDragOrigin = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        relX: signatureData.relX,
+        relY: signatureData.relY
+      };
+      e.preventDefault();
+    }
+
+    function onSigTouchStart(e) {
+      if (e.target === sigResizeHandle || e.target === sigDelBtn || isSigResizing || !e.touches[0]) return;
+      isSigDragging = true;
+      sigDragOrigin = {
+        clientX: e.touches[0].clientX,
+        clientY: e.touches[0].clientY,
+        relX: signatureData.relX,
+        relY: signatureData.relY
+      };
+      e.preventDefault();
+    }
+
+    function onSigResizeDown(e) {
+      e.stopPropagation();
+      isSigResizing = true;
+      sigDragOrigin = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        relW: signatureData.relW
+      };
+      e.preventDefault();
+    }
+
+    function onSigResizeTouchStart(e) {
+      e.stopPropagation();
+      if (!e.touches[0]) return;
+      isSigResizing = true;
+      sigDragOrigin = {
+        clientX: e.touches[0].clientX,
+        clientY: e.touches[0].clientY,
+        relW: signatureData.relW
+      };
+      e.preventDefault();
+    }
+
+    function handleSigDragMove(clientX, clientY) {
+      if (!signatureData.active || !previewCanvas) return;
+      const cw = previewCanvas.width;
+      const ch = previewCanvas.height;
+      if (cw <= 0 || ch <= 0) return;
+
+      if (isSigDragging) {
+        const dx = (clientX - sigDragOrigin.clientX) / cw;
+        const dy = (clientY - sigDragOrigin.clientY) / ch;
+
+        const pxW = cw * signatureData.relW;
+        const pxH = pxW / (signatureData.aspectRatio || 1);
+        const relH = pxH / ch;
+
+        signatureData.relX = Math.max(0, Math.min(1 - signatureData.relW, sigDragOrigin.relX + dx));
+        signatureData.relY = Math.max(0, Math.min(1 - relH, sigDragOrigin.relY + dy));
+        renderSignatureOverlay();
+      } else if (isSigResizing) {
+        const dx = (clientX - sigDragOrigin.clientX) / cw;
+        const newW = Math.max(0.1, Math.min(0.85, sigDragOrigin.relW + dx));
+        signatureData.relW = newW;
+        renderSignatureOverlay();
+      }
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      if (isSigDragging || isSigResizing) handleSigDragMove(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if ((isSigDragging || isSigResizing) && e.touches[0]) {
+        handleSigDragMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    window.addEventListener('mouseup', () => {
+      isSigDragging = false;
+      isSigResizing = false;
+    });
+
+    window.addEventListener('touchend', () => {
+      isSigDragging = false;
+      isSigResizing = false;
+    });
+
+    // =========================================================================
+    // IMAGE EDITOR MODAL (TRANSFORM, CROP & FILTER PRESETS)
+    // =========================================================================
+    async function openEditorModal(index) {
+      editingIndex = index;
+      const item = imageItems[index];
+      if (!item) return;
+
+      editorTempState = JSON.parse(JSON.stringify(item.editState));
+      editorCropActive = false;
+      editorCropRatio = 'free';
+
+      if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
+      if (editorCropPanel) editorCropPanel.classList.add('hidden');
+
+      editingImgObj = await MobileUtils.loadImageFromSrc(item.dataUrl);
+
+      renderFilterCards();
+      drawEditorCanvas();
+
+      if (editorModal) editorModal.classList.remove('hidden');
+    }
+
+    function closeEditorModal() {
+      if (editorModal) editorModal.classList.add('hidden');
+      editingIndex = -1;
+      editingImgObj = null;
+      editorCropActive = false;
+    }
+
+    if (editorCloseBtn) editorCloseBtn.addEventListener('click', closeEditorModal);
+    if (editorDiscardBtn) editorDiscardBtn.addEventListener('click', closeEditorModal);
+
+    if (editorSaveBtn) {
+      editorSaveBtn.addEventListener('click', async () => {
+        if (editingIndex < 0 || editingIndex >= imageItems.length) return;
+        const item = imageItems[editingIndex];
+        item.editState = JSON.parse(JSON.stringify(editorTempState));
+
+        // Create updated thumbnail preview
+        const offscreen = document.createElement('canvas');
+        MobileImageToPdf.renderEditedImageToCanvas(offscreen, editingImgObj, item.editState);
+        item.previewUrl = offscreen.toDataURL('image/jpeg', 0.88);
+        item.width = offscreen.width;
+        item.height = offscreen.height;
+
+        renderImageList();
+        updateLivePreview();
+        closeEditorModal();
+        MobileUtils.showToast('Changes saved!', 'success');
+      });
+    }
+
+    // Transform buttons
+    if (editorRotateCw) {
+      editorRotateCw.addEventListener('click', () => {
+        editorTempState.rotate = (editorTempState.rotate + 90) % 360;
+        drawEditorCanvas();
+        renderFilterCards();
+      });
+    }
+
+    if (editorRotateCcw) {
+      editorRotateCcw.addEventListener('click', () => {
+        editorTempState.rotate = (editorTempState.rotate - 90 + 360) % 360;
+        drawEditorCanvas();
+        renderFilterCards();
+      });
+    }
+
+    if (editorFlipH) {
+      editorFlipH.addEventListener('click', () => {
+        editorTempState.flipH = !editorTempState.flipH;
+        drawEditorCanvas();
+        renderFilterCards();
+      });
+    }
+
+    if (editorFlipV) {
+      editorFlipV.addEventListener('click', () => {
+        editorTempState.flipV = !editorTempState.flipV;
+        drawEditorCanvas();
+        renderFilterCards();
+      });
+    }
+
+    // Crop Toggle & Ratios
+    if (editorToggleCropBtn) {
+      editorToggleCropBtn.addEventListener('click', () => {
+        editorCropActive = !editorCropActive;
+        editorToggleCropBtn.classList.toggle('active', editorCropActive);
+        if (editorCropPanel) editorCropPanel.classList.toggle('hidden', !editorCropActive);
+        if (editorCropActive) initCropRect();
+        drawEditorCanvas();
+      });
+    }
+
+    editorRatioBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        editorCropRatio = btn.dataset.ratio;
+        editorRatioBtns.forEach(b => b.classList.toggle('active', b === btn));
+        adjustCropRectToRatio();
+        drawEditorCanvas();
+      });
+    });
+
+    if (editorApplyCropBtn) {
+      editorApplyCropBtn.addEventListener('click', () => {
+        if (!editorCanvas || !editingImgObj) return;
+        const cw = editorCanvas.width;
+        const ch = editorCanvas.height;
+        const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
+        const baseW = isRotated90 ? editingImgObj.naturalHeight : editingImgObj.naturalWidth;
+        const baseH = isRotated90 ? editingImgObj.naturalWidth : editingImgObj.naturalHeight;
+
+        const scaleX = baseW / cw;
+        const scaleY = baseH / ch;
+
+        editorTempState.crop = {
+          x: Math.max(0, Math.round(editorCropRect.x * scaleX)),
+          y: Math.max(0, Math.round(editorCropRect.y * scaleY)),
+          w: Math.min(baseW, Math.round(editorCropRect.w * scaleX)),
+          h: Math.min(baseH, Math.round(editorCropRect.h * scaleY))
+        };
+
+        editorCropActive = false;
+        if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
+        if (editorCropPanel) editorCropPanel.classList.add('hidden');
+
+        drawEditorCanvas();
+        renderFilterCards();
+        MobileUtils.showToast('Crop applied! Tap Save Changes to keep.', 'info');
+      });
+    }
+
+    if (editorResetCropBtn) {
+      editorResetCropBtn.addEventListener('click', () => {
+        editorTempState.crop = null;
+        editorCropActive = false;
+        if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
+        if (editorCropPanel) editorCropPanel.classList.add('hidden');
+        drawEditorCanvas();
+        renderFilterCards();
+        MobileUtils.showToast('Crop reset to full image.', 'info');
+      });
+    }
+
+    if (editorCancelCropBtn) {
+      editorCancelCropBtn.addEventListener('click', () => {
+        editorCropActive = false;
+        if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
+        if (editorCropPanel) editorCropPanel.classList.add('hidden');
+        drawEditorCanvas();
+      });
+    }
+
+    function initCropRect() {
+      if (!editorCanvas) return;
+      const cw = editorCanvas.width;
+      const ch = editorCanvas.height;
+      editorCropRect = {
+        x: Math.round(cw * 0.1),
+        y: Math.round(ch * 0.1),
+        w: Math.round(cw * 0.8),
+        h: Math.round(ch * 0.8)
+      };
+      adjustCropRectToRatio();
+    }
+
+    function adjustCropRectToRatio() {
+      if (editorCropRatio === 'free') return;
+      let targetRatio = 1;
+      if (editorCropRatio === '1:1') targetRatio = 1;
+      else if (editorCropRatio === '4:3') targetRatio = 4 / 3;
+      else if (editorCropRatio === '16:9') targetRatio = 16 / 9;
+      else if (editorCropRatio === 'a4') targetRatio = 210 / 297;
+
+      const currentRatio = editorCropRect.w / editorCropRect.h;
+      if (currentRatio > targetRatio) {
+        editorCropRect.w = editorCropRect.h * targetRatio;
+      } else {
+        editorCropRect.h = editorCropRect.w / targetRatio;
+      }
+    }
+
+    function drawEditorCanvas() {
+      if (!editorCanvas || !editingImgObj) return;
+
+      const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
+      let baseW = editorTempState.crop ? editorTempState.crop.w : (editingImgObj.naturalWidth || editingImgObj.width);
+      let baseH = editorTempState.crop ? editorTempState.crop.h : (editingImgObj.naturalHeight || editingImgObj.height);
+      let dispW = isRotated90 ? baseH : baseW;
+      let dispH = isRotated90 ? baseW : baseH;
+
+      const maxDisplayW = Math.min(320, window.innerWidth - 48);
+      const maxDisplayH = 260;
+      const scale = Math.min(maxDisplayW / dispW, maxDisplayH / dispH, 1);
+
+      const canvasW = Math.max(80, Math.round(dispW * scale));
+      const canvasH = Math.max(80, Math.round(dispH * scale));
+
+      MobileImageToPdf.renderEditedImageToCanvas(editorCanvas, editingImgObj, editorTempState, canvasW, canvasH);
+
+      if (editorCropActive) {
+        drawCropOverlay(editorCanvas);
+      }
+    }
+
+    function drawCropOverlay(canvas) {
+      const ctx = canvas.getContext('2d');
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const r = editorCropRect;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+      ctx.fillRect(0, 0, cw, r.y);
+      ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h));
+      ctx.fillRect(0, r.y, r.x, r.h);
+      ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h);
+
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(r.x, r.y, r.w, r.h);
+
+      // Rule of thirds grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(r.x + r.w / 3, r.y);
+      ctx.lineTo(r.x + r.w / 3, r.y + r.h);
+      ctx.moveTo(r.x + (r.w * 2) / 3, r.y);
+      ctx.lineTo(r.x + (r.w * 2) / 3, r.y + r.h);
+      ctx.moveTo(r.x, r.y + r.h / 3);
+      ctx.lineTo(r.x + r.w, r.y + r.h / 3);
+      ctx.moveTo(r.x, r.y + (r.h * 2) / 3);
+      ctx.lineTo(r.x + r.w, r.y + (r.h * 2) / 3);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Corner Drag Handles
+      const handles = [
+        { x: r.x, y: r.y },
+        { x: r.x + r.w, y: r.y },
+        { x: r.x + r.w, y: r.y + r.h },
+        { x: r.x, y: r.y + r.h }
+      ];
+
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 2;
+      handles.forEach(h => {
+        ctx.beginPath();
+        ctx.arc(h.x, h.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+    }
+
+    // Touch & Cursor Crop Pointer Events
+    function getCanvasCoords(clientX, clientY) {
+      if (!editorCanvas) return { x: 0, y: 0 };
+      const rect = editorCanvas.getBoundingClientRect();
+      const scaleX = editorCanvas.width / (rect.width || 1);
+      const scaleY = editorCanvas.height / (rect.height || 1);
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    function getCropHandleAt(x, y) {
+      const r = editorCropRect;
+      const pad = 28; // Touch area
+      if (Math.hypot(x - r.x, y - r.y) < pad) return 'nw';
+      if (Math.hypot(x - (r.x + r.w), y - r.y) < pad) return 'ne';
+      if (Math.hypot(x - (r.x + r.w), y - (r.y + r.h)) < pad) return 'se';
+      if (Math.hypot(x - r.x, y - (r.y + r.h)) < pad) return 'sw';
+      if (x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h) return 'move';
+      return null;
+    }
+
+    if (editorCanvas) {
+      editorCanvas.addEventListener('mousedown', (e) => {
+        if (!editorCropActive) return;
+        const { x, y } = getCanvasCoords(e.clientX, e.clientY);
+        cropDragMode = getCropHandleAt(x, y);
+        if (cropDragMode) {
+          isCropDragging = true;
+          cropDragStart = { x, y, rectX: editorCropRect.x, rectY: editorCropRect.y, rectW: editorCropRect.w, rectH: editorCropRect.h };
+        }
+      });
+
+      editorCanvas.addEventListener('touchstart', (e) => {
+        if (!editorCropActive || !e.touches[0]) return;
+        const { x, y } = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+        cropDragMode = getCropHandleAt(x, y);
+        if (cropDragMode) {
+          e.preventDefault();
+          isCropDragging = true;
+          cropDragStart = { x, y, rectX: editorCropRect.x, rectY: editorCropRect.y, rectW: editorCropRect.w, rectH: editorCropRect.h };
+        }
+      }, { passive: false });
+    }
+
+    function updateCropDrag(clientX, clientY) {
+      if (!editorCropActive || !isCropDragging || !editorCanvas) return;
+      const { x, y } = getCanvasCoords(clientX, clientY);
+      const dx = x - cropDragStart.x;
+      const dy = y - cropDragStart.y;
+      const cw = editorCanvas.width;
+      const ch = editorCanvas.height;
+      const minSize = 25;
+
+      let newX = cropDragStart.rectX;
+      let newY = cropDragStart.rectY;
+      let newW = cropDragStart.rectW;
+      let newH = cropDragStart.rectH;
+
+      if (cropDragMode === 'move') {
+        newX = Math.max(0, Math.min(cw - newW, cropDragStart.rectX + dx));
+        newY = Math.max(0, Math.min(ch - newH, cropDragStart.rectY + dy));
+      } else if (cropDragMode === 'se') {
+        newW = Math.max(minSize, Math.min(cw - newX, cropDragStart.rectW + dx));
+        newH = Math.max(minSize, Math.min(ch - newY, cropDragStart.rectH + dy));
+      } else if (cropDragMode === 'nw') {
+        newW = Math.max(minSize, cropDragStart.rectW - dx);
+        newH = Math.max(minSize, cropDragStart.rectH - dy);
+        newX = cropDragStart.rectX + (cropDragStart.rectW - newW);
+        newY = cropDragStart.rectY + (cropDragStart.rectH - newH);
+      } else if (cropDragMode === 'ne') {
+        newW = Math.max(minSize, Math.min(cw - newX, cropDragStart.rectW + dx));
+        newH = Math.max(minSize, cropDragStart.rectH - dy);
+        newY = cropDragStart.rectY + (cropDragStart.rectH - newH);
+      } else if (cropDragMode === 'sw') {
+        newW = Math.max(minSize, cropDragStart.rectW - dx);
+        newH = Math.max(minSize, Math.min(ch - newY, cropDragStart.rectH + dy));
+        newX = cropDragStart.rectX + (cropDragStart.rectW - newW);
+      }
+
+      editorCropRect = { x: newX, y: newY, w: newW, h: newH };
+      adjustCropRectToRatio();
+      drawEditorCanvas();
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      if (isCropDragging) updateCropDrag(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (isCropDragging && e.touches[0]) updateCropDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    window.addEventListener('mouseup', () => { isCropDragging = false; cropDragMode = null; });
+    window.addEventListener('touchend', () => { isCropDragging = false; cropDragMode = null; });
+
+    // Render Filter Preset Cards
+    function renderFilterCards() {
+      if (!editorFilterCardsRow || !editingImgObj) return;
+      editorFilterCardsRow.innerHTML = '';
+
+      const activeF = editorTempState.filter || 'original';
+
+      MobileImageToPdf.FILTER_PRESETS.forEach(preset => {
+        const card = document.createElement('div');
+        card.className = `mobile-filter-card ${preset.id === activeF ? 'active' : ''}`;
+        card.dataset.filter = preset.id;
+
+        const thumbCanvas = document.createElement('canvas');
+        const thumbState = {
+          crop: editorTempState.crop,
+          rotate: editorTempState.rotate,
+          flipH: editorTempState.flipH,
+          flipV: editorTempState.flipV,
+          filter: preset.id
+        };
+        MobileImageToPdf.renderEditedImageToCanvas(thumbCanvas, editingImgObj, thumbState, 60, 60);
+
+        card.innerHTML = `
+          <div class="mobile-filter-card-thumb"></div>
+          <span class="mobile-filter-card-name">${preset.name}</span>
+        `;
+        card.querySelector('.mobile-filter-card-thumb').appendChild(thumbCanvas);
+
+        card.addEventListener('click', () => {
+          editorTempState.filter = preset.id;
+          editorFilterCardsRow.querySelectorAll('.mobile-filter-card').forEach(c => c.classList.toggle('active', c === card));
+          drawEditorCanvas();
+        });
+
+        editorFilterCardsRow.appendChild(card);
+      });
+    }
+
+    // =========================================================================
+    // SIGNATURE STUDIO MODAL
+    // =========================================================================
+    if (btnOpenSig) {
+      btnOpenSig.addEventListener('click', () => {
+        if (sigModal) sigModal.classList.remove('hidden');
+        if (signatureRawImg) {
+          if (sigUploadBox) sigUploadBox.classList.add('hidden');
+          if (sigPreviewWrap) sigPreviewWrap.classList.remove('hidden');
+          if (sigControlsBox) sigControlsBox.classList.remove('hidden');
+          processSignature();
+        } else {
+          if (sigUploadBox) sigUploadBox.classList.remove('hidden');
+          if (sigPreviewWrap) sigPreviewWrap.classList.add('hidden');
+          if (sigControlsBox) sigControlsBox.classList.add('hidden');
+        }
+      });
+    }
+
+    if (sigCloseBtn) sigCloseBtn.addEventListener('click', () => sigModal && sigModal.classList.add('hidden'));
+    if (sigCancelBtn) sigCancelBtn.addEventListener('click', () => sigModal && sigModal.classList.add('hidden'));
+
+    if (sigInput) {
+      sigInput.addEventListener('change', async () => {
+        if (sigInput.files && sigInput.files[0]) {
+          MobileUtils.triggerHaptic('light');
+          const file = sigInput.files[0];
+          const dataUrl = await MobileUtils.readFileAsDataURL(file);
+          signatureRawImg = await MobileUtils.loadImageFromSrc(dataUrl);
+
+          if (sigUploadBox) sigUploadBox.classList.add('hidden');
+          if (sigPreviewWrap) sigPreviewWrap.classList.remove('hidden');
+          if (sigControlsBox) sigControlsBox.classList.remove('hidden');
+          if (sigApplyBtn) sigApplyBtn.disabled = false;
+
+          processSignature();
+          sigInput.value = '';
+        }
+      });
+    }
+
+    let sigSettings = { sensitivity: 45, inkColor: 'original', autoCrop: true };
+
+    if (sigSensSlider) {
+      sigSensSlider.addEventListener('input', () => {
+        sigSettings.sensitivity = parseInt(sigSensSlider.value, 10);
+        if (sigSensBadge) sigSensBadge.textContent = `${sigSettings.sensitivity}%`;
+        processSignature();
+      });
+    }
+
+    sigInkChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        sigSettings.inkColor = chip.dataset.color;
+        sigInkChips.forEach(c => c.classList.toggle('active', c === chip));
+        processSignature();
+      });
+    });
+
+    if (sigAutoCropCheck) {
+      sigAutoCropCheck.addEventListener('change', () => {
+        sigSettings.autoCrop = sigAutoCropCheck.checked;
+        processSignature();
+      });
+    }
+
+    function processSignature() {
+      if (!signatureRawImg || !sigCanvas) return;
+      signatureExtracted = MobileImageToPdf.extractSignature(signatureRawImg, sigSettings);
+
+      const maxW = 260, maxH = 130;
+      const scale = Math.min(maxW / signatureExtracted.width, maxH / signatureExtracted.height, 1);
+      sigCanvas.width = Math.max(50, Math.round(signatureExtracted.width * scale));
+      sigCanvas.height = Math.max(30, Math.round(signatureExtracted.height * scale));
+
+      const ctx = sigCanvas.getContext('2d');
+      ctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      ctx.drawImage(signatureExtracted.canvas, 0, 0, sigCanvas.width, sigCanvas.height);
+    }
+
+    if (sigApplyBtn) {
+      sigApplyBtn.addEventListener('click', () => {
+        if (!signatureExtracted || !signatureExtracted.dataUrl) return;
+        signatureData.active = true;
+        signatureData.dataUrl = signatureExtracted.dataUrl;
+        signatureData.aspectRatio = signatureExtracted.aspectRatio;
+
+        if (labelSigBtn) labelSigBtn.textContent = 'Edit Signature';
+        if (sigModal) sigModal.classList.add('hidden');
+
+        updateLivePreview();
+        MobileUtils.showToast('Signature added! Drag to position on pages.', 'success');
+      });
+    }
+
+    // =========================================================================
+    // GENERATE PDF
+    // =========================================================================
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (imageItems.length === 0) return;
         MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
-        actionBtn.textContent = 'Generating PDF...';
+        actionBtn.textContent = 'Creating PDF...';
 
         try {
           const options = {
@@ -817,7 +1605,14 @@ const MobileApp = (() => {
             filename: 'FileForge_Images.pdf'
           };
 
-          generatedPdf = await MobileImageToPdf.generatePdf(imageItems, options);
+          generatedPdf = await MobileImageToPdf.generatePdf(imageItems, options, signatureData, (curr, total) => {
+            actionBtn.textContent = `Rendering Page ${curr} of ${total}...`;
+          });
+
+          if (metaEl) {
+            metaEl.textContent = `${generatedPdf.pageCount} Page${generatedPdf.pageCount !== 1 ? 's' : ''} • ${MobileUtils.formatBytes(generatedPdf.size)} ${signatureData.active ? '• With Signature' : ''}`;
+          }
+
           resultBox.classList.remove('hidden');
           MobileUtils.triggerHaptic('success');
           MobileUtils.showToast(`PDF created with ${imageItems.length} pages!`, 'success');
@@ -847,10 +1642,12 @@ const MobileApp = (() => {
     }
   }
 
+
   // --- 4 & 5. PDF to JPG / PDF to PNG Controller ---
   function initPdfToImagesTool(toolId, format) {
     const input = document.getElementById(`input-${toolId}`);
     const box = document.getElementById(`upload-${toolId}`);
+    const changeBtn = document.getElementById(`change-${toolId}`);
     const selectedSec = document.getElementById(`selected-${toolId}`);
     const fileNameEl = document.getElementById(`name-${toolId}`);
     const fileSizeEl = document.getElementById(`size-${toolId}`);
@@ -865,6 +1662,9 @@ const MobileApp = (() => {
 
     let currentFile = null;
     let convertedImages = [];
+
+    bindFileTrigger(box, input);
+    bindFileTrigger(changeBtn, input);
 
     if (input) {
       input.addEventListener('change', () => {
@@ -967,6 +1767,7 @@ const MobileApp = (() => {
   function initSimpleImageConverter(toolId, targetFormat, targetExt) {
     const input = document.getElementById(`input-${toolId}`);
     const box = document.getElementById(`upload-${toolId}`);
+    const changeBtn = document.getElementById(`change-${toolId}`);
     const selectedSec = document.getElementById(`selected-${toolId}`);
     const fileNameEl = document.getElementById(`name-${toolId}`);
     const fileSizeEl = document.getElementById(`size-${toolId}`);
@@ -978,6 +1779,9 @@ const MobileApp = (() => {
 
     let currentFile = null;
     let convertedResult = null;
+
+    bindFileTrigger(box, input);
+    bindFileTrigger(changeBtn, input);
 
     if (input) {
       input.addEventListener('change', () => {
@@ -1040,16 +1844,25 @@ const MobileApp = (() => {
     initSimpleImageConverter('png-to-jpg', 'image/jpeg', 'JPG');
   }
 
-  // --- 8. Image Resizer Controller ---
+  // --- 8. Image Resizer Controller (Interactive Touch / Finger Scaling) ---
   function initImageResizer() {
     const input = document.getElementById('input-image-resizer');
     const box = document.getElementById('upload-image-resizer');
+    const changeBtn = document.getElementById('change-image-resizer');
     const selectedSec = document.getElementById('selected-image-resizer');
     const fileNameEl = document.getElementById('name-image-resizer');
     const originalDimsEl = document.getElementById('dims-image-resizer');
+    const touchBox = document.getElementById('box-touch-resizer');
+    const imageWrapper = document.getElementById('wrapper-touch-image');
+    const touchThumb = document.getElementById('thumb-touch-resizer');
+    const touchHandle = document.getElementById('handle-touch-resizer');
+    const badgePct = document.getElementById('badge-pct-image-resizer');
+    const slider = document.getElementById('slider-image-resizer');
+    const valSlider = document.getElementById('val-slider-image-resizer');
+    const presetBtns = document.querySelectorAll('.touch-preset-btn');
+    const lockRatioCheck = document.getElementById('lock-ratio-image-resizer');
     const widthInput = document.getElementById('width-image-resizer');
     const heightInput = document.getElementById('height-image-resizer');
-    const scaleSelect = document.getElementById('scale-image-resizer');
     const actionBtn = document.getElementById('btn-image-resizer');
     const resultBox = document.getElementById('result-image-resizer');
     const previewImg = document.getElementById('preview-image-resizer');
@@ -1060,7 +1873,142 @@ const MobileApp = (() => {
     let currentFile = null;
     let originalWidth = 0;
     let originalHeight = 0;
+    let currentScalePct = 100;
     let resizedResult = null;
+
+    bindFileTrigger(box, input);
+    bindFileTrigger(changeBtn, input);
+
+    function updateDimensionsFromScale(scalePct) {
+      currentScalePct = Math.max(10, Math.min(300, Math.round(scalePct)));
+      const newW = Math.max(1, Math.round((originalWidth * currentScalePct) / 100));
+      const newH = Math.max(1, Math.round((originalHeight * currentScalePct) / 100));
+
+      if (widthInput) widthInput.value = newW;
+      if (heightInput) heightInput.value = newH;
+      if (slider) slider.value = currentScalePct;
+      if (valSlider) valSlider.textContent = `${currentScalePct}%`;
+      if (badgePct) badgePct.textContent = `${currentScalePct}% (${newW}×${newH}px)`;
+
+      presetBtns.forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.scale, 10) === currentScalePct);
+      });
+
+      // Visual scaling in touch canvas preview
+      if (imageWrapper) {
+        const visualScale = Math.min(1.5, Math.max(0.3, currentScalePct / 100));
+        imageWrapper.style.transform = `scale(${visualScale})`;
+        imageWrapper.style.transformOrigin = 'center center';
+      }
+    }
+
+    // Touch / Mouse Drag Resizing on Corner Handle
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startScale = 100;
+
+    function onDragStart(clientX, clientY) {
+      isDragging = true;
+      startX = clientX;
+      startY = clientY;
+      startScale = currentScalePct;
+      MobileUtils.triggerHaptic('light');
+    }
+
+    function onDragMove(clientX, clientY) {
+      if (!isDragging) return;
+      const deltaX = clientX - startX;
+      const deltaY = clientY - startY;
+      const delta = (deltaX + deltaY) / 2;
+      const sensitivity = 0.6; // Adjust speed of finger drag
+      const newScale = Math.round(startScale + delta * sensitivity);
+      updateDimensionsFromScale(newScale);
+    }
+
+    function onDragEnd() {
+      if (isDragging) {
+        isDragging = false;
+        MobileUtils.triggerHaptic('light');
+      }
+    }
+
+    if (touchHandle) {
+      touchHandle.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches[0]) {
+          onDragStart(e.touches[0].clientX, e.touches[0].clientY);
+        }
+        e.preventDefault();
+      }, { passive: false });
+
+      touchHandle.addEventListener('mousedown', (e) => {
+        onDragStart(e.clientX, e.clientY);
+        e.preventDefault();
+      });
+    }
+
+    window.addEventListener('touchmove', (e) => {
+      if (isDragging && e.touches && e.touches[0]) {
+        onDragMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) onDragMove(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('touchend', onDragEnd);
+    window.addEventListener('mouseup', onDragEnd);
+
+    // Finger slider input
+    if (slider) {
+      slider.addEventListener('input', () => {
+        updateDimensionsFromScale(parseInt(slider.value, 10));
+      });
+    }
+
+    // Preset buttons
+    presetBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
+        const scale = parseInt(btn.dataset.scale, 10);
+        if (scale) updateDimensionsFromScale(scale);
+      });
+    });
+
+    // Width input manual change
+    if (widthInput) {
+      widthInput.addEventListener('input', () => {
+        const w = parseInt(widthInput.value, 10) || 1;
+        if (originalWidth) {
+          const scale = (w / originalWidth) * 100;
+          if (lockRatioCheck && lockRatioCheck.checked && heightInput) {
+            heightInput.value = Math.max(1, Math.round((originalHeight * w) / originalWidth));
+          }
+          currentScalePct = Math.round(scale);
+          if (slider) slider.value = currentScalePct;
+          if (valSlider) valSlider.textContent = `${currentScalePct}%`;
+          if (badgePct) badgePct.textContent = `${currentScalePct}%`;
+        }
+      });
+    }
+
+    // Height input manual change
+    if (heightInput) {
+      heightInput.addEventListener('input', () => {
+        const h = parseInt(heightInput.value, 10) || 1;
+        if (originalHeight) {
+          const scale = (h / originalHeight) * 100;
+          if (lockRatioCheck && lockRatioCheck.checked && widthInput) {
+            widthInput.value = Math.max(1, Math.round((originalWidth * h) / originalHeight));
+          }
+          currentScalePct = Math.round(scale);
+          if (slider) slider.value = currentScalePct;
+          if (valSlider) valSlider.textContent = `${currentScalePct}%`;
+          if (badgePct) badgePct.textContent = `${currentScalePct}%`;
+        }
+      });
+    }
 
     if (input) {
       input.addEventListener('change', async () => {
@@ -1073,22 +2021,13 @@ const MobileApp = (() => {
           originalWidth = img.width;
           originalHeight = img.height;
           originalDimsEl.textContent = `${originalWidth} × ${originalHeight} px`;
-          if (widthInput) widthInput.value = originalWidth;
-          if (heightInput) heightInput.value = originalHeight;
+
+          if (touchThumb) touchThumb.src = dataUrl;
+          updateDimensionsFromScale(100);
 
           box.classList.add('hidden');
           selectedSec.classList.remove('hidden');
           resultBox.classList.add('hidden');
-        }
-      });
-    }
-
-    if (scaleSelect) {
-      scaleSelect.addEventListener('change', () => {
-        const pct = parseInt(scaleSelect.value, 10);
-        if (pct && originalWidth) {
-          widthInput.value = Math.round((originalWidth * pct) / 100);
-          heightInput.value = Math.round((originalHeight * pct) / 100);
         }
       });
     }
@@ -1101,8 +2040,8 @@ const MobileApp = (() => {
         actionBtn.textContent = 'Resizing...';
 
         try {
-          const targetW = parseInt(widthInput.value, 10);
-          const targetH = parseInt(heightInput.value, 10);
+          const targetW = parseInt(widthInput.value, 10) || originalWidth;
+          const targetH = parseInt(heightInput.value, 10) || originalHeight;
           resizedResult = await MobileImageEngine.resizeImage(currentFile, {
             width: targetW,
             height: targetH
@@ -1117,7 +2056,7 @@ const MobileApp = (() => {
           MobileUtils.showToast(err.message || 'Resize failed', 'error');
         } finally {
           actionBtn.disabled = false;
-          actionBtn.textContent = 'Resize Image';
+          actionBtn.textContent = 'Resize & Save Image';
         }
       });
     }
@@ -1145,6 +2084,7 @@ const MobileApp = (() => {
   function initImageConverter() {
     const input = document.getElementById('input-image-converter');
     const box = document.getElementById('upload-image-converter');
+    const changeBtn = document.getElementById('change-image-converter');
     const selectedSec = document.getElementById('selected-image-converter');
     const fileNameEl = document.getElementById('name-image-converter');
     const fileSizeEl = document.getElementById('size-image-converter');
@@ -1157,6 +2097,9 @@ const MobileApp = (() => {
 
     let currentFile = null;
     let convertedResult = null;
+
+    bindFileTrigger(box, input);
+    bindFileTrigger(changeBtn, input);
 
     if (input) {
       input.addEventListener('change', () => {
@@ -1215,6 +2158,7 @@ const MobileApp = (() => {
   // --- 10. PDF Merger Controller ---
   function initPdfMerger() {
     const input = document.getElementById('input-pdf-merger');
+    const triggerBtn = document.getElementById('btn-trigger-pdf-merger');
     const listEl = document.getElementById('list-pdf-merger');
     const actionBtn = document.getElementById('btn-pdf-merger');
     const resultBox = document.getElementById('result-pdf-merger');
@@ -1225,10 +2169,12 @@ const MobileApp = (() => {
     let pdfFiles = [];
     let mergedResult = null;
 
+    bindFileTrigger(triggerBtn, input);
+
     function renderList() {
       if (!listEl) return;
       if (pdfFiles.length === 0) {
-        listEl.innerHTML = '<div class="mobile-empty-hint">Please add at least 2 PDF files to merge.</div>';
+        listEl.innerHTML = '<div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">Add at least 2 PDF files to combine them.</div>';
         if (actionBtn) actionBtn.disabled = true;
         return;
       }
@@ -1340,6 +2286,7 @@ const MobileApp = (() => {
   function initPdfSplitter() {
     const input = document.getElementById('input-pdf-splitter');
     const box = document.getElementById('upload-pdf-splitter');
+    const changeBtn = document.getElementById('change-pdf-splitter');
     const selectedSec = document.getElementById('selected-pdf-splitter');
     const fileNameEl = document.getElementById('name-pdf-splitter');
     const fileSizeEl = document.getElementById('size-pdf-splitter');
@@ -1351,6 +2298,9 @@ const MobileApp = (() => {
 
     let currentFile = null;
     let splitResult = null;
+
+    bindFileTrigger(box, input);
+    bindFileTrigger(changeBtn, input);
 
     if (input) {
       input.addEventListener('change', () => {
@@ -1420,6 +2370,8 @@ const MobileApp = (() => {
     let currentFile = null;
     let selectedIndices = new Set();
     let extractedResult = null;
+
+    bindFileTrigger(box, input);
 
     if (input) {
       input.addEventListener('change', async () => {
@@ -1544,10 +2496,13 @@ const MobileApp = (() => {
     let fileItems = [];
     let generatedZip = null;
 
+    bindFileTrigger(addFilesBtn, input);
+    bindFileTrigger(addFolderBtn, folderInput);
+
     function renderList() {
       if (!listEl) return;
       if (fileItems.length === 0) {
-        listEl.innerHTML = '<div class="mobile-empty-hint">Add files or a folder to create your ZIP archive.</div>';
+        listEl.innerHTML = '<div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">Add files or a folder to package into a ZIP.</div>';
         if (actionBtn) actionBtn.disabled = true;
         return;
       }
@@ -1603,15 +2558,6 @@ const MobileApp = (() => {
       });
     }
 
-    if (addFilesBtn) addFilesBtn.addEventListener('click', () => {
-      MobileUtils.triggerHaptic('light');
-      if (input) input.click();
-    });
-    if (addFolderBtn) addFolderBtn.addEventListener('click', () => {
-      MobileUtils.triggerHaptic('light');
-      if (folderInput) folderInput.click();
-    });
-
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (fileItems.length === 0) return;
@@ -1655,11 +2601,15 @@ const MobileApp = (() => {
   function initZipExtractor() {
     const input = document.getElementById('input-zip-extractor');
     const box = document.getElementById('upload-zip-extractor');
+    const changeBtn = document.getElementById('change-zip-extractor');
     const selectedSec = document.getElementById('selected-zip-extractor');
     const fileNameEl = document.getElementById('name-zip-extractor');
     const entriesList = document.getElementById('list-zip-extractor');
 
     let currentZipData = null;
+
+    bindFileTrigger(box, input);
+    bindFileTrigger(changeBtn, input);
 
     if (input) {
       input.addEventListener('change', async () => {
@@ -1712,8 +2662,8 @@ const MobileApp = (() => {
   // --- 15. Download All as ZIP Controller ---
   function initDownloadAllZip() {
     const input = document.getElementById('input-download-all-zip');
+    const triggerBtn = document.getElementById('btn-trigger-download-all-zip');
     const listEl = document.getElementById('list-download-all-zip');
-    const addMoreBtn = document.getElementById('add-more-download-all-zip');
     const zipNameInput = document.getElementById('name-download-all-zip');
     const actionBtn = document.getElementById('btn-download-all-zip');
     const resultBox = document.getElementById('result-download-all-zip');
@@ -1723,10 +2673,12 @@ const MobileApp = (() => {
     let filesList = [];
     let packagedZip = null;
 
+    bindFileTrigger(triggerBtn, input);
+
     function renderList() {
       if (!listEl) return;
       if (filesList.length === 0) {
-        listEl.innerHTML = '<div class="mobile-empty-hint">Select files you want to bundle into a ZIP.</div>';
+        listEl.innerHTML = '<div class="mobile-empty-hint" style="color: var(--text-muted); font-size: 0.84rem; text-align: center; padding: 20px 0;">Select any files you wish to compress into one ZIP download.</div>';
         if (actionBtn) actionBtn.disabled = true;
         return;
       }
@@ -1766,11 +2718,6 @@ const MobileApp = (() => {
         }
       });
     }
-
-    if (addMoreBtn) addMoreBtn.addEventListener('click', () => {
-      MobileUtils.triggerHaptic('light');
-      if (input) input.click();
-    });
 
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
@@ -1815,7 +2762,7 @@ const MobileApp = (() => {
   function handleAndroidBack() {
     if (isExitModalOpen()) {
       hideExitModal();
-      return true; // consumed
+      return true;
     }
 
     const hash = (window.location.hash || '').replace('#', '').trim();
@@ -1823,9 +2770,9 @@ const MobileApp = (() => {
       const confirmExit = localStorage.getItem('fileforge_mobile_confirm_exit') !== 'false';
       if (confirmExit) {
         showExitModal();
-        return true; // consumed by opening exit modal
+        return true;
       }
-      return false; // let Android OS exit directly
+      return false;
     }
 
     if (['about', 'privacy', 'terms', 'licenses'].includes(hash)) {
@@ -1833,7 +2780,6 @@ const MobileApp = (() => {
       return true;
     }
 
-    // From settings or tool, return to home
     window.location.hash = '';
     return true;
   }
@@ -1849,7 +2795,6 @@ const MobileApp = (() => {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize PDF.js worker with local offline bundle
   if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdf.worker.min.js';
   }
