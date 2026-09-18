@@ -1034,8 +1034,17 @@ const App = (() => {
     }
   }
 
-  // Centralized FileForge Mobile Android APK Release URL (bundled in repository /dist/)
-  const FILEFORGE_APK_URL = "./dist/FileForge-Mobile.apk";
+  /**
+   * Resolve APK Download URL dynamically across GitHub Pages, custom domain, or direct raw mirror
+   */
+  function getApkDownloadUrl() {
+    try {
+      if (window.location && window.location.href) {
+        return new URL('FileForge-Mobile.apk', window.location.href).href;
+      }
+    } catch (e) {}
+    return 'https://raw.githubusercontent.com/Abdur07-svg/FileForge/main/FileForge-Mobile.apk';
+  }
 
   /**
    * Device Detection Utility
@@ -1072,9 +1081,11 @@ const App = (() => {
       if (window.Utils && typeof window.Utils.showToast === 'function') {
         window.Utils.showToast('Starting FileForge-Mobile.apk download...', 'info', 3000);
       }
+      const apkUrl = getApkDownloadUrl();
       const link = document.createElement('a');
-      link.href = FILEFORGE_APK_URL;
+      link.href = apkUrl;
       link.setAttribute('download', 'FileForge-Mobile.apk');
+      link.setAttribute('target', '_blank');
       document.body.appendChild(link);
       link.click();
       setTimeout(() => {
