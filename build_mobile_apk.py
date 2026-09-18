@@ -599,10 +599,14 @@ def build_mobile_apk():
 
     size_mb = os.path.getsize(final_apk) / (1024 * 1024)
 
+    root_apk = os.path.join(BASE_DIR, 'FileForge-Mobile.apk')
+    shutil.copy2(final_apk, root_apk)
+
     print("\n==================================================")
     print("   FILEFORGE MOBILE RELEASE APK READY!")
     print("==================================================")
     print(f"Final APK Output:    {final_apk}")
+    print(f"Root APK Mirror:     {root_apk}")
     print(f"File Size:           {size_mb:.2f} MB")
     print(f"Package ID:          com.fileforge.mobile")
     print(f"minSdkVersion:       21 (Android 5.0+)")

@@ -1541,6 +1541,106 @@
       </div>
     </div>
 
+    <!-- Unified FileForge Mobile Save & Download Complete Modal Sheet -->
+    <div id="save-file-modal" class="mobile-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
+      <div class="mobile-modal-sheet save-file-modal-sheet">
+        
+        <!-- STEP 1: SAVE FILE FORM -->
+        <div id="save-modal-step-form" class="save-modal-step">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+            <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px;" id="save-modal-title">
+              <svg style="width: 20px; height: 20px; color: var(--color-primary-light);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Save Your File</span>
+            </div>
+            <button type="button" id="save-modal-close-btn" class="mobile-icon-btn" aria-label="Close modal">✕</button>
+          </div>
+
+          <!-- Filename Input -->
+          <div style="margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">
+              <span>File Name</span>
+              <span id="save-modal-file-meta" style="color: var(--color-primary-light);">0 KB</span>
+            </div>
+            <div class="save-filename-input-wrap">
+              <input type="text" id="save-modal-filename-input" class="mobile-input save-filename-input" autocomplete="off" spellcheck="false" placeholder="file-name">
+              <span id="save-modal-extension-badge" class="save-extension-badge">.pdf</span>
+            </div>
+            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 5px;">Extension is preserved automatically.</div>
+          </div>
+
+          <!-- Location Box -->
+          <div class="save-location-box" style="margin-bottom: 16px;">
+            <div class="save-location-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Save Location</span>
+            </div>
+            <p id="save-modal-location-text" class="save-location-text">
+              Your device will save this file to your default Downloads folder.
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button type="button" id="save-modal-cancel-btn" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+            <button type="button" id="save-modal-download-btn" class="btn btn-primary" style="flex: 1.4;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 16px; height: 16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Save File</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: SAVING IN PROGRESS -->
+        <div id="save-modal-step-saving" class="save-modal-step hidden" style="text-align: center; padding: 24px 10px;">
+          <div class="save-saving-spinner"></div>
+          <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 14px 0 4px;">Saving Your File...</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);" id="save-modal-saving-text">Exporting to local device storage...</div>
+        </div>
+
+        <!-- STEP 3: DOWNLOAD COMPLETE -->
+        <div id="save-modal-step-complete" class="save-modal-step hidden">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="font-size: 1.15rem; font-weight: 800; color: var(--color-success); display: flex; align-items: center; gap: 8px;">
+              <svg style="width: 22px; height: 22px; color: var(--color-success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>Download Complete</span>
+            </div>
+            <button type="button" id="save-modal-complete-close-btn" class="mobile-icon-btn" aria-label="Close modal">✕</button>
+          </div>
+
+          <div class="save-complete-card" style="margin-bottom: 14px;">
+            <div class="save-complete-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+            </div>
+            <div class="save-complete-info">
+              <div id="save-modal-complete-filename" class="save-complete-name">file.pdf</div>
+              <div id="save-modal-complete-meta" class="save-complete-meta">0 KB &bull; Saved locally</div>
+            </div>
+          </div>
+
+          <p id="save-modal-complete-location" style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 16px;">
+            Your file has been saved to your device's download location.
+          </p>
+
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="save-modal-save-again-btn" class="btn btn-secondary" style="flex: 1;">Save Again</button>
+            <button type="button" id="save-modal-share-btn" class="btn btn-secondary" style="flex: 1;">Share</button>
+            <button type="button" id="save-modal-done-btn" class="btn btn-primary" style="flex: 1;">Done</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Exit Confirmation Bottom Modal Sheet -->
     <div id="mobile-exit-modal" class="mobile-modal-backdrop hidden">
       <div class="mobile-modal-sheet">

@@ -4944,5 +4944,158 @@ input.form-control.input-success {
   }
 }
 
+/* ==========================================================================
+   UNIFIED SAVE & DOWNLOAD COMPLETE MODAL STYLES
+   ========================================================================== */
+
+.save-file-modal-card {
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.save-filename-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.save-filename-input {
+  width: 100%;
+  height: 46px;
+  padding-right: 75px !important;
+  background-color: var(--bg-input);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.save-filename-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  outline: none;
+}
+
+.save-extension-badge {
+  position: absolute;
+  right: 10px;
+  padding: 4px 8px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--color-primary-light);
+  pointer-events: none;
+  user-select: none;
+}
+
+.save-location-box {
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+
+.save-location-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.save-location-header svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary-light);
+  flex-shrink: 0;
+}
+
+.save-location-text {
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Saving State Spinner */
+.save-saving-spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 3px solid rgba(99, 102, 241, 0.2);
+  border-top-color: var(--color-primary);
+  animation: spinSaveSpinner 0.8s infinite linear;
+}
+
+@keyframes spinSaveSpinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Download Complete Card */
+.save-complete-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-top: 6px;
+}
+
+.save-complete-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.save-complete-icon-wrap svg {
+  width: 22px;
+  height: 22px;
+}
+
+.save-complete-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.save-complete-name {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.save-complete-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
 
 

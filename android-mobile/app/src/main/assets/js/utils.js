@@ -73,21 +73,244 @@ const MobileUtils = (() => {
     } catch (e) {}
   }
 
-  function downloadBlob(blob, filename) {
-    triggerHaptic('light');
-    filename = sanitizeFilename(filename, 'download');
-    const url = URL.createObjectURL(blob);
-    trackUrl(url);
+  /**
+   * Unified Mobile FileForge Download & Save Manager
+   */
+  const FileForgeDownloadManager = (() => {
+    let activeBlob = null;
+    let activeFilename = 'fileforge-mobile-file';
+    let activeMimeType = 'application/octet-stream';
+    let currentExtension = '';
+    let currentBaseName = '';
+    let isSaving = false;
+    let initialized = false;
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      if (a.parentElement) a.parentElement.removeChild(a);
-      revokeUrl(url);
-    }, 1500);
+    function initModal() {
+      if (initialized) return;
+      initialized = true;
+
+      const modal = document.getElementById('save-file-modal');
+      if (!modal) return;
+
+      const closeBtn = document.getElementById('save-modal-close-btn');
+      const completeCloseBtn = document.getElementById('save-modal-complete-close-btn');
+      const cancelBtn = document.getElementById('save-modal-cancel-btn');
+      const doneBtn = document.getElementById('save-modal-done-btn');
+      const downloadBtn = document.getElementById('save-modal-download-btn');
+      const saveAgainBtn = document.getElementById('save-modal-save-again-btn');
+      const shareBtn = document.getElementById('save-modal-share-btn');
+      const filenameInput = document.getElementById('save-modal-filename-input');
+
+      const closeModalFn = () => {
+        if (isSaving) return;
+        modal.classList.add('hidden');
+      };
+
+      if (closeBtn) closeBtn.addEventListener('click', closeModalFn);
+      if (completeCloseBtn) completeCloseBtn.addEventListener('click', closeModalFn);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModalFn);
+      if (doneBtn) doneBtn.addEventListener('click', closeModalFn);
+
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+          if (!isSaving && activeBlob) performSave();
+        });
+      }
+
+      if (saveAgainBtn) {
+        saveAgainBtn.addEventListener('click', () => {
+          if (activeBlob) {
+            showStep('form');
+          }
+        });
+      }
+
+      if (shareBtn) {
+        shareBtn.addEventListener('click', async () => {
+          if (!activeBlob) return;
+          const finalName = getFullFilename();
+          await shareBlob(activeBlob, finalName);
+        });
+      }
+
+      if (filenameInput) {
+        filenameInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (!isSaving && activeBlob) performSave();
+          }
+        });
+      }
+    }
+
+    function parseFilename(filename) {
+      filename = filename ? filename.trim() : 'fileforge-file';
+      const lastDotIndex = filename.lastIndexOf('.');
+      if (lastDotIndex > 0 && lastDotIndex < filename.length - 1) {
+        return {
+          base: filename.substring(0, lastDotIndex),
+          ext: filename.substring(lastDotIndex)
+        };
+      }
+      return {
+        base: filename,
+        ext: ''
+      };
+    }
+
+    function sanitizeBase(base) {
+      if (!base) return 'fileforge-file';
+      return base
+        .replace(/[/\\:*?"<>|]/g, '_')
+        .replace(/\.\.+/g, '_')
+        .replace(/^\.+|\.+$/g, '')
+        .trim() || 'fileforge-file';
+    }
+
+    function getFullFilename() {
+      const filenameInput = document.getElementById('save-modal-filename-input');
+      const rawBase = filenameInput ? filenameInput.value : currentBaseName;
+      const safeBase = sanitizeBase(rawBase);
+      return safeBase + currentExtension;
+    }
+
+    function showStep(stepName) {
+      const stepForm = document.getElementById('save-modal-step-form');
+      const stepSaving = document.getElementById('save-modal-step-saving');
+      const stepComplete = document.getElementById('save-modal-step-complete');
+
+      if (stepForm) stepForm.classList.toggle('hidden', stepName !== 'form');
+      if (stepSaving) stepSaving.classList.toggle('hidden', stepName !== 'saving');
+      if (stepComplete) stepComplete.classList.toggle('hidden', stepName !== 'complete');
+    }
+
+    async function performSave() {
+      if (isSaving || !activeBlob) return;
+      isSaving = true;
+
+      const downloadBtn = document.getElementById('save-modal-download-btn');
+      const cancelBtn = document.getElementById('save-modal-cancel-btn');
+      const finalFilename = getFullFilename();
+
+      if (downloadBtn) downloadBtn.disabled = true;
+      if (cancelBtn) cancelBtn.disabled = true;
+
+      showStep('saving');
+      triggerHaptic('light');
+
+      try {
+        // Standard Mobile Blob Download
+        const url = URL.createObjectURL(activeBlob);
+        trackUrl(url);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = finalFilename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          if (a.parentElement) a.parentElement.removeChild(a);
+          revokeUrl(url);
+        }, 1500);
+
+        // Display Complete View
+        const compFilename = document.getElementById('save-modal-complete-filename');
+        const compMeta = document.getElementById('save-modal-complete-meta');
+        const compLocation = document.getElementById('save-modal-complete-location');
+
+        if (compFilename) compFilename.textContent = finalFilename;
+        if (compMeta) compMeta.textContent = `${formatBytes(activeBlob.size)} • ${activeBlob.type || activeMimeType}`;
+        if (compLocation) compLocation.textContent = "Your file has been saved to your device's download location.";
+
+        triggerHaptic('success');
+        showStep('complete');
+      } catch (err) {
+        console.error('Mobile save error:', err);
+        showToast('Save failed: ' + (err.message || 'Unknown error'), 'error');
+        showStep('form');
+      } finally {
+        isSaving = false;
+        if (downloadBtn) downloadBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+      }
+    }
+
+    function openSaveDialog({ blob, filename, mimeType = 'application/octet-stream' }) {
+      if (!blob) {
+        showToast('No file data available to save', 'warning');
+        return;
+      }
+
+      initModal();
+
+      activeBlob = blob;
+      activeMimeType = mimeType || blob.type || 'application/octet-stream';
+      const parsed = parseFilename(filename || 'fileforge-file');
+      currentBaseName = parsed.base;
+      currentExtension = parsed.ext;
+
+      const modal = document.getElementById('save-file-modal');
+      if (!modal) {
+        directDownload(blob, filename);
+        return;
+      }
+
+      const filenameInput = document.getElementById('save-modal-filename-input');
+      const extBadge = document.getElementById('save-modal-extension-badge');
+      const metaEl = document.getElementById('save-modal-file-meta');
+
+      if (filenameInput) {
+        filenameInput.value = currentBaseName;
+      }
+      if (extBadge) {
+        extBadge.textContent = currentExtension || 'FILE';
+      }
+      if (metaEl) {
+        metaEl.textContent = formatBytes(blob.size);
+      }
+
+      showStep('form');
+      modal.classList.remove('hidden');
+
+      if (filenameInput) {
+        setTimeout(() => {
+          filenameInput.focus();
+          filenameInput.select();
+        }, 80);
+      }
+    }
+
+    function directDownload(blob, filename) {
+      triggerHaptic('light');
+      filename = sanitizeFilename(filename, 'download');
+      const url = URL.createObjectURL(blob);
+      trackUrl(url);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (a.parentElement) a.parentElement.removeChild(a);
+        revokeUrl(url);
+      }, 1500);
+    }
+
+    return {
+      save: openSaveDialog,
+      directDownload: directDownload
+    };
+  })();
+
+  window.FileForgeDownloadManager = FileForgeDownloadManager;
+
+  function downloadBlob(blob, filename, mimeType = null) {
+    FileForgeDownloadManager.save({
+      blob: blob,
+      filename: filename,
+      mimeType: mimeType || (blob ? blob.type : 'application/octet-stream')
+    });
   }
 
   async function shareBlob(blob, filename, title = 'FileForge File') {
@@ -115,7 +338,6 @@ const MobileUtils = (() => {
 
     // Fallback if sharing is unavailable or fails
     downloadBlob(blob, filename);
-    showToast('Downloaded to device', 'info');
     return false;
   }
 
@@ -191,6 +413,7 @@ const MobileUtils = (() => {
     triggerHaptic,
     downloadBlob,
     shareBlob,
+    downloadManager: FileForgeDownloadManager,
     showToast,
     readFileAsArrayBuffer,
     readFileAsDataURL,
