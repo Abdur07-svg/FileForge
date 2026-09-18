@@ -30,6 +30,76 @@ public class MainActivity extends Activity {
                 }
             });
         }
+
+        @JavascriptInterface
+        public void saveFile(String dataUrlOrBase64, String filename, String mimeType) {
+            try {
+                if (dataUrlOrBase64 == null || dataUrlOrBase64.isEmpty()) return;
+                
+                String base64Data = dataUrlOrBase64;
+                if (base64Data.contains(",")) {
+                    base64Data = base64Data.substring(base64Data.indexOf(",") + 1);
+                }
+                
+                final byte[] fileBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT);
+                final String safeFilename = (filename != null && !filename.trim().isEmpty()) 
+                    ? filename.replaceAll("[^a-zA-Z0-9._-]", "_") 
+                    : "fileforge-file";
+                final String safeMime = (mimeType != null && !mimeType.trim().isEmpty()) 
+                    ? mimeType 
+                    : "application/octet-stream";
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean saved = false;
+                        try {
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                                android.content.ContentValues values = new android.content.ContentValues();
+                                values.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, safeFilename);
+                                values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, safeMime);
+                                values.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS + "/FileForge");
+                                
+                                android.net.Uri uri = getContentResolver().insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                                if (uri != null) {
+                                    java.io.OutputStream out = getContentResolver().openOutputStream(uri);
+                                    if (out != null) {
+                                        out.write(fileBytes);
+                                        out.flush();
+                                        out.close();
+                                        saved = true;
+                                    }
+                                }
+                            }
+                            
+                            if (!saved) {
+                                java.io.File downloadDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS);
+                                java.io.File targetDir = new java.io.File(downloadDir, "FileForge");
+                                if (!targetDir.exists()) {
+                                    targetDir.mkdirs();
+                                }
+                                java.io.File destFile = new java.io.File(targetDir, safeFilename);
+                                java.io.FileOutputStream fos = new java.io.FileOutputStream(destFile);
+                                fos.write(fileBytes);
+                                fos.flush();
+                                fos.close();
+                                
+                                android.media.MediaScannerConnection.scanFile(MainActivity.this, 
+                                    new String[]{destFile.getAbsolutePath()}, 
+                                    new String[]{safeMime}, null);
+                                saved = true;
+                            }
+
+                            Toast.makeText(MainActivity.this, "Saved to Downloads/FileForge: " + safeFilename, Toast.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            Toast.makeText(MainActivity.this, "Save error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")

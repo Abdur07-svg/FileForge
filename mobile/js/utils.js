@@ -86,11 +86,9 @@ const MobileUtils = (() => {
     let initialized = false;
 
     function initModal() {
-      if (initialized) return;
-      initialized = true;
-
       const modal = document.getElementById('save-file-modal');
-      if (!modal) return;
+      if (!modal || initialized) return;
+      initialized = true;
 
       const closeBtn = document.getElementById('save-modal-close-btn');
       const completeCloseBtn = document.getElementById('save-modal-complete-close-btn');
@@ -111,14 +109,20 @@ const MobileUtils = (() => {
       if (cancelBtn) cancelBtn.addEventListener('click', closeModalFn);
       if (doneBtn) doneBtn.addEventListener('click', closeModalFn);
 
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModalFn();
+      });
+
       if (downloadBtn) {
-        downloadBtn.addEventListener('click', () => {
+        downloadBtn.addEventListener('click', (e) => {
+          e.preventDefault();
           if (!isSaving && activeBlob) performSave();
         });
       }
 
       if (saveAgainBtn) {
-        saveAgainBtn.addEventListener('click', () => {
+        saveAgainBtn.addEventListener('click', (e) => {
+          e.preventDefault();
           if (activeBlob) {
             showStep('form');
           }
@@ -126,7 +130,8 @@ const MobileUtils = (() => {
       }
 
       if (shareBtn) {
-        shareBtn.addEventListener('click', async () => {
+        shareBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
           if (!activeBlob) return;
           const finalName = getFullFilename();
           await shareBlob(activeBlob, finalName);
@@ -211,7 +216,7 @@ const MobileUtils = (() => {
                 reject(e);
               }
             };
-            reader.onerror = reject;
+            reader.onerror = () => reject(new Error('Failed to read file data'));
             reader.readAsDataURL(activeBlob);
           });
         } else {
@@ -238,8 +243,8 @@ const MobileUtils = (() => {
         if (compFilename) compFilename.textContent = finalFilename;
         if (compMeta) compMeta.textContent = `${formatBytes(activeBlob.size)} • ${activeBlob.type || activeMimeType}`;
         if (compLocation) {
-          compLocation.textContent = window.AndroidBridge 
-            ? "Saved directly to your device storage in Downloads/FileForge." 
+          compLocation.innerHTML = window.AndroidBridge 
+            ? "Saved directly to your device storage in <strong>Downloads/FileForge</strong>." 
             : "Your file has been saved to your device's download location.";
         }
 
@@ -279,6 +284,7 @@ const MobileUtils = (() => {
       const filenameInput = document.getElementById('save-modal-filename-input');
       const extBadge = document.getElementById('save-modal-extension-badge');
       const metaEl = document.getElementById('save-modal-file-meta');
+      const locationText = document.getElementById('save-modal-location-text');
 
       if (filenameInput) {
         filenameInput.value = currentBaseName;
@@ -288,6 +294,13 @@ const MobileUtils = (() => {
       }
       if (metaEl) {
         metaEl.textContent = formatBytes(blob.size);
+      }
+      if (locationText) {
+        if (window.AndroidBridge && typeof window.AndroidBridge.saveFile === 'function') {
+          locationText.innerHTML = 'Your device will save this file directly to <strong style="color: var(--color-primary-light);">Downloads/FileForge</strong>.';
+        } else {
+          locationText.textContent = 'Your device will save this file to your default Downloads folder.';
+        }
       }
 
       showStep('form');
@@ -318,7 +331,15 @@ const MobileUtils = (() => {
       }, 1500);
     }
 
+    // Auto-init on DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initModal);
+    } else {
+      initModal();
+    }
+
     return {
+      init: initModal,
       save: openSaveDialog,
       directDownload: directDownload
     };
