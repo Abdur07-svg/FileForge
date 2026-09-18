@@ -1034,8 +1034,8 @@ const App = (() => {
     }
   }
 
-  // Centralized FileForge Mobile Android APK Release URL
-  const FILEFORGE_APK_URL = "https://github.com/Abdur07-svg/FileForge/releases/latest/download/FileForge-Mobile.apk";
+  // Centralized FileForge Mobile Android APK Release URL (bundled in repository /dist/)
+  const FILEFORGE_APK_URL = "./dist/FileForge-Mobile.apk";
 
   /**
    * Device Detection Utility
