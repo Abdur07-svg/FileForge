@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>FileForge Mobile — Fast & Private File Tools</title>
   <meta name="description" content="Lightweight, fast, 100% private mobile file tools. Compress, convert, merge, and split files on your Android device.">
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
@@ -31,9 +31,17 @@
         <img src="assets/logo.svg" alt="FileForge Logo" class="mobile-brand-logo">
         <span class="mobile-brand-name">FileForge</span>
       </a>
-      <div class="mobile-badge-private">
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"/></svg>
-        <span>100% Local</span>
+      <div class="mobile-header-actions">
+        <div class="mobile-badge-private">
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"/></svg>
+          <span>100% Local</span>
+        </div>
+        <button type="button" id="btn-open-settings" class="mobile-settings-btn" aria-label="Settings and Information" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -43,7 +51,7 @@
       <!-- ==========================================
            1. HOME SCREEN VIEW
            ========================================== -->
-      <div id="mobile-home-view">
+      <div id="mobile-home-view" class="mobile-view-enter">
         <div class="mobile-hero-tagline">
           <h1 class="hero-tagline-title">Mobile File Tools</h1>
           <p class="hero-tagline-sub">Simple • Private • Processed on your device</p>
@@ -74,7 +82,240 @@
       </div>
 
       <!-- ==========================================
-           2. TOOL VIEWS CONTAINER
+           2. SETTINGS / MORE VIEW
+           ========================================== -->
+      <div id="mobile-settings-view" class="mobile-view-enter hidden">
+        <div class="mobile-tool-nav">
+          <button type="button" class="mobile-back-btn" aria-label="Back to Home">←</button>
+          <h2 class="mobile-tool-header-title">Settings</h2>
+        </div>
+
+        <div class="settings-section-title">Appearance</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span class="settings-row-title">Dark Mode</span>
+              <span class="settings-row-sub">Comfortable low-glare dark palette</span>
+            </div>
+            <label class="mobile-switch" aria-label="Toggle Dark Mode">
+              <input type="checkbox" id="toggle-dark-mode" class="mobile-switch-input" checked>
+              <span class="mobile-switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section-title">App Preferences</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span class="settings-row-title">Haptic Feedback</span>
+              <span class="settings-row-sub">Vibrate softly on buttons and success</span>
+            </div>
+            <label class="mobile-switch" aria-label="Toggle Haptic Feedback">
+              <input type="checkbox" id="toggle-haptic" class="mobile-switch-input" checked>
+              <span class="mobile-switch-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span class="settings-row-title">Confirm Before Exit</span>
+              <span class="settings-row-sub">Ask before exiting from Home screen</span>
+            </div>
+            <label class="mobile-switch" aria-label="Toggle Exit Confirmation">
+              <input type="checkbox" id="toggle-confirm-exit" class="mobile-switch-input" checked>
+              <span class="mobile-switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section-title">Information</div>
+        <div class="settings-card">
+          <a href="#about" class="settings-row" id="link-to-about">
+            <div class="settings-row-label">
+              <span class="settings-row-title">About FileForge</span>
+              <span class="settings-row-sub">App details & privacy overview</span>
+            </div>
+            <div class="settings-row-action">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </div>
+          </a>
+          <a href="#privacy" class="settings-row" id="link-to-privacy">
+            <div class="settings-row-label">
+              <span class="settings-row-title">Privacy Policy</span>
+              <span class="settings-row-sub">How your files and data are handled</span>
+            </div>
+            <div class="settings-row-action">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </div>
+          </a>
+          <a href="#terms" class="settings-row" id="link-to-terms">
+            <div class="settings-row-label">
+              <span class="settings-row-title">Terms of Use</span>
+              <span class="settings-row-sub">Rules & signature disclaimers</span>
+            </div>
+            <div class="settings-row-action">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </div>
+          </a>
+          <a href="#licenses" class="settings-row" id="link-to-licenses">
+            <div class="settings-row-label">
+              <span class="settings-row-title">Open Source Licenses</span>
+              <span class="settings-row-sub">Third-party library attributions</span>
+            </div>
+            <div class="settings-row-action">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </div>
+          </a>
+        </div>
+
+        <div class="settings-section-title">App Information</div>
+        <div class="settings-card" style="padding: 14px 16px; font-size: 0.82rem; color: var(--text-secondary);">
+          <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">FileForge Mobile for Android</div>
+          <div>Version 1.0.0 (Release Build)</div>
+          <div style="margin-top: 6px; font-size: 0.76rem; color: var(--text-muted);">15 Essential Client-Side Tools • 100% Offline Processing</div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           3. ABOUT VIEW
+           ========================================== -->
+      <div id="mobile-about-view" class="mobile-view-enter hidden">
+        <div class="mobile-tool-nav">
+          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">←</button>
+          <h2 class="mobile-tool-header-title">About FileForge</h2>
+        </div>
+
+        <div class="info-doc-body">
+          <div class="info-card-callout">
+            <strong>FileForge Mobile</strong> is a dedicated, lightweight Android utility application providing 15 essential PDF, Image, and ZIP archive tools.
+          </div>
+
+          <h3>⚡ Local &amp; Private by Design</h3>
+          <p>
+            Unlike traditional file tools that upload your sensitive documents to remote servers, FileForge Mobile executes 100% of processing directly within your device's memory. Your bank statements, personal photos, and contracts never leave your phone.
+          </p>
+
+          <h3>📱 15 Essential Tools</h3>
+          <p>
+            Designed from the ground up for portrait-first phone screens, touch interactions, and Android gesture navigation. Includes PDF compression, multi-image to PDF with mixed orientations, PDF merging, splitting, lossless format conversion, and ZIP archiving.
+          </p>
+
+          <h3>🛡️ Zero Accounts &amp; Zero Trackers</h3>
+          <p>
+            No login, no subscriptions, no ads, and no external telemetry. FileForge is completely free and works completely offline once packaged into the APK.
+          </p>
+
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 10px;">
+            Version: 1.0.0 • Architecture: Universal APK • Target SDK: Android 14+
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           4. PRIVACY POLICY VIEW
+           ========================================== -->
+      <div id="mobile-privacy-view" class="mobile-view-enter hidden">
+        <div class="mobile-tool-nav">
+          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">←</button>
+          <h2 class="mobile-tool-header-title">Privacy Policy</h2>
+        </div>
+
+        <div class="info-doc-body">
+          <div class="info-card-callout">
+            <strong>Summary:</strong> Supported files are processed locally on your device and are not uploaded to a FileForge server for processing.
+          </div>
+
+          <h3>1. File Processing &amp; Temporary Memory</h3>
+          <p>
+            When you select a file (PDF, Image, or Archive), it is loaded solely into temporary device memory (RAM) and processed using local client-side engines. Once you navigate away from a tool, all temporary memory references, canvases, and object URLs are immediately revoked.
+          </p>
+
+          <h3>2. Zero Data Collection</h3>
+          <p>
+            FileForge Mobile does not collect, transmit, store, or sell any personal data, file metadata, IP addresses, or device identifiers. There are no tracking scripts, analytics SDKs, or background telemetry.
+          </p>
+
+          <h3>3. Local Preferences Storage</h3>
+          <p>
+            The application uses local device storage (localStorage) exclusively to remember harmless UI preferences: your Theme (Dark/Light), Haptic Feedback toggle, and Exit Confirmation toggle. No user files or document contents are ever stored in persistent storage.
+          </p>
+
+          <h3>4. Permissions</h3>
+          <p>
+            FileForge Mobile does not request broad file storage permissions. It uses Android's native system file picker to open only the specific files you choose to process.
+          </p>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           5. TERMS OF USE VIEW
+           ========================================== -->
+      <div id="mobile-terms-view" class="mobile-view-enter hidden">
+        <div class="mobile-tool-nav">
+          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">←</button>
+          <h2 class="mobile-tool-header-title">Terms of Use</h2>
+        </div>
+
+        <div class="info-doc-body">
+          <div class="info-card-callout">
+            By using FileForge Mobile, you agree to these simple terms.
+          </div>
+
+          <h3>1. Lawful &amp; Authorized Use</h3>
+          <p>
+            You are solely responsible for ensuring you have the legal right and authorization to process, convert, compress, or merge any files and documents you handle through FileForge Mobile.
+          </p>
+
+          <h3>2. Signature Disclaimer</h3>
+          <p>
+            FileForge's Signature feature only places a user-provided signature image onto a document. It does not create, verify, authenticate, or certify a legally valid digital signature or electronic signature. Users are solely responsible for using signatures only with proper authorization and for complying with applicable laws and requirements. Use only your own signature or a signature you are authorized to use.
+          </p>
+
+          <h3>3. Disclaimer of Warranty</h3>
+          <p>
+            FileForge Mobile is provided "as-is" without warranty of any kind. While our client-side engines are designed for high fidelity, no guarantee is made that all complex PDF or image structures will convert perfectly on all device architectures.
+          </p>
+
+          <h3>4. Limitation of Liability</h3>
+          <p>
+            Under no circumstances shall FileForge maintainers be liable for any data loss, file corruption, or indirect damages resulting from the use of this software.
+          </p>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           6. OPEN SOURCE LICENSES VIEW
+           ========================================== -->
+      <div id="mobile-licenses-view" class="mobile-view-enter hidden">
+        <div class="mobile-tool-nav">
+          <button type="button" class="mobile-back-btn" aria-label="Back to Settings">←</button>
+          <h2 class="mobile-tool-header-title">Open Source Licenses</h2>
+        </div>
+
+        <div class="info-doc-body">
+          <p>
+            FileForge Mobile bundles the following open-source client-side libraries:
+          </p>
+
+          <h3>1. PDF-Lib (MIT License)</h3>
+          <div class="info-license-block">Copyright (c) 2019 Andrew Dillon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction...</div>
+
+          <h3>2. PDF.js (Apache License 2.0)</h3>
+          <div class="info-license-block">Copyright 2023 Mozilla Foundation
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0</div>
+
+          <h3>3. JSZip (MIT License)</h3>
+          <div class="info-license-block">Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files...</div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           7. TOOL VIEWS CONTAINER
            ========================================== -->
       <div id="mobile-tool-container" class="hidden">
 
@@ -119,7 +360,10 @@
               <div class="result-header">✓ Compressed Successfully</div>
               <div id="stats-image-compressor" class="result-stats-row"></div>
               <img id="preview-image-compressor" class="mobile-preview-thumb" alt="Preview">
-              <button type="button" id="dl-image-compressor" class="btn btn-success btn-block">Download Compressed Image</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-image-compressor" class="btn btn-success">Download</button>
+                <button type="button" id="share-image-compressor" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -133,7 +377,7 @@
                 <li>Tap <strong>+ Select Image</strong> and choose a photo from your gallery.</li>
                 <li>Adjust the <strong>Compression Quality</strong> slider.</li>
                 <li>Tap <strong>Compress Image</strong>.</li>
-                <li>Review the size savings and tap <strong>Download Compressed Image</strong>.</li>
+                <li>Review the size savings and tap <strong>Download</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -185,7 +429,10 @@
             <div id="result-pdf-compressor" class="mobile-result-box hidden">
               <div class="result-header">✓ PDF Compressed</div>
               <div id="stats-pdf-compressor" class="result-stats-row"></div>
-              <button type="button" id="dl-pdf-compressor" class="btn btn-success btn-block">Download Compressed PDF</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-pdf-compressor" class="btn btn-success">Download</button>
+                <button type="button" id="share-pdf-compressor" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -199,7 +446,7 @@
                 <li>Tap <strong>+ Select PDF Document</strong> to pick your file.</li>
                 <li>Choose your preferred <strong>Compression Level</strong>.</li>
                 <li>Tap <strong>Compress PDF</strong> and wait for local page processing.</li>
-                <li>Tap <strong>Download Compressed PDF</strong> to save the result.</li>
+                <li>Tap <strong>Download</strong> or <strong>Share</strong> to export the compressed PDF.</li>
               </ol>
             </div>
           </div>
@@ -226,7 +473,6 @@
               </div>
             </div>
 
-            <!-- Progressive Disclosure: Page Settings -->
             <div class="mobile-accordion open" style="margin-top: 8px;">
               <div class="mobile-accordion-header">
                 <span>Page Layout & Sizing</span>
@@ -264,7 +510,10 @@
 
             <div id="result-image-to-pdf" class="mobile-result-box hidden">
               <div class="result-header">✓ PDF Ready!</div>
-              <button type="button" id="dl-image-to-pdf" class="btn btn-success btn-block">Download PDF Document</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-image-to-pdf" class="btn btn-success">Download PDF</button>
+                <button type="button" id="share-image-to-pdf" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -278,7 +527,7 @@
                 <li>Tap <strong>+ Add Images</strong> to select photos.</li>
                 <li>Use <strong>↑</strong> and <strong>↓</strong> to arrange page order.</li>
                 <li>Optionally set individual page orientations (Auto/Portrait/Landscape).</li>
-                <li>Tap <strong>Create PDF</strong> and then <strong>Download PDF Document</strong>.</li>
+                <li>Tap <strong>Create PDF</strong> and then <strong>Download PDF</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -319,7 +568,10 @@
             <div id="result-pdf-to-jpg" class="mobile-result-box hidden">
               <div class="result-header">✓ Pages Converted</div>
               <div id="gallery-pdf-to-jpg" class="mobile-gallery-grid"></div>
-              <button type="button" id="dl-all-pdf-to-jpg" class="btn btn-success btn-block">Download All as ZIP</button>
+              <div class="result-actions-row" style="margin-top: 10px;">
+                <button type="button" id="dl-all-pdf-to-jpg" class="btn btn-success">Download All (ZIP)</button>
+                <button type="button" id="share-all-pdf-to-jpg" class="btn btn-secondary">Share ZIP</button>
+              </div>
             </div>
           </div>
 
@@ -332,7 +584,7 @@
               <ol class="guide-step-list">
                 <li>Tap <strong>+ Select PDF</strong> to load a document.</li>
                 <li>Tap <strong>Convert to JPG</strong>.</li>
-                <li>Download individual images or tap <strong>Download All as ZIP</strong>.</li>
+                <li>Download individual images or tap <strong>Download All (ZIP)</strong>.</li>
               </ol>
             </div>
           </div>
@@ -373,7 +625,10 @@
             <div id="result-pdf-to-png" class="mobile-result-box hidden">
               <div class="result-header">✓ Pages Converted</div>
               <div id="gallery-pdf-to-png" class="mobile-gallery-grid"></div>
-              <button type="button" id="dl-all-pdf-to-png" class="btn btn-success btn-block">Download All as ZIP</button>
+              <div class="result-actions-row" style="margin-top: 10px;">
+                <button type="button" id="dl-all-pdf-to-png" class="btn btn-success">Download All (ZIP)</button>
+                <button type="button" id="share-all-pdf-to-png" class="btn btn-secondary">Share ZIP</button>
+              </div>
             </div>
           </div>
 
@@ -419,7 +674,10 @@
             <div id="result-jpg-to-png" class="mobile-result-box hidden">
               <div class="result-header">✓ Converted to PNG</div>
               <img id="preview-jpg-to-png" class="mobile-preview-thumb" alt="Preview">
-              <button type="button" id="dl-jpg-to-png" class="btn btn-success btn-block">Download PNG Image</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-jpg-to-png" class="btn btn-success">Download</button>
+                <button type="button" id="share-jpg-to-png" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -432,7 +690,7 @@
               <ol class="guide-step-list">
                 <li>Tap <strong>+ Select JPG Image</strong>.</li>
                 <li>Tap <strong>Convert to PNG</strong>.</li>
-                <li>Tap <strong>Download PNG Image</strong>.</li>
+                <li>Tap <strong>Download</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -465,7 +723,10 @@
             <div id="result-png-to-jpg" class="mobile-result-box hidden">
               <div class="result-header">✓ Converted to JPG</div>
               <img id="preview-png-to-jpg" class="mobile-preview-thumb" alt="Preview">
-              <button type="button" id="dl-png-to-jpg" class="btn btn-success btn-block">Download JPG Image</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-png-to-jpg" class="btn btn-success">Download</button>
+                <button type="button" id="share-png-to-jpg" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -478,7 +739,7 @@
               <ol class="guide-step-list">
                 <li>Tap <strong>+ Select PNG Image</strong>.</li>
                 <li>Tap <strong>Convert to JPG</strong>.</li>
-                <li>Tap <strong>Download JPG Image</strong>.</li>
+                <li>Tap <strong>Download</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -533,7 +794,10 @@
               <div class="result-header">✓ Resized Successfully</div>
               <div id="result-dims-image-resizer" class="text-secondary font-bold"></div>
               <img id="preview-image-resizer" class="mobile-preview-thumb" alt="Preview">
-              <button type="button" id="dl-image-resizer" class="btn btn-success btn-block">Download Resized Image</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-image-resizer" class="btn btn-success">Download</button>
+                <button type="button" id="share-image-resizer" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -547,7 +811,7 @@
                 <li>Tap <strong>+ Select Image to Resize</strong>.</li>
                 <li>Enter new dimensions or select a percentage preset.</li>
                 <li>Tap <strong>Resize Image</strong>.</li>
-                <li>Tap <strong>Download Resized Image</strong>.</li>
+                <li>Tap <strong>Download</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -590,7 +854,10 @@
             <div id="result-image-converter" class="mobile-result-box hidden">
               <div class="result-header">✓ Converted Successfully</div>
               <img id="preview-image-converter" class="mobile-preview-thumb" alt="Preview">
-              <button type="button" id="dl-image-converter" class="btn btn-success btn-block">Download Converted Image</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-image-converter" class="btn btn-success">Download</button>
+                <button type="button" id="share-image-converter" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -604,7 +871,7 @@
                 <li>Tap <strong>+ Select Image</strong>.</li>
                 <li>Choose your <strong>Target Format</strong>.</li>
                 <li>Tap <strong>Convert Image</strong>.</li>
-                <li>Tap <strong>Download Converted Image</strong>.</li>
+                <li>Tap <strong>Download</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -634,7 +901,10 @@
             <div id="result-pdf-merger" class="mobile-result-box hidden">
               <div class="result-header">✓ PDFs Merged</div>
               <div id="info-pdf-merger" class="text-secondary font-bold"></div>
-              <button type="button" id="dl-pdf-merger" class="btn btn-success btn-block">Download Merged PDF</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-pdf-merger" class="btn btn-success">Download PDF</button>
+                <button type="button" id="share-pdf-merger" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -648,7 +918,7 @@
                 <li>Tap <strong>+ Add PDF Files</strong> to select 2 or more files.</li>
                 <li>Use <strong>↑</strong> and <strong>↓</strong> to change the document sequence.</li>
                 <li>Tap <strong>Merge PDFs</strong>.</li>
-                <li>Tap <strong>Download Merged PDF</strong>.</li>
+                <li>Tap <strong>Download PDF</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -685,7 +955,10 @@
 
             <div id="result-pdf-splitter" class="mobile-result-box hidden">
               <div class="result-header">✓ PDF Split Ready</div>
-              <button type="button" id="dl-pdf-splitter" class="btn btn-success btn-block">Download Split PDF</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-pdf-splitter" class="btn btn-success">Download</button>
+                <button type="button" id="share-pdf-splitter" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -699,7 +972,7 @@
                 <li>Tap <strong>+ Select PDF to Split</strong>.</li>
                 <li>Type page numbers or ranges (e.g. <code>1-3, 5</code>).</li>
                 <li>Tap <strong>Split PDF</strong>.</li>
-                <li>Tap <strong>Download Split PDF</strong>.</li>
+                <li>Tap <strong>Download</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -731,7 +1004,10 @@
 
             <div id="result-pdf-page-extractor" class="mobile-result-box hidden">
               <div class="result-header">✓ Pages Extracted</div>
-              <button type="button" id="dl-pdf-page-extractor" class="btn btn-success btn-block">Download Extracted PDF</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-pdf-page-extractor" class="btn btn-success">Download</button>
+                <button type="button" id="share-pdf-page-extractor" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -745,7 +1021,7 @@
                 <li>Tap <strong>+ Select PDF</strong>.</li>
                 <li>Tap the page thumbnails you want to keep.</li>
                 <li>Tap <strong>Extract Pages</strong>.</li>
-                <li>Tap <strong>Download Extracted PDF</strong>.</li>
+                <li>Tap <strong>Download</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -781,7 +1057,10 @@
 
             <div id="result-zip-creator" class="mobile-result-box hidden">
               <div class="result-header">✓ ZIP Created</div>
-              <button type="button" id="dl-zip-creator" class="btn btn-success btn-block">Download ZIP File</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-zip-creator" class="btn btn-success">Download</button>
+                <button type="button" id="share-zip-creator" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -795,7 +1074,7 @@
                 <li>Tap <strong>+ Add Files</strong> or <strong>+ Add Folder</strong>.</li>
                 <li>Optionally edit the <strong>ZIP Filename</strong>.</li>
                 <li>Tap <strong>Create ZIP Archive</strong>.</li>
-                <li>Tap <strong>Download ZIP File</strong>.</li>
+                <li>Tap <strong>Download</strong> or <strong>Share</strong>.</li>
               </ol>
             </div>
           </div>
@@ -870,7 +1149,10 @@
 
             <div id="result-download-all-zip" class="mobile-result-box hidden">
               <div class="result-header">✓ ZIP Ready!</div>
-              <button type="button" id="dl-download-all-zip" class="btn btn-success btn-block">Download ZIP Bundle</button>
+              <div class="result-actions-row">
+                <button type="button" id="dl-download-all-zip" class="btn btn-success">Download ZIP</button>
+                <button type="button" id="share-download-all-zip" class="btn btn-secondary">Share</button>
+              </div>
             </div>
           </div>
 
@@ -897,6 +1179,18 @@
     <footer class="mobile-footer">
       <div>FileForge Mobile • 100% Client-Side Privacy</div>
     </footer>
+
+    <!-- Exit Confirmation Bottom Modal Sheet -->
+    <div id="mobile-exit-modal" class="mobile-modal-backdrop hidden">
+      <div class="mobile-modal-sheet">
+        <div style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Exit FileForge?</div>
+        <div style="font-size: 0.84rem; color: var(--text-secondary);">Are you sure you want to close the application?</div>
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button type="button" id="btn-cancel-exit" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+          <button type="button" id="btn-confirm-exit" class="btn btn-primary" style="flex: 1;">Exit</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Toast Notification Container -->
     <div id="mobile-toast-container" class="mobile-toast-container" aria-live="polite"></div>

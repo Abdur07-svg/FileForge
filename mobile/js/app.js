@@ -1,6 +1,7 @@
 /**
  * FileForge Mobile - Main Application Controller
- * Handles Navigation, State Reset, Tool Search, and Interactive Mobile Controllers
+ * Handles Navigation, Settings, Theme & Haptic Toggles, Exit Confirmation,
+ * Tool Search, Interactive Mobile Controllers, and Web Share API integration.
  */
 const MobileApp = (() => {
 
@@ -8,7 +9,7 @@ const MobileApp = (() => {
   let currentToolId = null;
   let activeToolState = {};
 
-  // Tool metadata definition
+  // Tool metadata definition (15 essential mobile tools)
   const TOOLS = [
     {
       id: 'image-compressor',
@@ -118,16 +119,121 @@ const MobileApp = (() => {
   ];
 
   /**
-   * Initialize App Shell, Event Listeners and Routing
+   * Initialize App Shell, Settings, Event Listeners and Routing
    */
   function init() {
+    initPreferences();
     renderToolCards();
     initNavigation();
     initSearchAndFilter();
     initToolControllers();
+    initExitModal();
 
     // Check initial hash route
     handleHashChange();
+  }
+
+  /**
+   * User UI Preferences (Theme, Haptic, Exit Confirmation)
+   * Only harmless UI states stored in localStorage. Never user files.
+   */
+  function initPreferences() {
+    // 1. Theme preference
+    const savedTheme = localStorage.getItem('fileforge_mobile_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    const themeToggle = document.getElementById('toggle-dark-mode');
+    if (themeToggle) {
+      themeToggle.checked = savedTheme === 'dark';
+      themeToggle.addEventListener('change', () => {
+        MobileUtils.triggerHaptic('light');
+        const theme = themeToggle.checked ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('fileforge_mobile_theme', theme);
+      });
+    }
+
+    // 2. Haptic Feedback preference
+    const hapticEnabled = localStorage.getItem('fileforge_mobile_haptic') !== 'false';
+    const hapticToggle = document.getElementById('toggle-haptic');
+    if (hapticToggle) {
+      hapticToggle.checked = hapticEnabled;
+      hapticToggle.addEventListener('change', () => {
+        localStorage.setItem('fileforge_mobile_haptic', hapticToggle.checked ? 'true' : 'false');
+        if (hapticToggle.checked) MobileUtils.triggerHaptic('light');
+      });
+    }
+
+    // 3. Confirm Before Exit preference
+    const exitConfirmEnabled = localStorage.getItem('fileforge_mobile_confirm_exit') !== 'false';
+    const exitConfirmToggle = document.getElementById('toggle-confirm-exit');
+    if (exitConfirmToggle) {
+      exitConfirmToggle.checked = exitConfirmEnabled;
+      exitConfirmToggle.addEventListener('change', () => {
+        MobileUtils.triggerHaptic('light');
+        localStorage.setItem('fileforge_mobile_confirm_exit', exitConfirmToggle.checked ? 'true' : 'false');
+      });
+    }
+
+    // 4. Header Settings button
+    const settingsBtn = document.getElementById('btn-open-settings');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
+        window.location.hash = '#settings';
+      });
+    }
+  }
+
+  /**
+   * Exit Modal Sheet Handlers
+   */
+  function initExitModal() {
+    const modal = document.getElementById('mobile-exit-modal');
+    const cancelBtn = document.getElementById('btn-cancel-exit');
+    const confirmBtn = document.getElementById('btn-confirm-exit');
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
+        hideExitModal();
+      });
+    }
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
+        hideExitModal();
+        // If loaded in Android WebView with native bridge or window.close
+        if (window.AndroidBridge && typeof window.AndroidBridge.closeApp === 'function') {
+          window.AndroidBridge.closeApp();
+        } else {
+          window.close();
+        }
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          hideExitModal();
+        }
+      });
+    }
+  }
+
+  function showExitModal() {
+    const modal = document.getElementById('mobile-exit-modal');
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  function hideExitModal() {
+    const modal = document.getElementById('mobile-exit-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function isExitModalOpen() {
+    const modal = document.getElementById('mobile-exit-modal');
+    return modal && !modal.classList.contains('hidden');
   }
 
   /**
@@ -149,6 +255,10 @@ const MobileApp = (() => {
         </div>
       </a>
     `).join('');
+
+    grid.querySelectorAll('.mobile-tool-card').forEach(card => {
+      card.addEventListener('click', () => MobileUtils.triggerHaptic('light'));
+    });
   }
 
   /**
@@ -158,9 +268,35 @@ const MobileApp = (() => {
     window.addEventListener('hashchange', handleHashChange);
     window.addEventListener('popstate', handleHashChange);
 
-    document.querySelectorAll('.mobile-back-btn, .mobile-home-btn').forEach(btn => {
+    // Bind all static back buttons
+    document.querySelectorAll('#mobile-settings-view .mobile-back-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        MobileUtils.triggerHaptic('light');
+        window.location.hash = '';
+      });
+    });
+
+    document.querySelectorAll('#mobile-about-view .mobile-back-btn, #mobile-privacy-view .mobile-back-btn, #mobile-terms-view .mobile-back-btn, #mobile-licenses-view .mobile-back-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        MobileUtils.triggerHaptic('light');
+        window.location.hash = '#settings';
+      });
+    });
+
+    document.querySelectorAll('#mobile-tool-container .mobile-back-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        MobileUtils.triggerHaptic('light');
+        window.location.hash = '';
+      });
+    });
+
+    document.querySelectorAll('.mobile-home-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        MobileUtils.triggerHaptic('light');
         window.location.hash = '';
       });
     });
@@ -168,8 +304,23 @@ const MobileApp = (() => {
 
   function handleHashChange() {
     const hash = (window.location.hash || '').replace('#', '').trim();
-    if (!hash) {
+
+    if (isExitModalOpen()) {
+      hideExitModal();
+    }
+
+    if (!hash || hash === 'home') {
       showHomeView();
+    } else if (hash === 'settings') {
+      showSettingsView();
+    } else if (hash === 'about') {
+      showDocView('mobile-about-view');
+    } else if (hash === 'privacy') {
+      showDocView('mobile-privacy-view');
+    } else if (hash === 'terms') {
+      showDocView('mobile-terms-view');
+    } else if (hash === 'licenses') {
+      showDocView('mobile-licenses-view');
     } else {
       const tool = TOOLS.find(t => t.id === hash);
       if (tool) {
@@ -180,15 +331,53 @@ const MobileApp = (() => {
     }
   }
 
+  function hideAllScreens() {
+    const homeView = document.getElementById('mobile-home-view');
+    const settingsView = document.getElementById('mobile-settings-view');
+    const aboutView = document.getElementById('mobile-about-view');
+    const privacyView = document.getElementById('mobile-privacy-view');
+    const termsView = document.getElementById('mobile-terms-view');
+    const licensesView = document.getElementById('mobile-licenses-view');
+    const toolContainer = document.getElementById('mobile-tool-container');
+
+    if (homeView) homeView.classList.add('hidden');
+    if (settingsView) settingsView.classList.add('hidden');
+    if (aboutView) aboutView.classList.add('hidden');
+    if (privacyView) privacyView.classList.add('hidden');
+    if (termsView) termsView.classList.add('hidden');
+    if (licensesView) licensesView.classList.add('hidden');
+    if (toolContainer) toolContainer.classList.add('hidden');
+  }
+
   function showHomeView() {
     resetState();
     currentToolId = null;
+    hideAllScreens();
 
     const homeView = document.getElementById('mobile-home-view');
-    const toolContainer = document.getElementById('mobile-tool-container');
-
     if (homeView) homeView.classList.remove('hidden');
-    if (toolContainer) toolContainer.classList.add('hidden');
+
+    window.scrollTo(0, 0);
+  }
+
+  function showSettingsView() {
+    resetState();
+    currentToolId = null;
+    hideAllScreens();
+
+    const settingsView = document.getElementById('mobile-settings-view');
+    if (settingsView) settingsView.classList.remove('hidden');
+
+    window.scrollTo(0, 0);
+  }
+
+  function showDocView(viewId) {
+    resetState();
+    currentToolId = null;
+    hideAllScreens();
+
+    const docView = document.getElementById(viewId);
+    if (docView) docView.classList.remove('hidden');
 
     window.scrollTo(0, 0);
   }
@@ -198,11 +387,9 @@ const MobileApp = (() => {
       resetState();
     }
     currentToolId = toolId;
+    hideAllScreens();
 
-    const homeView = document.getElementById('mobile-home-view');
     const toolContainer = document.getElementById('mobile-tool-container');
-
-    if (homeView) homeView.classList.add('hidden');
     if (toolContainer) toolContainer.classList.remove('hidden');
 
     // Hide all tool views, show active one
@@ -281,6 +468,7 @@ const MobileApp = (() => {
 
     chips.forEach(chip => {
       chip.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
         chips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         activeFilter = chip.getAttribute('data-filter') || 'all';
@@ -312,6 +500,7 @@ const MobileApp = (() => {
     // Accordions / How-to guides
     document.querySelectorAll('.mobile-accordion-header').forEach(header => {
       header.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
         const parent = header.closest('.mobile-accordion');
         if (parent) parent.classList.toggle('open');
       });
@@ -332,6 +521,7 @@ const MobileApp = (() => {
     const resultStats = document.getElementById('stats-image-compressor');
     const previewImg = document.getElementById('preview-image-compressor');
     const downloadBtn = document.getElementById('dl-image-compressor');
+    const shareBtn = document.getElementById('share-image-compressor');
 
     let currentFile = null;
     let compressedResult = null;
@@ -345,6 +535,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files[0]) {
+          MobileUtils.triggerHaptic('light');
           currentFile = input.files[0];
           fileNameEl.textContent = currentFile.name;
           fileSizeEl.textContent = MobileUtils.formatBytes(currentFile.size);
@@ -358,6 +549,7 @@ const MobileApp = (() => {
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (!currentFile) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Compressing...';
 
@@ -373,6 +565,7 @@ const MobileApp = (() => {
           `;
           previewImg.src = compressedResult.previewUrl;
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast(`Compressed! Saved ${compressedResult.savingsPercent}%`, 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'Compression failed', 'error');
@@ -388,6 +581,15 @@ const MobileApp = (() => {
         if (compressedResult && compressedResult.blob) {
           const ext = currentFile.type === 'image/png' ? 'png' : 'jpg';
           MobileUtils.downloadBlob(compressedResult.blob, `${MobileUtils.getBaseName(currentFile.name)}_compressed.${ext}`);
+        }
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (compressedResult && compressedResult.blob) {
+          const ext = currentFile.type === 'image/png' ? 'png' : 'jpg';
+          MobileUtils.shareBlob(compressedResult.blob, `${MobileUtils.getBaseName(currentFile.name)}_compressed.${ext}`, 'Compressed Image');
         }
       });
     }
@@ -408,6 +610,7 @@ const MobileApp = (() => {
     const resultBox = document.getElementById('result-pdf-compressor');
     const resultStats = document.getElementById('stats-pdf-compressor');
     const downloadBtn = document.getElementById('dl-pdf-compressor');
+    const shareBtn = document.getElementById('share-pdf-compressor');
 
     let currentFile = null;
     let compressedPdfResult = null;
@@ -415,6 +618,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files[0]) {
+          MobileUtils.triggerHaptic('light');
           currentFile = input.files[0];
           fileNameEl.textContent = currentFile.name;
           fileSizeEl.textContent = MobileUtils.formatBytes(currentFile.size);
@@ -428,6 +632,7 @@ const MobileApp = (() => {
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (!currentFile) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Compressing PDF...';
         progressWrap.classList.remove('hidden');
@@ -446,6 +651,7 @@ const MobileApp = (() => {
             <div class="stat-pill"><span class="label">Savings:</span> <strong class="text-primary">${compressedPdfResult.savingsPercent}%</strong></div>
           `;
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast('PDF Compressed successfully!', 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'PDF Compression failed', 'error');
@@ -464,6 +670,14 @@ const MobileApp = (() => {
         }
       });
     }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (compressedPdfResult && compressedPdfResult.blob) {
+          MobileUtils.shareBlob(compressedPdfResult.blob, compressedPdfResult.filename, 'Compressed PDF');
+        }
+      });
+    }
   }
 
   // --- 3. Image to PDF Controller ---
@@ -477,6 +691,7 @@ const MobileApp = (() => {
     const actionBtn = document.getElementById('btn-image-to-pdf');
     const resultBox = document.getElementById('result-image-to-pdf');
     const downloadBtn = document.getElementById('dl-image-to-pdf');
+    const shareBtn = document.getElementById('share-image-to-pdf');
 
     let imageItems = [];
     let generatedPdf = null;
@@ -518,6 +733,7 @@ const MobileApp = (() => {
       // Bind move & remove events
       imageListEl.querySelectorAll('.btn-move-up').forEach(b => {
         b.addEventListener('click', () => {
+          MobileUtils.triggerHaptic('light');
           const idx = parseInt(b.dataset.idx, 10);
           if (idx > 0) {
             const tmp = imageItems[idx];
@@ -530,6 +746,7 @@ const MobileApp = (() => {
 
       imageListEl.querySelectorAll('.btn-move-down').forEach(b => {
         b.addEventListener('click', () => {
+          MobileUtils.triggerHaptic('light');
           const idx = parseInt(b.dataset.idx, 10);
           if (idx < imageItems.length - 1) {
             const tmp = imageItems[idx];
@@ -542,6 +759,7 @@ const MobileApp = (() => {
 
       imageListEl.querySelectorAll('.btn-remove').forEach(b => {
         b.addEventListener('click', () => {
+          MobileUtils.triggerHaptic('light');
           const idx = parseInt(b.dataset.idx, 10);
           MobileUtils.revokeUrl(imageItems[idx].previewUrl);
           imageItems.splice(idx, 1);
@@ -560,6 +778,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files.length > 0) {
+          MobileUtils.triggerHaptic('light');
           Array.from(input.files).forEach(file => {
             const previewUrl = URL.createObjectURL(file);
             MobileUtils.trackUrl(previewUrl);
@@ -578,6 +797,7 @@ const MobileApp = (() => {
 
     if (addMoreBtn) {
       addMoreBtn.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
         if (input) input.click();
       });
     }
@@ -585,6 +805,7 @@ const MobileApp = (() => {
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (imageItems.length === 0) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Generating PDF...';
 
@@ -598,6 +819,7 @@ const MobileApp = (() => {
 
           generatedPdf = await MobileImageToPdf.generatePdf(imageItems, options);
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast(`PDF created with ${imageItems.length} pages!`, 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'PDF Generation failed', 'error');
@@ -612,6 +834,14 @@ const MobileApp = (() => {
       downloadBtn.addEventListener('click', () => {
         if (generatedPdf && generatedPdf.blob) {
           MobileUtils.downloadBlob(generatedPdf.blob, generatedPdf.filename);
+        }
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (generatedPdf && generatedPdf.blob) {
+          MobileUtils.shareBlob(generatedPdf.blob, generatedPdf.filename, 'Generated PDF');
         }
       });
     }
@@ -631,6 +861,7 @@ const MobileApp = (() => {
     const resultBox = document.getElementById(`result-${toolId}`);
     const galleryEl = document.getElementById(`gallery-${toolId}`);
     const downloadAllBtn = document.getElementById(`dl-all-${toolId}`);
+    const shareAllBtn = document.getElementById(`share-all-${toolId}`);
 
     let currentFile = null;
     let convertedImages = [];
@@ -638,6 +869,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files[0]) {
+          MobileUtils.triggerHaptic('light');
           currentFile = input.files[0];
           fileNameEl.textContent = currentFile.name;
           fileSizeEl.textContent = MobileUtils.formatBytes(currentFile.size);
@@ -651,6 +883,7 @@ const MobileApp = (() => {
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (!currentFile) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Converting Pages...';
         progressWrap.classList.remove('hidden');
@@ -683,6 +916,7 @@ const MobileApp = (() => {
           });
 
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast(`Converted ${convertedImages.length} pages!`, 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'Conversion failed', 'error');
@@ -703,6 +937,19 @@ const MobileApp = (() => {
           MobileUtils.downloadBlob(zipRes.blob, zipRes.filename);
         } catch (e) {
           MobileUtils.showToast('Failed to create ZIP', 'error');
+        }
+      });
+    }
+
+    if (shareAllBtn) {
+      shareAllBtn.addEventListener('click', async () => {
+        if (convertedImages.length === 0) return;
+        try {
+          const zipName = `${MobileUtils.getBaseName(currentFile.name)}_images.zip`;
+          const zipRes = await MobileZipEngine.bundleBlobsAsZip(convertedImages, zipName);
+          MobileUtils.shareBlob(zipRes.blob, zipRes.filename, 'Extracted Pages (ZIP)');
+        } catch (e) {
+          MobileUtils.showToast('Failed to share ZIP', 'error');
         }
       });
     }
@@ -727,6 +974,7 @@ const MobileApp = (() => {
     const resultBox = document.getElementById(`result-${toolId}`);
     const previewImg = document.getElementById(`preview-${toolId}`);
     const downloadBtn = document.getElementById(`dl-${toolId}`);
+    const shareBtn = document.getElementById(`share-${toolId}`);
 
     let currentFile = null;
     let convertedResult = null;
@@ -734,6 +982,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files[0]) {
+          MobileUtils.triggerHaptic('light');
           currentFile = input.files[0];
           fileNameEl.textContent = currentFile.name;
           fileSizeEl.textContent = MobileUtils.formatBytes(currentFile.size);
@@ -747,6 +996,7 @@ const MobileApp = (() => {
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (!currentFile) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Converting...';
 
@@ -754,6 +1004,7 @@ const MobileApp = (() => {
           convertedResult = await MobileImageEngine.convertImage(currentFile, targetFormat, 0.95);
           previewImg.src = convertedResult.previewUrl;
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast(`Converted to ${targetExt.toUpperCase()}!`, 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'Conversion failed', 'error');
@@ -768,6 +1019,14 @@ const MobileApp = (() => {
       downloadBtn.addEventListener('click', () => {
         if (convertedResult && convertedResult.blob) {
           MobileUtils.downloadBlob(convertedResult.blob, convertedResult.filename);
+        }
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (convertedResult && convertedResult.blob) {
+          MobileUtils.shareBlob(convertedResult.blob, convertedResult.filename, `Converted ${targetExt.toUpperCase()}`);
         }
       });
     }
@@ -796,6 +1055,7 @@ const MobileApp = (() => {
     const previewImg = document.getElementById('preview-image-resizer');
     const resultDimsEl = document.getElementById('result-dims-image-resizer');
     const downloadBtn = document.getElementById('dl-image-resizer');
+    const shareBtn = document.getElementById('share-image-resizer');
 
     let currentFile = null;
     let originalWidth = 0;
@@ -805,6 +1065,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', async () => {
         if (input.files && input.files[0]) {
+          MobileUtils.triggerHaptic('light');
           currentFile = input.files[0];
           fileNameEl.textContent = currentFile.name;
           const dataUrl = await MobileUtils.readFileAsDataURL(currentFile);
@@ -835,6 +1096,7 @@ const MobileApp = (() => {
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (!currentFile) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Resizing...';
 
@@ -849,6 +1111,7 @@ const MobileApp = (() => {
           resultDimsEl.textContent = `${resizedResult.width} × ${resizedResult.height} px (${MobileUtils.formatBytes(resizedResult.size)})`;
           previewImg.src = resizedResult.previewUrl;
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast('Image Resized!', 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'Resize failed', 'error');
@@ -867,6 +1130,15 @@ const MobileApp = (() => {
         }
       });
     }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (resizedResult && resizedResult.blob) {
+          const ext = MobileUtils.getExtension(currentFile.name) || 'png';
+          MobileUtils.shareBlob(resizedResult.blob, `${MobileUtils.getBaseName(currentFile.name)}_resized.${ext}`, 'Resized Image');
+        }
+      });
+    }
   }
 
   // --- 9. Image Converter Controller ---
@@ -881,6 +1153,7 @@ const MobileApp = (() => {
     const resultBox = document.getElementById('result-image-converter');
     const previewImg = document.getElementById('preview-image-converter');
     const downloadBtn = document.getElementById('dl-image-converter');
+    const shareBtn = document.getElementById('share-image-converter');
 
     let currentFile = null;
     let convertedResult = null;
@@ -888,6 +1161,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files[0]) {
+          MobileUtils.triggerHaptic('light');
           currentFile = input.files[0];
           fileNameEl.textContent = currentFile.name;
           fileSizeEl.textContent = MobileUtils.formatBytes(currentFile.size);
@@ -901,6 +1175,7 @@ const MobileApp = (() => {
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (!currentFile) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Converting...';
 
@@ -909,6 +1184,7 @@ const MobileApp = (() => {
           convertedResult = await MobileImageEngine.convertImage(currentFile, targetFmt);
           previewImg.src = convertedResult.previewUrl;
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast('Converted successfully!', 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'Conversion failed', 'error');
@@ -926,17 +1202,25 @@ const MobileApp = (() => {
         }
       });
     }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (convertedResult && convertedResult.blob) {
+          MobileUtils.shareBlob(convertedResult.blob, convertedResult.filename, 'Converted Image');
+        }
+      });
+    }
   }
 
   // --- 10. PDF Merger Controller ---
   function initPdfMerger() {
     const input = document.getElementById('input-pdf-merger');
     const listEl = document.getElementById('list-pdf-merger');
-    const addMoreBtn = document.getElementById('add-more-pdf-merger');
     const actionBtn = document.getElementById('btn-pdf-merger');
     const resultBox = document.getElementById('result-pdf-merger');
     const resultInfo = document.getElementById('info-pdf-merger');
     const downloadBtn = document.getElementById('dl-pdf-merger');
+    const shareBtn = document.getElementById('share-pdf-merger');
 
     let pdfFiles = [];
     let mergedResult = null;
@@ -968,6 +1252,7 @@ const MobileApp = (() => {
 
       listEl.querySelectorAll('.btn-move-up').forEach(b => {
         b.addEventListener('click', () => {
+          MobileUtils.triggerHaptic('light');
           const idx = parseInt(b.dataset.idx, 10);
           if (idx > 0) {
             const tmp = pdfFiles[idx];
@@ -980,6 +1265,7 @@ const MobileApp = (() => {
 
       listEl.querySelectorAll('.btn-move-down').forEach(b => {
         b.addEventListener('click', () => {
+          MobileUtils.triggerHaptic('light');
           const idx = parseInt(b.dataset.idx, 10);
           if (idx < pdfFiles.length - 1) {
             const tmp = pdfFiles[idx];
@@ -992,6 +1278,7 @@ const MobileApp = (() => {
 
       listEl.querySelectorAll('.btn-remove').forEach(b => {
         b.addEventListener('click', () => {
+          MobileUtils.triggerHaptic('light');
           const idx = parseInt(b.dataset.idx, 10);
           pdfFiles.splice(idx, 1);
           renderList();
@@ -1002,6 +1289,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files.length > 0) {
+          MobileUtils.triggerHaptic('light');
           Array.from(input.files).forEach(f => pdfFiles.push(f));
           renderList();
           input.value = '';
@@ -1009,15 +1297,10 @@ const MobileApp = (() => {
       });
     }
 
-    if (addMoreBtn) {
-      addMoreBtn.addEventListener('click', () => {
-        if (input) input.click();
-      });
-    }
-
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (pdfFiles.length < 2) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Merging PDFs...';
 
@@ -1025,6 +1308,7 @@ const MobileApp = (() => {
           mergedResult = await MobilePdfEngine.mergePdfs(pdfFiles);
           resultInfo.textContent = `Merged ${pdfFiles.length} files (${mergedResult.pageCount} pages, ${MobileUtils.formatBytes(mergedResult.size)})`;
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast('PDFs merged successfully!', 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'Merge failed', 'error');
@@ -1042,6 +1326,14 @@ const MobileApp = (() => {
         }
       });
     }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (mergedResult && mergedResult.blob) {
+          MobileUtils.shareBlob(mergedResult.blob, mergedResult.filename, 'Merged PDF');
+        }
+      });
+    }
   }
 
   // --- 11. PDF Splitter Controller ---
@@ -1055,6 +1347,7 @@ const MobileApp = (() => {
     const actionBtn = document.getElementById('btn-pdf-splitter');
     const resultBox = document.getElementById('result-pdf-splitter');
     const downloadBtn = document.getElementById('dl-pdf-splitter');
+    const shareBtn = document.getElementById('share-pdf-splitter');
 
     let currentFile = null;
     let splitResult = null;
@@ -1062,6 +1355,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files[0]) {
+          MobileUtils.triggerHaptic('light');
           currentFile = input.files[0];
           fileNameEl.textContent = currentFile.name;
           fileSizeEl.textContent = MobileUtils.formatBytes(currentFile.size);
@@ -1075,6 +1369,7 @@ const MobileApp = (() => {
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (!currentFile) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Splitting...';
 
@@ -1082,6 +1377,7 @@ const MobileApp = (() => {
           const rangeStr = rangeInput ? rangeInput.value : '';
           splitResult = await MobilePdfEngine.splitPdf(currentFile, 'ranges', rangeStr);
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast(`Extracted ${splitResult.pageCount} pages!`, 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'Split failed', 'error');
@@ -1099,6 +1395,14 @@ const MobileApp = (() => {
         }
       });
     }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (splitResult && splitResult.blob) {
+          MobileUtils.shareBlob(splitResult.blob, splitResult.filename, 'Split PDF');
+        }
+      });
+    }
   }
 
   // --- 12. PDF Page Extractor Controller ---
@@ -1111,6 +1415,7 @@ const MobileApp = (() => {
     const actionBtn = document.getElementById('btn-pdf-page-extractor');
     const resultBox = document.getElementById('result-pdf-page-extractor');
     const downloadBtn = document.getElementById('dl-pdf-page-extractor');
+    const shareBtn = document.getElementById('share-pdf-page-extractor');
 
     let currentFile = null;
     let selectedIndices = new Set();
@@ -1119,6 +1424,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', async () => {
         if (input.files && input.files[0]) {
+          MobileUtils.triggerHaptic('light');
           currentFile = input.files[0];
           selectedIndices.clear();
           box.classList.add('hidden');
@@ -1138,6 +1444,7 @@ const MobileApp = (() => {
 
               thumbGrid.querySelectorAll('.mobile-thumb-card').forEach(card => {
                 card.addEventListener('click', () => {
+                  MobileUtils.triggerHaptic('light');
                   const idx = parseInt(card.dataset.idx, 10);
                   if (selectedIndices.has(idx)) {
                     selectedIndices.delete(idx);
@@ -1162,6 +1469,7 @@ const MobileApp = (() => {
 
     if (selectAllBtn) {
       selectAllBtn.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
         const cards = thumbGrid.querySelectorAll('.mobile-thumb-card');
         const shouldSelectAll = selectedIndices.size < cards.length;
         selectedIndices.clear();
@@ -1184,6 +1492,7 @@ const MobileApp = (() => {
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (!currentFile || selectedIndices.size === 0) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Extracting...';
 
@@ -1191,6 +1500,7 @@ const MobileApp = (() => {
           const sortedIndices = Array.from(selectedIndices).sort((a, b) => a - b);
           extractedResult = await MobilePdfEngine.extractPages(currentFile, sortedIndices);
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast(`Extracted ${extractedResult.pageCount} pages into PDF!`, 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'Extraction failed', 'error');
@@ -1208,6 +1518,14 @@ const MobileApp = (() => {
         }
       });
     }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (extractedResult && extractedResult.blob) {
+          MobileUtils.shareBlob(extractedResult.blob, extractedResult.filename, 'Extracted PDF Pages');
+        }
+      });
+    }
   }
 
   // --- 13. ZIP File Creator Controller ---
@@ -1221,6 +1539,7 @@ const MobileApp = (() => {
     const actionBtn = document.getElementById('btn-zip-creator');
     const resultBox = document.getElementById('result-zip-creator');
     const downloadBtn = document.getElementById('dl-zip-creator');
+    const shareBtn = document.getElementById('share-zip-creator');
 
     let fileItems = [];
     let generatedZip = null;
@@ -1250,6 +1569,7 @@ const MobileApp = (() => {
 
       listEl.querySelectorAll('.btn-remove').forEach(b => {
         b.addEventListener('click', () => {
+          MobileUtils.triggerHaptic('light');
           const idx = parseInt(b.dataset.idx, 10);
           fileItems.splice(idx, 1);
           renderList();
@@ -1260,6 +1580,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files.length > 0) {
+          MobileUtils.triggerHaptic('light');
           Array.from(input.files).forEach(f => {
             fileItems.push({ file: f, path: f.name });
           });
@@ -1272,6 +1593,7 @@ const MobileApp = (() => {
     if (folderInput) {
       folderInput.addEventListener('change', () => {
         if (folderInput.files && folderInput.files.length > 0) {
+          MobileUtils.triggerHaptic('light');
           Array.from(folderInput.files).forEach(f => {
             fileItems.push({ file: f, path: f.webkitRelativePath || f.name });
           });
@@ -1281,12 +1603,19 @@ const MobileApp = (() => {
       });
     }
 
-    if (addFilesBtn) addFilesBtn.addEventListener('click', () => input && input.click());
-    if (addFolderBtn) addFolderBtn.addEventListener('click', () => folderInput && folderInput.click());
+    if (addFilesBtn) addFilesBtn.addEventListener('click', () => {
+      MobileUtils.triggerHaptic('light');
+      if (input) input.click();
+    });
+    if (addFolderBtn) addFolderBtn.addEventListener('click', () => {
+      MobileUtils.triggerHaptic('light');
+      if (folderInput) folderInput.click();
+    });
 
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (fileItems.length === 0) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Creating ZIP...';
 
@@ -1294,6 +1623,7 @@ const MobileApp = (() => {
           const zipName = (zipNameInput && zipNameInput.value.trim()) || 'archive.zip';
           generatedZip = await MobileZipEngine.createZip(fileItems, zipName);
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast(`ZIP created with ${fileItems.length} files!`, 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'ZIP creation failed', 'error');
@@ -1308,6 +1638,14 @@ const MobileApp = (() => {
       downloadBtn.addEventListener('click', () => {
         if (generatedZip && generatedZip.blob) {
           MobileUtils.downloadBlob(generatedZip.blob, generatedZip.filename);
+        }
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (generatedZip && generatedZip.blob) {
+          MobileUtils.shareBlob(generatedZip.blob, generatedZip.filename, 'Created ZIP Archive');
         }
       });
     }
@@ -1326,6 +1664,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', async () => {
         if (input.files && input.files[0]) {
+          MobileUtils.triggerHaptic('light');
           const file = input.files[0];
           fileNameEl.textContent = `${file.name} (${MobileUtils.formatBytes(file.size)})`;
           box.classList.add('hidden');
@@ -1349,6 +1688,7 @@ const MobileApp = (() => {
 
             entriesList.querySelectorAll('.btn-dl-entry').forEach(b => {
               b.addEventListener('click', async () => {
+                MobileUtils.triggerHaptic('light');
                 const idx = parseInt(b.dataset.idx, 10);
                 const entryObj = currentZipData.entries[idx];
                 if (entryObj && !entryObj.isDir) {
@@ -1358,6 +1698,7 @@ const MobileApp = (() => {
               });
             });
 
+            MobileUtils.triggerHaptic('success');
             MobileUtils.showToast(`Found ${currentZipData.fileCount} files in archive!`, 'success');
           } catch (err) {
             entriesList.innerHTML = '<div class="mobile-error">Failed to read ZIP file.</div>';
@@ -1377,6 +1718,7 @@ const MobileApp = (() => {
     const actionBtn = document.getElementById('btn-download-all-zip');
     const resultBox = document.getElementById('result-download-all-zip');
     const downloadBtn = document.getElementById('dl-download-all-zip');
+    const shareBtn = document.getElementById('share-download-all-zip');
 
     let filesList = [];
     let packagedZip = null;
@@ -1406,6 +1748,7 @@ const MobileApp = (() => {
 
       listEl.querySelectorAll('.btn-remove').forEach(b => {
         b.addEventListener('click', () => {
+          MobileUtils.triggerHaptic('light');
           const idx = parseInt(b.dataset.idx, 10);
           filesList.splice(idx, 1);
           renderList();
@@ -1416,6 +1759,7 @@ const MobileApp = (() => {
     if (input) {
       input.addEventListener('change', () => {
         if (input.files && input.files.length > 0) {
+          MobileUtils.triggerHaptic('light');
           Array.from(input.files).forEach(f => filesList.push(f));
           renderList();
           input.value = '';
@@ -1423,11 +1767,15 @@ const MobileApp = (() => {
       });
     }
 
-    if (addMoreBtn) addMoreBtn.addEventListener('click', () => input && input.click());
+    if (addMoreBtn) addMoreBtn.addEventListener('click', () => {
+      MobileUtils.triggerHaptic('light');
+      if (input) input.click();
+    });
 
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (filesList.length === 0) return;
+        MobileUtils.triggerHaptic('light');
         actionBtn.disabled = true;
         actionBtn.textContent = 'Packaging ZIP...';
 
@@ -1435,6 +1783,7 @@ const MobileApp = (() => {
           const zipName = (zipNameInput && zipNameInput.value.trim()) || 'bundle.zip';
           packagedZip = await MobileZipEngine.createZip(filesList, zipName);
           resultBox.classList.remove('hidden');
+          MobileUtils.triggerHaptic('success');
           MobileUtils.showToast('Packaged into ZIP successfully!', 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'ZIP packaging failed', 'error');
@@ -1452,13 +1801,50 @@ const MobileApp = (() => {
         }
       });
     }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        if (packagedZip && packagedZip.blob) {
+          MobileUtils.shareBlob(packagedZip.blob, packagedZip.filename, 'Packaged ZIP Archive');
+        }
+      });
+    }
+  }
+
+  // Handle native Android back event called from Android MainActivity
+  function handleAndroidBack() {
+    if (isExitModalOpen()) {
+      hideExitModal();
+      return true; // consumed
+    }
+
+    const hash = (window.location.hash || '').replace('#', '').trim();
+    if (!hash || hash === 'home') {
+      const confirmExit = localStorage.getItem('fileforge_mobile_confirm_exit') !== 'false';
+      if (confirmExit) {
+        showExitModal();
+        return true; // consumed by opening exit modal
+      }
+      return false; // let Android OS exit directly
+    }
+
+    if (['about', 'privacy', 'terms', 'licenses'].includes(hash)) {
+      window.location.hash = '#settings';
+      return true;
+    }
+
+    // From settings or tool, return to home
+    window.location.hash = '';
+    return true;
   }
 
   return {
     init,
     showHomeView,
     showToolView,
-    resetState
+    showSettingsView,
+    resetState,
+    handleAndroidBack
   };
 })();
 

@@ -1,6 +1,6 @@
 /**
- * FileForge Mobile - Utils & Memory Helper
- * Lightweight, 100% Client-Side
+ * FileForge Mobile - Utils, Memory & Native Feature Helper
+ * Lightweight, 100% Client-Side with Haptics and Native Web Share
  */
 const MobileUtils = (() => {
   // Track active blob URLs to clean up immediately upon navigation or reset
@@ -58,7 +58,23 @@ const MobileUtils = (() => {
     return lastDot === -1 ? '' : filename.substring(lastDot + 1).toLowerCase();
   }
 
+  function triggerHaptic(type = 'light') {
+    try {
+      const hapticEnabled = localStorage.getItem('fileforge_mobile_haptic') !== 'false';
+      if (!hapticEnabled || !navigator.vibrate) return;
+
+      if (type === 'light') {
+        navigator.vibrate(12);
+      } else if (type === 'success') {
+        navigator.vibrate([10, 40, 15]);
+      } else if (type === 'warning') {
+        navigator.vibrate([20, 50, 20]);
+      }
+    } catch (e) {}
+  }
+
   function downloadBlob(blob, filename) {
+    triggerHaptic('light');
     filename = sanitizeFilename(filename, 'download');
     const url = URL.createObjectURL(blob);
     trackUrl(url);
@@ -74,9 +90,41 @@ const MobileUtils = (() => {
     }, 1500);
   }
 
+  async function shareBlob(blob, filename, title = 'FileForge File') {
+    triggerHaptic('light');
+    filename = sanitizeFilename(filename, 'share_file');
+
+    try {
+      if (navigator.canShare) {
+        const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: title,
+            text: `Processed with FileForge Mobile: ${filename}`,
+            files: [file]
+          });
+          showToast('Shared successfully!', 'success');
+          return true;
+        }
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.warn('Share error fallback:', err);
+      }
+    }
+
+    // Fallback if sharing is unavailable or fails
+    downloadBlob(blob, filename);
+    showToast('Downloaded to device', 'info');
+    return false;
+  }
+
   function showToast(message, type = 'info', duration = 2800) {
     const container = document.getElementById('mobile-toast-container');
     if (!container) return;
+
+    if (type === 'success') triggerHaptic('success');
+    if (type === 'error') triggerHaptic('warning');
 
     const toast = document.createElement('div');
     toast.className = `mobile-toast mobile-toast-${type}`;
@@ -140,7 +188,9 @@ const MobileUtils = (() => {
     sanitizeFilename,
     getBaseName,
     getExtension,
+    triggerHaptic,
     downloadBlob,
+    shareBlob,
     showToast,
     readFileAsArrayBuffer,
     readFileAsDataURL,

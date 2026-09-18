@@ -178,6 +178,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -190,6 +191,18 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> filePathCallback;
     private final static int FILECHOOSER_RESULTCODE = 101;
     private long backPressedTime = 0;
+
+    public class AndroidBridge {
+        @JavascriptInterface
+        public void closeApp() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    finish();
+                }
+            });
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -209,11 +222,20 @@ public class MainActivity extends Activity {
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
 
+        webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url != null && url.startsWith("file:///android_asset/")) {
                     return false;
+                }
+                if (url != null && (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("mailto:"))) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        startActivity(intent);
+                        return true;
+                    } catch (Exception ignored) {}
                 }
                 return false;
             }
@@ -268,20 +290,28 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
         if (webView != null) {
-            String currentUrl = webView.getUrl();
-            if (currentUrl != null && currentUrl.contains("#") && !currentUrl.endsWith("#")) {
-                webView.loadUrl("file:///android_asset/index.html#");
-                return;
-            }
+            // Evaluate in-app back navigation handler
+            webView.evaluateJavascript("window.MobileApp && window.MobileApp.handleAndroidBack ? window.MobileApp.handleAndroidBack() : false;", new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+                    if ("true".equals(value)) {
+                        // Handled by web app
+                        return;
+                    }
+
+                    // Fallback to double press back to exit
+                    if (backPressedTime + 2000 > System.currentTimeMillis()) {
+                        finish();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Press back again to exit FileForge", Toast.LENGTH_SHORT).show();
+                        backPressedTime = System.currentTimeMillis();
+                    }
+                }
+            });
+            return;
         }
 
-        if (backPressedTime + 2000 > System.currentTimeMillis()) {
-            super.onBackPressed();
-            finish();
-        } else {
-            Toast.makeText(this, "Press back again to exit FileForge", Toast.LENGTH_SHORT).show();
-            backPressedTime = System.currentTimeMillis();
-        }
+        super.onBackPressed();
     }
 }''')
 
