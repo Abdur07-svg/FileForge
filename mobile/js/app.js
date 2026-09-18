@@ -293,7 +293,7 @@ const MobileApp = (() => {
       });
     });
 
-    document.querySelectorAll('#mobile-about-view .mobile-back-btn, #mobile-privacy-view .mobile-back-btn, #mobile-terms-view .mobile-back-btn, #mobile-licenses-view .mobile-back-btn').forEach(btn => {
+    document.querySelectorAll('#mobile-about-view .mobile-back-btn, #mobile-privacy-view .mobile-back-btn, #mobile-terms-view .mobile-back-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         MobileUtils.triggerHaptic('light');
@@ -335,8 +335,6 @@ const MobileApp = (() => {
       showDocView('mobile-privacy-view');
     } else if (hash === 'terms') {
       showDocView('mobile-terms-view');
-    } else if (hash === 'licenses') {
-      showDocView('mobile-licenses-view');
     } else {
       const tool = TOOLS.find(t => t.id === hash);
       if (tool) {
@@ -353,7 +351,6 @@ const MobileApp = (() => {
     const aboutView = document.getElementById('mobile-about-view');
     const privacyView = document.getElementById('mobile-privacy-view');
     const termsView = document.getElementById('mobile-terms-view');
-    const licensesView = document.getElementById('mobile-licenses-view');
     const toolContainer = document.getElementById('mobile-tool-container');
 
     if (homeView) homeView.classList.add('hidden');
@@ -361,7 +358,6 @@ const MobileApp = (() => {
     if (aboutView) aboutView.classList.add('hidden');
     if (privacyView) privacyView.classList.add('hidden');
     if (termsView) termsView.classList.add('hidden');
-    if (licensesView) licensesView.classList.add('hidden');
     if (toolContainer) toolContainer.classList.add('hidden');
   }
 
@@ -2795,7 +2791,7 @@ const MobileApp = (() => {
     const hash = (window.location.hash || '').replace('#', '').trim();
 
     // Priority 3: Result screen -> Tool screen (if in a tool and a result box is visible)
-    if (hash && hash !== 'home' && hash !== 'settings' && !['about', 'privacy', 'terms', 'licenses'].includes(hash)) {
+    if (hash && hash !== 'home' && hash !== 'settings' && !['about', 'privacy', 'terms'].includes(hash)) {
       const activeToolView = document.getElementById(`tool-view-${hash}`);
       if (activeToolView) {
         const visibleResult = activeToolView.querySelector('.mobile-result-box:not(.hidden)');
@@ -2806,8 +2802,8 @@ const MobileApp = (() => {
       }
     }
 
-    // Priority 5: Settings / About / Privacy / Terms / Licenses -> previous screen
-    if (['about', 'privacy', 'terms', 'licenses'].includes(hash)) {
+    // Priority 5: Settings / About / Privacy / Terms -> previous screen
+    if (['about', 'privacy', 'terms'].includes(hash)) {
       window.location.hash = '#settings';
       return true;
     }

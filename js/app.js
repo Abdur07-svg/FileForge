@@ -1023,13 +1023,7 @@ const App = (() => {
       });
     });
 
-    // Licenses modal trigger
-    document.querySelectorAll('.open-licenses-link').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        openModal('licenses-modal');
-      });
-    });
+
 
     // Get APK button device-specific trigger (Desktop, Android, iOS)
     const apkDownloadBtn = document.getElementById('apk-download-btn');

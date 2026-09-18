@@ -4277,7 +4277,6 @@
               <li><a href="#" class="open-about-link">About FileForge</a></li>
               <li><a href="#" class="open-privacy-link">Privacy Policy</a></li>
               <li><a href="#" class="open-terms-link">Terms of Use</a></li>
-              <li><a href="#" class="open-licenses-link">Open Source Licenses</a></li>
             </ul>
           </div>
         </div>
@@ -4573,14 +4572,16 @@
         <p style="margin-bottom: 12px;">
           Always keep an original copy of important files before compression, conversion, editing, splitting, merging, or other processing.
         </p>
-        <p style="margin-bottom: 16px;">
+        <p style="margin-bottom: 14px;">
           FileForge is a file utility tool and does not guarantee that every generated file will preserve every feature, structure, metadata field, formatting element, or functionality of the original file.
+        </p>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+          FileForge uses third-party open-source libraries where required for certain file-processing features. The respective licenses and notices of those components apply.
         </p>
         <div style="border-top: 1px solid var(--border-color); padding-top: 12px; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div>
             <strong>Version:</strong> 1.0.0 &bull; <strong>Developed by:</strong> Abdur &bull; <strong>Copyright:</strong> &copy; 2026 FileForge
           </div>
-          <button type="button" class="btn btn-xs btn-secondary open-licenses-link">Open Source Licenses</button>
         </div>
       </div>
       <div class="modal-footer">
@@ -4805,66 +4806,7 @@
     </div>
   </div>
 
-  <!-- Open Source Licenses Modal -->
-  <div id="licenses-modal" class="modal-container hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop"></div>
-    <div class="modal-card" style="max-width: 680px;">
-      <div class="modal-header">
-        <h3 class="modal-title">
-          <svg style="width: 24px; height: 24px; color: var(--color-accent);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-            <path d="M2 17l10 5 10-5"></path>
-            <path d="M2 12l10 5 10-5"></path>
-          </svg>
-          <span>Open Source Licenses</span>
-        </h3>
-        <button type="button" class="modal-close-btn" aria-label="Close modal" title="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body" style="font-size: 0.88rem; line-height: 1.6; color: var(--text-secondary);">
-        <p style="margin-bottom: 14px;">
-          FileForge is built with appreciation for the open-source community. The following open-source libraries are bundled in this project:
-        </p>
 
-        <!-- PDF.js -->
-        <div style="background: var(--bg-surface-elevated); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <strong style="color: var(--text-primary);">PDF.js (Mozilla)</strong>
-            <span class="badge badge-neutral" style="font-size: 0.72rem;">Apache License 2.0</span>
-          </div>
-          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Copyright &copy; Mozilla and individual contributors</div>
-          <div style="font-size: 0.76rem; color: var(--text-secondary);">Licensed under the Apache License, Version 2.0. You may obtain a copy of the License at <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary);">http://www.apache.org/licenses/LICENSE-2.0</a></div>
-        </div>
-
-        <!-- pdf-lib -->
-        <div style="background: var(--bg-surface-elevated); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <strong style="color: var(--text-primary);">pdf-lib</strong>
-            <span class="badge badge-neutral" style="font-size: 0.72rem;">MIT License</span>
-          </div>
-          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Copyright &copy; 2019 Andrew Dillon</div>
-          <div style="font-size: 0.76rem; color: var(--text-secondary);">Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files to deal in the Software without restriction.</div>
-        </div>
-
-        <!-- JSZip -->
-        <div style="background: var(--bg-surface-elevated); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <strong style="color: var(--text-primary);">JSZip</strong>
-            <span class="badge badge-neutral" style="font-size: 0.72rem;">MIT License / GPLv3</span>
-          </div>
-          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Copyright &copy; 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso</div>
-          <div style="font-size: 0.76rem; color: var(--text-secondary);">Dual licensed under the MIT License and GPLv3. Distributed under the MIT license terms.</div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary modal-close-btn-text">Close</button>
-      </div>
-    </div>
-  </div>
 
   <!-- Contact Modal -->
   <div id="contact-modal" class="modal-container hidden" role="dialog" aria-modal="true">
