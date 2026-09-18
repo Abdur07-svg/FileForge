@@ -1242,12 +1242,25 @@ const App = (() => {
     }
   }
 
+  function updateNavActiveState(isHome = true) {
+    document.querySelectorAll('.nav-home-link').forEach(link => {
+      if (isHome) {
+        link.classList.add('active');
+        link.setAttribute('aria-current', 'page');
+      } else {
+        link.classList.remove('active');
+        link.removeAttribute('aria-current');
+      }
+    });
+  }
+
   function showHomeView(updateHash = true) {
     // Complete reset of previous tool state when returning to homepage
     resetAllToolStates();
     activeToolId = null;
     document.body.classList.remove('has-active-tool');
     if (updateHash) history.pushState(null, '', window.location.pathname);
+    updateNavActiveState(true);
 
     // Show homepage sections
     document.getElementById('hero-section').classList.remove('hidden');
@@ -1276,6 +1289,7 @@ const App = (() => {
     activeToolId = toolId;
     window.location.hash = toolId;
     document.body.classList.add('has-active-tool');
+    updateNavActiveState(false);
 
     // Find tool definition
     const tool = TOOLS_DATA.find(t => t.id === toolId);

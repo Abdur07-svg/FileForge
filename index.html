@@ -31,7 +31,7 @@
       <!-- Desktop Navigation Menu with Hover Dropdowns -->
       <nav class="nav-menu-wrap" aria-label="Main Navigation">
         <ul class="nav-menu">
-          <li><a href="#" class="nav-link nav-home-link active">Home</a></li>
+          <li><a href="#" class="nav-link nav-home-link active" aria-current="page">Home</a></li>
           
           <!-- PDF Tools Dropdown -->
           <li class="nav-item-dropdown">
@@ -433,7 +433,7 @@
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
             </div>
-            <h3 class="dropzone-title">Drop your PDF or image here to get started</h3>
+            <h2 class="dropzone-title">Drop your PDF or image here to get started</h2>
             <p class="dropzone-desc">Supports PDF, JPG, PNG, WebP &bull; Processed securely in-memory</p>
             <button id="hero-browse-btn" type="button" class="btn btn-primary">Browse Files</button>
             <input type="file" id="hero-file-input" class="hidden" multiple accept=".pdf,image/*">
@@ -446,7 +446,7 @@
             <svg class="search-box-icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
             </svg>
-            <input type="text" id="tool-search" class="tool-search-input" placeholder="Search file tools (e.g. compress, png to jpg, merge pdf)..." autocomplete="off">
+            <input type="text" id="tool-search" class="tool-search-input" placeholder="Search file tools (e.g. compress, png to jpg, merge pdf)..." autocomplete="off" aria-label="Search file tools">
             <span class="search-shortcut-badge">Ctrl + K</span>
           </div>
 
