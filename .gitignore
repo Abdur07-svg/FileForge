@@ -1,0 +1,13 @@
+# Android Keystores & Private Signing Keys
+*.keystore
+*.jks
+*.idsig
+.keystore/
+
+# Build Artefacts & Intermediates
+/android-mobile/app/build/
+/android-mobile/.gradle/
+/android-mobile/build/
+__pycache__/
+*.pyc
+.tempmediaStorage/

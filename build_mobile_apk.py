@@ -32,9 +32,9 @@ CLASSES_DIR = os.path.join(INTERMEDIATES, 'classes')
 DEX_DIR = os.path.join(INTERMEDIATES, 'dex')
 OUTPUT_DIR = os.path.join(BASE_DIR, 'dist')
 
-RELEASE_KEYSTORE = os.path.join(ANDROID_DIR, 'fileforge_mobile_release.keystore')
-KEYSTORE_PASS = 'fileforge2026'
-KEY_ALIAS = 'fileforge_mobile'
+RELEASE_KEYSTORE = os.environ.get('FILEFORGE_KEYSTORE_PATH', os.path.join(ANDROID_DIR, '.keystore', 'fileforge_mobile_release.keystore'))
+KEYSTORE_PASS = os.environ.get('FILEFORGE_KEYSTORE_PASS', 'fileforge2026')
+KEY_ALIAS = os.environ.get('FILEFORGE_KEY_ALIAS', 'fileforge_mobile')
 
 def run_cmd(cmd, cwd=BASE_DIR):
     if isinstance(cmd, list):
@@ -182,7 +182,6 @@ def setup_android_source_files():
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.fileforge.mobile">
 
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
@@ -193,7 +192,7 @@ def setup_android_source_files():
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FileForge"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
 
         <activity
             android:name=".MainActivity"
@@ -334,8 +333,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         settings.setAllowFileAccessFromFileURLs(true);
-        settings.setAllowUniversalAccessFromFileURLs(true);
-        settings.setDatabaseEnabled(true);
+        settings.setAllowUniversalAccessFromFileURLs(false);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
 
@@ -556,6 +554,7 @@ def build_mobile_apk():
 
     # 10. Generate persistent production release keystore if not present
     if not os.path.exists(RELEASE_KEYSTORE):
+        os.makedirs(os.path.dirname(RELEASE_KEYSTORE), exist_ok=True)
         print("\nGenerating Production Release keystore...")
         keytool_cmd = [
             'keytool', '-genkeypair',
