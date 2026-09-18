@@ -146,15 +146,21 @@ button, input, select, textarea {
   height: 32px;
   border-radius: var(--radius-sm);
   filter: drop-shadow(0 2px 6px rgba(99, 102, 241, 0.4));
+  flex-shrink: 0;
 }
 
 .mobile-brand-name {
+  display: inline-block;
+  font-family: var(--font-sans);
   font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   background: var(--grad-primary);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  padding-right: 4px;
+  line-height: 1.25;
 }
 
 .mobile-header-actions {
