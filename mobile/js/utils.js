@@ -96,6 +96,7 @@ const MobileUtils = (() => {
       const cancelBtn = document.getElementById('save-modal-cancel-btn');
       const doneBtn = document.getElementById('save-modal-done-btn');
       const downloadBtn = document.getElementById('save-modal-download-btn');
+      const pickerBtn = document.getElementById('save-modal-picker-btn');
       const saveAgainBtn = document.getElementById('save-modal-save-again-btn');
       const shareBtn = document.getElementById('save-modal-share-btn');
       const openBtn = document.getElementById('save-modal-open-btn');
@@ -120,6 +121,13 @@ const MobileUtils = (() => {
 
       if (downloadBtn) {
         downloadBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (!isSaving && activeBlob) performSave();
+        });
+      }
+
+      if (pickerBtn) {
+        pickerBtn.addEventListener('click', (e) => {
           e.preventDefault();
           if (!isSaving && activeBlob) performSave();
         });
@@ -407,7 +415,9 @@ const MobileUtils = (() => {
       }
       if (locationText) {
         if (window.AndroidBridge) {
-          locationText.textContent = "This file will be saved using Android's file saving system.";
+          locationText.textContent = "Tap 'Choose Folder' or 'Save File' to select any folder on your device or SD card.";
+        } else if (window.showSaveFilePicker) {
+          locationText.textContent = "Choose any destination folder on your device.";
         } else {
           locationText.textContent = "Your device will save this file to your default Downloads folder.";
         }

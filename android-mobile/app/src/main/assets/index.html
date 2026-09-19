@@ -1576,16 +1576,22 @@
             <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 5px;">Extension is preserved automatically.</div>
           </div>
 
-          <!-- Location Box -->
+          <!-- Location Box with Folder Choose Action -->
           <div class="save-location-box" style="margin-bottom: 16px;">
-            <div class="save-location-header">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span>Save Location</span>
+            <div class="save-location-header-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <div class="save-location-header" style="margin-bottom: 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Save Location</span>
+              </div>
+              <button type="button" id="save-modal-picker-btn" class="save-choose-folder-pill" title="Choose destination folder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <span>Choose Folder</span>
+              </button>
             </div>
             <p id="save-modal-location-text" class="save-location-text">
-              This file will be saved using Android's file saving system.
+              Choose any folder or SD card location via Android system picker.
             </p>
           </div>
 

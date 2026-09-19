@@ -1790,6 +1790,30 @@ button, input, select, textarea {
   flex-shrink: 0;
 }
 
+.save-choose-folder-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--color-primary-light);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  line-height: 1;
+}
+
+.save-choose-folder-pill:hover,
+.save-choose-folder-pill:active {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
 .save-location-text {
   font-size: 0.75rem;
   color: var(--text-secondary);
