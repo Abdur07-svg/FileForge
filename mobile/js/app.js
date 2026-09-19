@@ -2119,8 +2119,11 @@ const MobileApp = (() => {
     const resultDimsEl = document.getElementById('result-dims-image-resizer');
     const downloadBtn = document.getElementById('dl-image-resizer');
     const shareBtn = document.getElementById('share-image-resizer');
+    const resizerMagnifier = document.getElementById('mobile-resizer-magnifier');
+    const resizerMagCanvas = document.getElementById('mobile-resizer-magnifier-canvas');
 
     let currentFile = null;
+    let resizerImgObj = null;
     let originalWidth = 0;
     let originalHeight = 0;
     let currentScalePct = 100;
@@ -2128,6 +2131,53 @@ const MobileApp = (() => {
 
     bindFileTrigger(box, input);
     bindFileTrigger(changeBtn, input);
+
+    function renderResizerMagnifier(touchClientX, touchClientY) {
+      if (!resizerMagnifier || !resizerMagCanvas || !resizerImgObj || !touchBox || !touchThumb) return;
+      resizerMagnifier.classList.remove('hidden');
+
+      const boxRect = touchBox.getBoundingClientRect();
+      const magW = resizerMagCanvas.width;
+      const magH = resizerMagCanvas.height;
+      const ctx = resizerMagCanvas.getContext('2d');
+
+      const relX = touchClientX - boxRect.left;
+      if (relX > boxRect.width / 2) {
+        resizerMagnifier.style.right = 'auto';
+        resizerMagnifier.style.left = '10px';
+        resizerMagnifier.style.top = '10px';
+      } else {
+        resizerMagnifier.style.left = 'auto';
+        resizerMagnifier.style.right = '10px';
+        resizerMagnifier.style.top = '10px';
+      }
+
+      ctx.clearRect(0, 0, magW, magH);
+
+      const thumbRect = touchThumb.getBoundingClientRect();
+      const focusXInThumb = Math.max(0, Math.min(thumbRect.width, touchClientX - thumbRect.left));
+      const focusYInThumb = Math.max(0, Math.min(thumbRect.height, touchClientY - thumbRect.top));
+
+      const normX = thumbRect.width > 0 ? (focusXInThumb / thumbRect.width) : 0.5;
+      const normY = thumbRect.height > 0 ? (focusYInThumb / thumbRect.height) : 0.5;
+
+      const srcCenterX = normX * (resizerImgObj.naturalWidth || resizerImgObj.width);
+      const srcCenterY = normY * (resizerImgObj.naturalHeight || resizerImgObj.height);
+
+      const zoom = 2.4;
+      const srcCropW = magW / zoom;
+      const srcCropH = magH / zoom;
+      const srcX = srcCenterX - srcCropW / 2;
+      const srcY = srcCenterY - srcCropH / 2;
+
+      ctx.save();
+      ctx.drawImage(
+        resizerImgObj,
+        srcX, srcY, srcCropW, srcCropH,
+        0, 0, magW, magH
+      );
+      ctx.restore();
+    }
 
     function updateDimensionsFromScale(scalePct) {
       currentScalePct = Math.max(10, Math.min(300, Math.round(scalePct)));
@@ -2163,6 +2213,7 @@ const MobileApp = (() => {
       startX = clientX;
       startY = clientY;
       startScale = currentScalePct;
+      renderResizerMagnifier(clientX, clientY);
       MobileUtils.triggerHaptic('light');
     }
 
@@ -2174,11 +2225,13 @@ const MobileApp = (() => {
       const sensitivity = 0.6; // Adjust speed of finger drag
       const newScale = Math.round(startScale + delta * sensitivity);
       updateDimensionsFromScale(newScale);
+      renderResizerMagnifier(clientX, clientY);
     }
 
     function onDragEnd() {
       if (isDragging) {
         isDragging = false;
+        if (resizerMagnifier) resizerMagnifier.classList.add('hidden');
         MobileUtils.triggerHaptic('light');
       }
     }
@@ -2220,11 +2273,21 @@ const MobileApp = (() => {
     // Preset buttons
     presetBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        MobileUtils.triggerHaptic('light');
+        MobileUtils.triggerHaptic('selection');
         const scale = parseInt(btn.dataset.scale, 10);
-        if (scale) updateDimensionsFromScale(scale);
+        updateDimensionsFromScale(scale);
       });
     });
+
+    // Ratio lock checkbox toggle
+    if (lockRatioCheck) {
+      lockRatioCheck.addEventListener('change', () => {
+        if (lockRatioCheck.checked && originalWidth && originalHeight && widthInput && heightInput) {
+          const w = parseInt(widthInput.value, 10) || originalWidth;
+          heightInput.value = Math.max(1, Math.round((w * originalHeight) / originalWidth));
+        }
+      });
+    }
 
     // Width input manual change
     if (widthInput) {
@@ -2233,7 +2296,7 @@ const MobileApp = (() => {
         if (originalWidth) {
           const scale = (w / originalWidth) * 100;
           if (lockRatioCheck && lockRatioCheck.checked && heightInput) {
-            heightInput.value = Math.max(1, Math.round((originalHeight * w) / originalWidth));
+            heightInput.value = Math.max(1, Math.round((w * originalHeight) / originalWidth));
           }
           currentScalePct = Math.round(scale);
           if (slider) slider.value = currentScalePct;
@@ -2268,6 +2331,7 @@ const MobileApp = (() => {
           fileNameEl.textContent = currentFile.name;
           const dataUrl = await MobileUtils.readFileAsDataURL(currentFile);
           const img = await MobileUtils.loadImageFromSrc(dataUrl);
+          resizerImgObj = img;
           originalWidth = img.width;
           originalHeight = img.height;
           originalDimsEl.textContent = `${originalWidth} × ${originalHeight} px`;

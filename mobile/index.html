@@ -583,9 +583,9 @@
 
             <!-- Live PDF Page Preview Stage with Interactive Signature Placement -->
             <div id="i2p-live-preview-box" class="mobile-pdf-preview-stage hidden">
-              <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; display: flex; justify-content: space-between; width: 100%;">
-                <span>PDF Page Preview</span>
-                <span id="i2p-preview-info" style="color: var(--color-primary);">Page 1 of 1</span>
+              <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span style="color: var(--text-primary); font-weight: 700;">PDF Page Preview</span>
+                <span id="i2p-preview-info" class="badge badge-info" style="font-size: 0.8rem; font-weight: 700;">Page 1 of 1</span>
               </div>
               <div class="mobile-pdf-preview-sheet">
                 <canvas id="mobile-i2p-preview-canvas" class="mobile-pdf-preview-canvas"></canvas>
@@ -598,7 +598,7 @@
               </div>
               <div class="mobile-preview-nav-row">
                 <button type="button" id="btn-i2p-prev-page" class="btn btn-xs btn-secondary" disabled>◀ Prev Page</button>
-                <div style="font-size: 0.78rem; color: var(--text-muted);" id="i2p-sig-status-hint">Drag signature to move</div>
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);" id="i2p-sig-status-hint">Drag signature to move</div>
                 <button type="button" id="btn-i2p-next-page" class="btn btn-xs btn-secondary" disabled>Next Page ▶</button>
               </div>
             </div>
@@ -924,12 +924,16 @@
               </div>
 
               <!-- Interactive Touch Canvas Preview with Corner Drag Handle -->
-              <div id="box-touch-resizer" class="touch-preview-box">
+              <div id="box-touch-resizer" class="touch-preview-box" style="position: relative;">
                 <div id="wrapper-touch-image" class="touch-image-wrapper">
                   <img id="thumb-touch-resizer" class="touch-preview-image" alt="Resize Preview">
                   <div id="handle-touch-resizer" class="touch-resize-handle" title="Drag to resize with finger">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                   </div>
+                </div>
+                <div id="mobile-resizer-magnifier" class="crop-live-magnifier hidden">
+                  <canvas id="mobile-resizer-magnifier-canvas" width="130" height="130"></canvas>
+                  <div class="magnifier-crosshair"></div>
                 </div>
               </div>
 

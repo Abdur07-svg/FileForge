@@ -241,50 +241,95 @@ const ImageCropper = (() => {
     if (!currentFile || !dom.cropCanvas) return;
     const canvas = dom.cropCanvas;
     const ctx = canvas.getContext('2d');
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const r = cropRect;
 
     // Draw base image
-    ctx.drawImage(currentFile.img, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(currentFile.img, 0, 0, cw, ch);
 
     // Darkened overlay outside crop rectangle
     ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
-    ctx.fillRect(0, 0, canvas.width, cropRect.y); // Top
-    ctx.fillRect(0, cropRect.y + cropRect.h, canvas.width, canvas.height - (cropRect.y + cropRect.h)); // Bottom
-    ctx.fillRect(0, cropRect.y, cropRect.x, cropRect.h); // Left
-    ctx.fillRect(cropRect.x + cropRect.w, cropRect.y, canvas.width - (cropRect.x + cropRect.w), cropRect.h); // Right
+    ctx.fillRect(0, 0, cw, r.y); // Top
+    ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h)); // Bottom
+    ctx.fillRect(0, r.y, r.x, r.h); // Left
+    ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h); // Right
 
-    // Glowing border & grid lines
-    ctx.strokeStyle = '#6366f1';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+    // Solid bright blue crop border (matching reference image)
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
 
     // Rule of thirds grid lines
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
 
-    const thirdW = cropRect.w / 3;
-    const thirdH = cropRect.h / 3;
+    const thirdW = r.w / 3;
+    const thirdH = r.h / 3;
 
     ctx.beginPath();
-    ctx.moveTo(cropRect.x + thirdW, cropRect.y);
-    ctx.lineTo(cropRect.x + thirdW, cropRect.y + cropRect.h);
-    ctx.moveTo(cropRect.x + thirdW * 2, cropRect.y);
-    ctx.lineTo(cropRect.x + thirdW * 2, cropRect.y + cropRect.h);
+    ctx.moveTo(r.x + thirdW, r.y);
+    ctx.lineTo(r.x + thirdW, r.y + r.h);
+    ctx.moveTo(r.x + thirdW * 2, r.y);
+    ctx.lineTo(r.x + thirdW * 2, r.y + r.h);
 
-    ctx.moveTo(cropRect.x, cropRect.y + thirdH);
-    ctx.lineTo(cropRect.x + cropRect.w, cropRect.y + thirdH);
-    ctx.moveTo(cropRect.x, cropRect.y + thirdH * 2);
-    ctx.lineTo(cropRect.x + cropRect.w, cropRect.y + thirdH * 2);
+    ctx.moveTo(r.x, r.y + thirdH);
+    ctx.lineTo(r.x + r.w, r.y + thirdH);
+    ctx.moveTo(r.x, r.y + thirdH * 2);
+    ctx.lineTo(r.x + r.w, r.y + thirdH * 2);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Corner Handles
-    const handleSize = 10;
-    ctx.fillStyle = '#6366f1';
-    ctx.fillRect(cropRect.x - handleSize / 2, cropRect.y - handleSize / 2, handleSize, handleSize); // NW
-    ctx.fillRect(cropRect.x + cropRect.w - handleSize / 2, cropRect.y - handleSize / 2, handleSize, handleSize); // NE
-    ctx.fillRect(cropRect.x + cropRect.w - handleSize / 2, cropRect.y + cropRect.h - handleSize / 2, handleSize, handleSize); // SE
-    ctx.fillRect(cropRect.x - handleSize / 2, cropRect.y + cropRect.h - handleSize / 2, handleSize, handleSize); // SW
+    // Helper for rounded pill handles (North, South, West, East)
+    function drawPill(x, y, w, h, radius) {
+      ctx.save();
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(x - w / 2, y - h / 2, w, h, radius);
+      } else {
+        ctx.rect(x - w / 2, y - h / 2, w, h);
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Helper for circular corner handles (NW, NE, SE, SW)
+    function drawCorner(x, y) {
+      ctx.save();
+      // Outer Blue Circle
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.fillStyle = '#0284c7';
+      ctx.fill();
+      // Inner White Ring
+      ctx.beginPath();
+      ctx.arc(x, y, 6.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      // Center Blue Dot
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#0284c7';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 4 Edge / Middle Pill Handles (North, South, West, East)
+    drawPill(r.x + r.w / 2, r.y, 30, 10, 5); // Top (N)
+    drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5); // Bottom (S)
+    drawPill(r.x, r.y + r.h / 2, 10, 30, 5); // Left (W)
+    drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5); // Right (E)
+
+    // 4 Circular Corner Handles
+    drawCorner(r.x, r.y); // NW
+    drawCorner(r.x + r.w, r.y); // NE
+    drawCorner(r.x + r.w, r.y + r.h); // SE
+    drawCorner(r.x, r.y + r.h); // SW
   }
 
   function getCanvasCoords(e) {
@@ -292,30 +337,38 @@ const ImageCropper = (() => {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
+      x: (clientX - rect.left) * (dom.cropCanvas.width / (rect.width || 1)),
+      y: (clientY - rect.top) * (dom.cropCanvas.height / (rect.height || 1))
     };
+  }
+
+  function getCropHandleAt(coords) {
+    const r = cropRect;
+    const cornerPad = 32;
+    const edgePad = 26;
+
+    // 1. Check 4 corners first
+    if (Math.hypot(coords.x - r.x, coords.y - r.y) < cornerPad) return 'nw';
+    if (Math.hypot(coords.x - (r.x + r.w), coords.y - r.y) < cornerPad) return 'ne';
+    if (Math.hypot(coords.x - (r.x + r.w), coords.y - (r.y + r.h)) < cornerPad) return 'se';
+    if (Math.hypot(coords.x - r.x, coords.y - (r.y + r.h)) < cornerPad) return 'sw';
+
+    // 2. Check 4 edge pills
+    if (Math.abs(coords.y - r.y) < edgePad && Math.abs(coords.x - (r.x + r.w / 2)) < 28) return 'n';
+    if (Math.abs(coords.y - (r.y + r.h)) < edgePad && Math.abs(coords.x - (r.x + r.w / 2)) < 28) return 's';
+    if (Math.abs(coords.x - r.x) < edgePad && Math.abs(coords.y - (r.y + r.h / 2)) < 28) return 'w';
+    if (Math.abs(coords.x - (r.x + r.w)) < edgePad && Math.abs(coords.y - (r.y + r.h / 2)) < 28) return 'e';
+
+    // 3. Inside box
+    if (coords.x > r.x && coords.x < r.x + r.w && coords.y > r.y && coords.y < r.y + r.h) return 'move';
+    return null;
   }
 
   function onPointerDown(e) {
     const coords = getCanvasCoords(e);
-    const hSize = 16;
+    dragMode = getCropHandleAt(coords);
 
-    // Check corners
-    if (Math.abs(coords.x - cropRect.x) < hSize && Math.abs(coords.y - cropRect.y) < hSize) {
-      dragMode = 'nw';
-    } else if (Math.abs(coords.x - (cropRect.x + cropRect.w)) < hSize && Math.abs(coords.y - cropRect.y) < hSize) {
-      dragMode = 'ne';
-    } else if (Math.abs(coords.x - (cropRect.x + cropRect.w)) < hSize && Math.abs(coords.y - (cropRect.y + cropRect.h)) < hSize) {
-      dragMode = 'se';
-    } else if (Math.abs(coords.x - cropRect.x) < hSize && Math.abs(coords.y - (cropRect.y + cropRect.h)) < hSize) {
-      dragMode = 'sw';
-    } else if (coords.x >= cropRect.x && coords.x <= cropRect.x + cropRect.w && coords.y >= cropRect.y && coords.y <= cropRect.y + cropRect.h) {
-      dragMode = 'move';
-    } else {
-      dragMode = null;
-      return;
-    }
+    if (!dragMode) return;
 
     isDragging = true;
     dragStart = {
@@ -370,6 +423,22 @@ const ImageCropper = (() => {
       cropRect.h = (dragStart.cropY + dragStart.cropH) - newY;
       cropRect.x = newX;
       cropRect.y = newY;
+      if (activeRatio !== 'free') adjustCropToRatio();
+    } else if (dragMode === 'n') {
+      let newY = Math.max(0, Math.min(dragStart.cropY + dragStart.cropH - 30, dragStart.cropY + dy));
+      cropRect.h = (dragStart.cropY + dragStart.cropH) - newY;
+      cropRect.y = newY;
+      if (activeRatio !== 'free') adjustCropToRatio();
+    } else if (dragMode === 's') {
+      cropRect.h = Math.max(30, Math.min(dom.cropCanvas.height - dragStart.cropY, dragStart.cropH + dy));
+      if (activeRatio !== 'free') adjustCropToRatio();
+    } else if (dragMode === 'w') {
+      let newX = Math.max(0, Math.min(dragStart.cropX + dragStart.cropW - 30, dragStart.cropX + dx));
+      cropRect.w = (dragStart.cropX + dragStart.cropW) - newX;
+      cropRect.x = newX;
+      if (activeRatio !== 'free') adjustCropToRatio();
+    } else if (dragMode === 'e') {
+      cropRect.w = Math.max(30, Math.min(dom.cropCanvas.width - dragStart.cropX, dragStart.cropW + dx));
       if (activeRatio !== 'free') adjustCropToRatio();
     }
 

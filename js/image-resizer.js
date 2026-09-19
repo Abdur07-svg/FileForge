@@ -28,8 +28,10 @@ const ImageResizer = (() => {
       emptyState: document.getElementById('ir-empty-state'),
       fileList: document.getElementById('ir-file-list'),
       
-      // Interactive Canvas
+      // Interactive Canvas & Magnifier
       resizeCanvas: document.getElementById('ir-canvas'),
+      magnifier: document.getElementById('ir-magnifier'),
+      magnifierCanvas: document.getElementById('ir-magnifier-canvas'),
 
       // Mode switch
       modeDimsRadio: document.getElementById('ir-mode-dims'),
@@ -300,52 +302,101 @@ const ImageResizer = (() => {
 
     const canvas = dom.resizeCanvas;
     const ctx = canvas.getContext('2d');
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const r = resizeRect;
 
     // 1. Draw base image scaled to display canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(active.img, 0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(active.img, 0, 0, cw, ch);
 
-    // 2. Darken area outside target resize box
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
-    ctx.fillRect(0, 0, canvas.width, resizeRect.y);
-    ctx.fillRect(0, resizeRect.y + resizeRect.h, canvas.width, canvas.height - (resizeRect.y + resizeRect.h));
-    ctx.fillRect(0, resizeRect.y, resizeRect.x, resizeRect.h);
-    ctx.fillRect(resizeRect.x + resizeRect.w, resizeRect.y, canvas.width - (resizeRect.x + resizeRect.w), resizeRect.h);
+    // 2. Darkened area outside target resize box
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
+    ctx.fillRect(0, 0, cw, r.y);
+    ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h));
+    ctx.fillRect(0, r.y, r.x, r.h);
+    ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h);
 
-    // 3. Glowing bounding box
-    ctx.strokeStyle = '#3b82f6';
+    // 3. Solid bright blue crop border (matching reference image)
+    ctx.strokeStyle = '#0284c7';
     ctx.lineWidth = 2.5;
-    ctx.strokeRect(resizeRect.x, resizeRect.y, resizeRect.w, resizeRect.h);
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
 
-    // 4. Handles (Corners & Middle Edges)
-    const handleSize = 12;
-    ctx.fillStyle = '#3b82f6';
+    // 4. Rule of thirds subtle grid
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(r.x + r.w / 3, r.y);
+    ctx.lineTo(r.x + r.w / 3, r.y + r.h);
+    ctx.moveTo(r.x + (r.w * 2) / 3, r.y);
+    ctx.lineTo(r.x + (r.w * 2) / 3, r.y + r.h);
+    ctx.moveTo(r.x, r.y + r.h / 3);
+    ctx.lineTo(r.x + r.w, r.y + r.h / 3);
+    ctx.moveTo(r.x, r.y + (r.h * 2) / 3);
+    ctx.lineTo(r.x + r.w, r.y + (r.h * 2) / 3);
+    ctx.stroke();
+    ctx.setLineDash([]);
 
-    const corners = [
-      { x: resizeRect.x, y: resizeRect.y }, // NW
-      { x: resizeRect.x + resizeRect.w, y: resizeRect.y }, // NE
-      { x: resizeRect.x + resizeRect.w, y: resizeRect.y + resizeRect.h }, // SE
-      { x: resizeRect.x, y: resizeRect.y + resizeRect.h }, // SW
-      { x: resizeRect.x + resizeRect.w / 2, y: resizeRect.y + resizeRect.h }, // S
-      { x: resizeRect.x + resizeRect.w, y: resizeRect.y + resizeRect.h / 2 }  // E
-    ];
+    // Helper for rounded pill handles (North, South, West, East)
+    function drawPill(x, y, w, h, radius) {
+      ctx.save();
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(x - w / 2, y - h / 2, w, h, radius);
+      } else {
+        ctx.rect(x - w / 2, y - h / 2, w, h);
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.restore();
+    }
 
-    corners.forEach(c => {
-      ctx.fillRect(c.x - handleSize / 2, c.y - handleSize / 2, handleSize, handleSize);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(c.x - handleSize / 2, c.y - handleSize / 2, handleSize, handleSize);
-    });
+    // Helper for circular corner handles (NW, NE, SE, SW)
+    function drawCorner(x, y) {
+      ctx.save();
+      // Outer Blue Circle
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.fillStyle = '#0284c7';
+      ctx.fill();
+      // Inner White Ring
+      ctx.beginPath();
+      ctx.arc(x, y, 6.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      // Center Blue Dot
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#0284c7';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 4 Edge / Middle Pill Handles (North, South, West, East)
+    drawPill(r.x + r.w / 2, r.y, 30, 10, 5); // Top (N)
+    drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5); // Bottom (S)
+    drawPill(r.x, r.y + r.h / 2, 10, 30, 5); // Left (W)
+    drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5); // Right (E)
+
+    // 4 Circular Corner Handles
+    drawCorner(r.x, r.y); // NW
+    drawCorner(r.x + r.w, r.y); // NE
+    drawCorner(r.x + r.w, r.y + r.h); // SE
+    drawCorner(r.x, r.y + r.h); // SW
 
     // 5. Dimension Badge on top of resize box
-    const realW = Math.round(resizeRect.w / canvasScale);
-    const realH = Math.round(resizeRect.h / canvasScale);
+    const realW = Math.round(r.w / canvasScale);
+    const realH = Math.round(r.h / canvasScale);
     const badgeText = `${realW} × ${realH} px`;
 
     ctx.font = 'bold 12px sans-serif';
     const textWidth = ctx.measureText(badgeText).width;
-    const badgeX = Math.max(5, resizeRect.x + (resizeRect.w - textWidth - 16) / 2);
-    const badgeY = Math.max(22, resizeRect.y - 8);
+    const badgeX = Math.max(5, r.x + (r.w - textWidth - 16) / 2);
+    const badgeY = Math.max(22, r.y - 10);
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     if (typeof ctx.roundRect === 'function') {
@@ -365,35 +416,96 @@ const ImageResizer = (() => {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return {
-      x: (clientX - rect.left) * (dom.resizeCanvas.width / rect.width),
-      y: (clientY - rect.top) * (dom.resizeCanvas.height / rect.height)
+      x: (clientX - rect.left) * (dom.resizeCanvas.width / (rect.width || 1)),
+      y: (clientY - rect.top) * (dom.resizeCanvas.height / (rect.height || 1))
     };
+  }
+
+  function getCropHandleAt(coords) {
+    const r = resizeRect;
+    const cornerPad = 32;
+    const edgePad = 26;
+
+    // 1. Check 4 corners first
+    if (Math.hypot(coords.x - r.x, coords.y - r.y) < cornerPad) return 'nw';
+    if (Math.hypot(coords.x - (r.x + r.w), coords.y - r.y) < cornerPad) return 'ne';
+    if (Math.hypot(coords.x - (r.x + r.w), coords.y - (r.y + r.h)) < cornerPad) return 'se';
+    if (Math.hypot(coords.x - r.x, coords.y - (r.y + r.h)) < cornerPad) return 'sw';
+
+    // 2. Check 4 edge pills
+    if (Math.abs(coords.y - r.y) < edgePad && Math.abs(coords.x - (r.x + r.w / 2)) < 28) return 'n';
+    if (Math.abs(coords.y - (r.y + r.h)) < edgePad && Math.abs(coords.x - (r.x + r.w / 2)) < 28) return 's';
+    if (Math.abs(coords.x - r.x) < edgePad && Math.abs(coords.y - (r.y + r.h / 2)) < 28) return 'w';
+    if (Math.abs(coords.x - (r.x + r.w)) < edgePad && Math.abs(coords.y - (r.y + r.h / 2)) < 28) return 'e';
+
+    // 3. Inside box
+    if (coords.x > r.x && coords.x < r.x + r.w && coords.y > r.y && coords.y < r.y + r.h) return 'move';
+    return null;
+  }
+
+  function getFocusPointFromDragMode(coords) {
+    if (dragMode === 'nw') return { x: resizeRect.x, y: resizeRect.y };
+    if (dragMode === 'ne') return { x: resizeRect.x + resizeRect.w, y: resizeRect.y };
+    if (dragMode === 'se') return { x: resizeRect.x + resizeRect.w, y: resizeRect.y + resizeRect.h };
+    if (dragMode === 'sw') return { x: resizeRect.x, y: resizeRect.y + resizeRect.h };
+    if (dragMode === 'n') return { x: resizeRect.x + resizeRect.w / 2, y: resizeRect.y };
+    if (dragMode === 's') return { x: resizeRect.x + resizeRect.w / 2, y: resizeRect.y + resizeRect.h };
+    if (dragMode === 'w') return { x: resizeRect.x, y: resizeRect.y + resizeRect.h / 2 };
+    if (dragMode === 'e') return { x: resizeRect.x + resizeRect.w, y: resizeRect.y + resizeRect.h / 2 };
+    return { x: coords.x, y: coords.y };
+  }
+
+  function renderMagnifier(focusCanvasX, focusCanvasY) {
+    const active = files[activeIndex];
+    if (!dom.magnifier || !dom.magnifierCanvas || !active || !active.img || !dom.resizeCanvas) return;
+    dom.magnifier.classList.remove('hidden');
+
+    const magCanvas = dom.magnifierCanvas;
+    const magCtx = magCanvas.getContext('2d');
+    const magW = magCanvas.width;
+    const magH = magCanvas.height;
+
+    // Smart positioning: opposite quadrant so cursor/finger never covers it
+    const cw = dom.resizeCanvas.width;
+    if (focusCanvasX < cw / 2) {
+      dom.magnifier.style.left = 'auto';
+      dom.magnifier.style.right = '16px';
+      dom.magnifier.style.top = '16px';
+    } else {
+      dom.magnifier.style.right = 'auto';
+      dom.magnifier.style.left = '16px';
+      dom.magnifier.style.top = '16px';
+    }
+
+    magCtx.clearRect(0, 0, magW, magH);
+
+    // Map canvas display coords to source image coords
+    const scaleX = active.origWidth / (dom.resizeCanvas.width || 1);
+    const scaleY = active.origHeight / (dom.resizeCanvas.height || 1);
+    const srcCenterX = focusCanvasX * scaleX;
+    const srcCenterY = focusCanvasY * scaleY;
+
+    const zoom = 2.4;
+    const srcCropW = magW / zoom;
+    const srcCropH = magH / zoom;
+    const srcX = srcCenterX - srcCropW / 2;
+    const srcY = srcCenterY - srcCropH / 2;
+
+    magCtx.save();
+    magCtx.drawImage(
+      active.img,
+      srcX, srcY, srcCropW, srcCropH,
+      0, 0, magW, magH
+    );
+    magCtx.restore();
   }
 
   function onPointerDown(e) {
     if (!files[activeIndex] || !dom.resizeCanvas) return;
     const coords = getCanvasCoords(e);
-    const hSize = 20;
+    dragMode = getCropHandleAt(coords);
 
-    // Check handle collision
-    if (Math.abs(coords.x - resizeRect.x) < hSize && Math.abs(coords.y - resizeRect.y) < hSize) {
-      dragMode = 'nw';
-    } else if (Math.abs(coords.x - (resizeRect.x + resizeRect.w)) < hSize && Math.abs(coords.y - resizeRect.y) < hSize) {
-      dragMode = 'ne';
-    } else if (Math.abs(coords.x - (resizeRect.x + resizeRect.w)) < hSize && Math.abs(coords.y - (resizeRect.y + resizeRect.h)) < hSize) {
-      dragMode = 'se';
-    } else if (Math.abs(coords.x - resizeRect.x) < hSize && Math.abs(coords.y - (resizeRect.y + resizeRect.h)) < hSize) {
-      dragMode = 'sw';
-    } else if (Math.abs(coords.x - (resizeRect.x + resizeRect.w / 2)) < hSize && Math.abs(coords.y - (resizeRect.y + resizeRect.h)) < hSize) {
-      dragMode = 's';
-    } else if (Math.abs(coords.x - (resizeRect.x + resizeRect.w)) < hSize && Math.abs(coords.y - (resizeRect.y + resizeRect.h / 2)) < hSize) {
-      dragMode = 'e';
-    } else if (coords.x >= resizeRect.x && coords.x <= resizeRect.x + resizeRect.w && coords.y >= resizeRect.y && coords.y <= resizeRect.y + resizeRect.h) {
-      dragMode = 'move';
-    } else {
-      dragMode = null;
-      return;
-    }
+    if (!dragMode) return;
 
     isDragging = true;
     dragStart = {
@@ -404,6 +516,9 @@ const ImageResizer = (() => {
       rectW: resizeRect.w,
       rectH: resizeRect.h
     };
+
+    const focus = getFocusPointFromDragMode(coords);
+    renderMagnifier(focus.x, focus.y);
   }
 
   function onPointerMove(e) {
@@ -460,10 +575,27 @@ const ImageResizer = (() => {
       resizeRect.y = newY;
       resizeRect.w = newW;
       resizeRect.h = newH;
+    } else if (dragMode === 'n') {
+      let newY = Math.max(0, Math.min(dragStart.rectY + dragStart.rectH - 20, dragStart.rectY + dy));
+      let newH = (dragStart.rectY + dragStart.rectH) - newY;
+      let newW = lockRatio ? Math.round(newH * ratio) : resizeRect.w;
+      resizeRect.y = newY;
+      resizeRect.h = newH;
+      resizeRect.w = newW;
+    } else if (dragMode === 'w') {
+      let newX = Math.max(0, Math.min(dragStart.rectX + dragStart.rectW - 20, dragStart.rectX + dx));
+      let newW = (dragStart.rectX + dragStart.rectW) - newX;
+      let newH = lockRatio ? Math.round(newW / ratio) : resizeRect.h;
+      resizeRect.x = newX;
+      resizeRect.w = newW;
+      resizeRect.h = newH;
     }
 
     updateInputsFromRect();
     drawResizeCanvas();
+
+    const focus = getFocusPointFromDragMode(coords);
+    renderMagnifier(focus.x, focus.y);
   }
 
   function updateInputsFromRect() {
@@ -487,6 +619,7 @@ const ImageResizer = (() => {
   function onPointerUp() {
     isDragging = false;
     dragMode = null;
+    if (dom.magnifier) dom.magnifier.classList.add('hidden');
   }
 
   function onTouchStart(e) {
