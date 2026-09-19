@@ -1585,7 +1585,7 @@
               <span>Save Location</span>
             </div>
             <p id="save-modal-location-text" class="save-location-text">
-              Your device will save this file to your default Downloads folder.
+              This file will be saved using Android's file saving system.
             </p>
           </div>
 
@@ -1601,8 +1601,8 @@
         <!-- STEP 2: SAVING IN PROGRESS -->
         <div id="save-modal-step-saving" class="save-modal-step hidden" style="text-align: center; padding: 24px 10px;">
           <div class="save-saving-spinner"></div>
-          <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 14px 0 4px;">Saving Your File...</div>
-          <div style="font-size: 0.8rem; color: var(--text-secondary);" id="save-modal-saving-text">Exporting to local device storage...</div>
+          <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 14px 0 4px;">Saving...</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);" id="save-modal-saving-text">Please wait...</div>
         </div>
 
         <!-- STEP 3: DOWNLOAD COMPLETE -->
@@ -1613,7 +1613,7 @@
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
-              <span>Download Complete</span>
+              <span>✓ Download Complete</span>
             </div>
             <button type="button" id="save-modal-complete-close-btn" class="mobile-icon-btn" aria-label="Close modal">✕</button>
           </div>
@@ -1627,18 +1627,38 @@
             </div>
             <div class="save-complete-info">
               <div id="save-modal-complete-filename" class="save-complete-name">file.pdf</div>
-              <div id="save-modal-complete-meta" class="save-complete-meta">0 KB &bull; Saved locally</div>
+              <div id="save-modal-complete-meta" class="save-complete-meta">0 KB &bull; Saved successfully</div>
             </div>
           </div>
 
           <p id="save-modal-complete-location" style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 16px;">
-            Your file has been saved to your device's download location.
+            Your file has been saved successfully.
           </p>
 
-          <div style="display: flex; gap: 8px;">
-            <button type="button" id="save-modal-save-again-btn" class="btn btn-secondary" style="flex: 1;">Save Again</button>
-            <button type="button" id="save-modal-share-btn" class="btn btn-secondary" style="flex: 1;">Share</button>
-            <button type="button" id="save-modal-done-btn" class="btn btn-primary" style="flex: 1;">Done</button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" id="save-modal-open-btn" class="btn btn-secondary" style="flex: 1; min-width: 90px;">Open File</button>
+            <button type="button" id="save-modal-share-btn" class="btn btn-secondary" style="flex: 1; min-width: 80px;">Share</button>
+            <button type="button" id="save-modal-save-again-btn" class="btn btn-secondary" style="flex: 1; min-width: 90px;">Save Again</button>
+            <button type="button" id="save-modal-done-btn" class="btn btn-primary" style="flex: 1; min-width: 90px;">Back to Tool</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: ERROR STATE -->
+        <div id="save-modal-step-error" class="save-modal-step hidden" style="text-align: center; padding: 20px 10px;">
+          <div style="width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: var(--color-danger); display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 22px; height: 22px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Unable to Save File</div>
+          <p id="save-modal-error-text" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 18px;">
+            Please try again or choose another location.
+          </p>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" id="save-modal-error-back-btn" class="btn btn-secondary" style="flex: 1;">Back to Tool</button>
+            <button type="button" id="save-modal-retry-btn" class="btn btn-primary" style="flex: 1.2;">Try Again</button>
           </div>
         </div>
 
