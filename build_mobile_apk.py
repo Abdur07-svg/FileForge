@@ -318,7 +318,47 @@ public class MainActivity extends Activity {
     private Uri lastSavedUri = null;
     private String lastSavedMimeType = null;
 
+    private String normalizeMimeType(String mime, String filename) {
+        if (mime != null) {
+            mime = mime.trim().toLowerCase();
+            if (mime.contains(";")) {
+                mime = mime.substring(0, mime.indexOf(";")).trim();
+            }
+        }
+
+        if (mime == null || mime.isEmpty() || "application/octet-stream".equals(mime) || "*/*".equals(mime)) {
+            String lowerFilename = (filename != null) ? filename.toLowerCase() : "";
+            if (lowerFilename.endsWith(".pdf")) return "application/pdf";
+            if (lowerFilename.endsWith(".jpg") || lowerFilename.endsWith(".jpeg")) return "image/jpeg";
+            if (lowerFilename.endsWith(".png")) return "image/png";
+            if (lowerFilename.endsWith(".webp")) return "image/webp";
+            if (lowerFilename.endsWith(".svg")) return "image/svg+xml";
+            if (lowerFilename.endsWith(".zip")) return "application/zip";
+            if (lowerFilename.endsWith(".txt")) return "text/plain";
+            if (lowerFilename.endsWith(".csv")) return "text/csv";
+            if (lowerFilename.endsWith(".json")) return "application/json";
+            if (lowerFilename.endsWith(".html")) return "text/html";
+            return "*/*";
+        }
+
+        if ("image/jpg".equals(mime)) return "image/jpeg";
+        if ("application/x-zip".equals(mime) || "application/x-zip-compressed".equals(mime)) return "application/zip";
+        if ("application/x-pdf".equals(mime)) return "application/pdf";
+
+        return mime;
+    }
+
     public class AndroidBridge {
+        @JavascriptInterface
+        public boolean isAndroidApp() {
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean isFileForgeApp() {
+            return true;
+        }
+
         @JavascriptInterface
         public void closeApp() {
             runOnUiThread(new Runnable() {
@@ -330,6 +370,11 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void openSavePicker(final String dataUrlOrBase64, final String filename, final String mimeType) {
+            saveFile(dataUrlOrBase64, filename, mimeType);
+        }
+
+        @JavascriptInterface
         public void saveFile(final String dataUrlOrBase64, final String filename, final String mimeType) {
             if (dataUrlOrBase64 == null || dataUrlOrBase64.isEmpty()) {
                 notifySaveError("No file data received.");
@@ -338,17 +383,21 @@ public class MainActivity extends Activity {
 
             try {
                 String base64Data = dataUrlOrBase64;
-                if (base64Data.contains(",")) {
-                    base64Data = base64Data.substring(base64Data.indexOf(",") + 1);
+                int commaIndex = base64Data.indexOf(",");
+                if (commaIndex != -1) {
+                    base64Data = base64Data.substring(commaIndex + 1);
                 }
                 
                 final byte[] fileBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT);
+                if (fileBytes == null || fileBytes.length == 0) {
+                    notifySaveError("Unable to create the file: generated output is 0 bytes.");
+                    return;
+                }
+
                 final String safeFilename = (filename != null && !filename.trim().isEmpty()) 
                     ? filename.replaceAll("[^a-zA-Z0-9._-]", "_") 
                     : "fileforge-file";
-                final String safeMime = (mimeType != null && !mimeType.trim().isEmpty()) 
-                    ? mimeType 
-                    : "application/octet-stream";
+                final String safeMime = normalizeMimeType(mimeType, safeFilename);
 
                 pendingSaveBytes = fileBytes;
                 pendingSaveFilename = safeFilename;
@@ -363,12 +412,25 @@ public class MainActivity extends Activity {
                             intent.setType(safeMime);
                             intent.putExtra(Intent.EXTRA_TITLE, safeFilename);
                             startActivityForResult(intent, CREATE_FILE_REQUEST_CODE);
+                        } catch (android.content.ActivityNotFoundException anfe) {
+                            try {
+                                Intent fallbackIntent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                                fallbackIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                                fallbackIntent.setType("*/*");
+                                fallbackIntent.putExtra(Intent.EXTRA_TITLE, safeFilename);
+                                startActivityForResult(fallbackIntent, CREATE_FILE_REQUEST_CODE);
+                            } catch (Exception e2) {
+                                pendingSaveBytes = null;
+                                notifySaveError("Unable to open Android save location: " + e2.getMessage());
+                            }
                         } catch (Exception e) {
-                            saveToPublicDownloadsFallback(fileBytes, safeFilename, safeMime);
+                            pendingSaveBytes = null;
+                            notifySaveError("Unable to start save picker: " + e.getMessage());
                         }
                     }
                 });
             } catch (Exception e) {
+                pendingSaveBytes = null;
                 notifySaveError("Decoding failed: " + e.getMessage());
             }
         }
@@ -425,79 +487,17 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void saveToPublicDownloadsFallback(final byte[] fileBytes, final String safeFilename, final String safeMime) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    boolean saved = false;
-                    Uri savedUri = null;
-
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                        android.content.ContentValues values = new android.content.ContentValues();
-                        values.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, safeFilename);
-                        values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, safeMime);
-                        values.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS + "/FileForge");
-
-                        savedUri = getContentResolver().insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                        if (savedUri != null) {
-                            OutputStream out = getContentResolver().openOutputStream(savedUri);
-                            if (out != null) {
-                                out.write(fileBytes);
-                                out.flush();
-                                out.close();
-                                saved = true;
-                            }
-                        }
-                    }
-
-                    if (!saved) {
-                        File downloadDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS);
-                        File targetDir = new File(downloadDir, "FileForge");
-                        if (!targetDir.exists()) {
-                            targetDir.mkdirs();
-                        }
-                        File destFile = new File(targetDir, safeFilename);
-                        FileOutputStream fos = new FileOutputStream(destFile);
-                        fos.write(fileBytes);
-                        fos.flush();
-                        fos.close();
-
-                        savedUri = Uri.fromFile(destFile);
-                        android.media.MediaScannerConnection.scanFile(MainActivity.this,
-                            new String[]{destFile.getAbsolutePath()},
-                            new String[]{safeMime}, null);
-                        saved = true;
-                    }
-
-                    if (saved && savedUri != null) {
-                        lastSavedUri = savedUri;
-                        lastSavedMimeType = safeMime;
-                        pendingSaveBytes = null;
-                        notifySaveSuccess(safeFilename, safeMime, savedUri.toString());
-                    } else {
-                        pendingSaveBytes = null;
-                        notifySaveError("Could not write file to storage.");
-                    }
-                } catch (Exception e) {
-                    pendingSaveBytes = null;
-                    notifySaveError(e.getMessage());
-                }
-            }
-        }).start();
-    }
-
     private String escapeJs(String s) {
         if (s == null) return "";
         return s.replace("\\\\", "\\\\\\\\").replace("'", "\\\\'").replace("\\r", "").replace("\\n", " ");
     }
 
-    private void notifySaveSuccess(final String filename, final String mimeType, final String uriString) {
+    private void notifySaveSuccess(final String filename, final String mimeType, final String uriString, final long fileSize) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 if (webView != null) {
-                    String js = "window.FileForgeDownloadManager && window.FileForgeDownloadManager.onNativeSaveSuccess('" + escapeJs(filename) + "', '" + escapeJs(mimeType) + "', '" + escapeJs(uriString) + "');";
+                    String js = "window.FileForgeDownloadManager && window.FileForgeDownloadManager.onNativeSaveSuccess('" + escapeJs(filename) + "', '" + escapeJs(mimeType) + "', '" + escapeJs(uriString) + "', " + fileSize + ");";
                     webView.evaluateJavascript(js, null);
                 }
             }
@@ -548,6 +548,12 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
 
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.evaluateJavascript("window.FileForgeAndroidApp = true; window.isAndroidAPK = true;", null);
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url != null && url.startsWith("file:///android_asset/")) {
@@ -612,8 +618,8 @@ public class MainActivity extends Activity {
                 final String filename = pendingSaveFilename;
                 final String mimeType = pendingSaveMimeType;
 
-                if (bytes == null) {
-                    notifySaveError("File data buffer expired.");
+                if (bytes == null || bytes.length == 0) {
+                    notifySaveError("File data buffer is empty or expired.");
                     return;
                 }
 
@@ -630,11 +636,31 @@ public class MainActivity extends Activity {
                             out.flush();
                             out.close();
 
+                            long writtenSize = bytes.length;
+                            try {
+                                android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+                                if (cursor != null) {
+                                    int sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE);
+                                    if (sizeIndex != -1 && cursor.moveToFirst()) {
+                                        long queriedSize = cursor.getLong(sizeIndex);
+                                        if (queriedSize > 0) {
+                                            writtenSize = queriedSize;
+                                        }
+                                    }
+                                    cursor.close();
+                                }
+                            } catch (Exception ignored) {}
+
+                            if (writtenSize <= 0) {
+                                notifySaveError("Saved file is empty (0 bytes).");
+                                return;
+                            }
+
                             lastSavedUri = uri;
                             lastSavedMimeType = mimeType;
                             pendingSaveBytes = null;
 
-                            notifySaveSuccess(filename, mimeType, uri.toString());
+                            notifySaveSuccess(filename, mimeType, uri.toString(), writtenSize);
                         } catch (Exception e) {
                             pendingSaveBytes = null;
                             notifySaveError("Write failed: " + e.getMessage());

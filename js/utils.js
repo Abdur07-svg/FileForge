@@ -112,15 +112,12 @@ const Utils = (() => {
 
   /**
    * Unified FileForge Download & Save Manager
-   * Handles Save dialog -> Location picker / Direct Save -> Saving -> Complete workflow
+   * Desktop Browser: Direct browser download -> Download Complete modal
    */
   const FileForgeDownloadManager = (() => {
     let activeBlob = null;
     let activeFilename = 'fileforge-output';
     let activeMimeType = 'application/octet-stream';
-    let currentExtension = '';
-    let currentBaseName = '';
-    let isSaving = false;
     let initialized = false;
 
     function initModal() {
@@ -134,15 +131,11 @@ const Utils = (() => {
       const completeCloseBtn = document.getElementById('save-modal-complete-close-btn');
       const cancelBtn = document.getElementById('save-modal-cancel-btn');
       const doneBtn = document.getElementById('save-modal-done-btn');
-      const downloadBtn = document.getElementById('save-modal-download-btn');
-      const pickerBtn = document.getElementById('save-modal-picker-btn');
       const saveAgainBtn = document.getElementById('save-modal-save-again-btn');
       const shareBtn = document.getElementById('save-modal-share-btn');
-      const filenameInput = document.getElementById('save-modal-filename-input');
       const backdrop = modal.querySelector('.modal-backdrop');
 
       const closeModalFn = () => {
-        if (isSaving) return;
         modal.classList.add('hidden');
       };
 
@@ -152,22 +145,11 @@ const Utils = (() => {
       if (doneBtn) doneBtn.addEventListener('click', closeModalFn);
       if (backdrop) backdrop.addEventListener('click', closeModalFn);
 
-      if (downloadBtn) {
-        downloadBtn.addEventListener('click', () => {
-          if (!isSaving && activeBlob) performSave(false);
-        });
-      }
-
-      if (pickerBtn) {
-        pickerBtn.addEventListener('click', () => {
-          if (!isSaving && activeBlob) performSave(true);
-        });
-      }
-
       if (saveAgainBtn) {
         saveAgainBtn.addEventListener('click', () => {
           if (activeBlob) {
-            showStep('form');
+            triggerBrowserDownload(activeBlob, activeFilename);
+            showToast('Downloading again...', 'info');
           }
         });
       }
@@ -175,14 +157,13 @@ const Utils = (() => {
       if (shareBtn) {
         shareBtn.addEventListener('click', async () => {
           if (!activeBlob) return;
-          const finalName = getFullFilename();
           try {
             if (navigator.canShare) {
-              const file = new File([activeBlob], finalName, { type: activeBlob.type || activeMimeType });
+              const file = new File([activeBlob], activeFilename, { type: activeBlob.type || activeMimeType });
               if (navigator.canShare({ files: [file] })) {
                 await navigator.share({
-                  title: finalName,
-                  text: `Processed with FileForge: ${finalName}`,
+                  title: activeFilename,
+                  text: `Processed with FileForge: ${activeFilename}`,
                   files: [file]
                 });
                 showToast('Shared successfully!', 'success');
@@ -190,219 +171,14 @@ const Utils = (() => {
             }
           } catch (err) {
             if (err.name !== 'AbortError') {
-              console.warn('Share error:', err);
               showToast('Sharing not supported or cancelled', 'info');
             }
           }
         });
       }
-
-      if (filenameInput) {
-        filenameInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            if (!isSaving && activeBlob) performSave(false);
-          }
-        });
-      }
     }
 
-    function parseFilename(filename) {
-      filename = filename ? filename.trim() : 'fileforge-file';
-      const lastDotIndex = filename.lastIndexOf('.');
-      if (lastDotIndex > 0 && lastDotIndex < filename.length - 1) {
-        return {
-          base: filename.substring(0, lastDotIndex),
-          ext: filename.substring(lastDotIndex)
-        };
-      }
-      return {
-        base: filename,
-        ext: ''
-      };
-    }
-
-    function sanitizeBase(base) {
-      if (!base) return 'fileforge-file';
-      return base
-        .replace(/[/\\:*?"<>|]/g, '_')
-        .replace(/\.\.+/g, '_')
-        .replace(/^\.+|\.+$/g, '')
-        .trim() || 'fileforge-file';
-    }
-
-    function getFullFilename() {
-      const filenameInput = document.getElementById('save-modal-filename-input');
-      const rawBase = filenameInput ? filenameInput.value : currentBaseName;
-      const safeBase = sanitizeBase(rawBase);
-      return safeBase + currentExtension;
-    }
-
-    function showStep(stepName) {
-      const stepForm = document.getElementById('save-modal-step-form');
-      const stepSaving = document.getElementById('save-modal-step-saving');
-      const stepComplete = document.getElementById('save-modal-step-complete');
-
-      if (stepForm) stepForm.classList.toggle('hidden', stepName !== 'form');
-      if (stepSaving) stepSaving.classList.toggle('hidden', stepName !== 'saving');
-      if (stepComplete) stepComplete.classList.toggle('hidden', stepName !== 'complete');
-    }
-
-    async function performSave(usePicker = false) {
-      if (isSaving || !activeBlob) return;
-      isSaving = true;
-
-      const downloadBtn = document.getElementById('save-modal-download-btn');
-      const pickerBtn = document.getElementById('save-modal-picker-btn');
-      const cancelBtn = document.getElementById('save-modal-cancel-btn');
-      const finalFilename = getFullFilename();
-
-      if (downloadBtn) downloadBtn.disabled = true;
-      if (pickerBtn) pickerBtn.disabled = true;
-      if (cancelBtn) cancelBtn.disabled = true;
-
-      showStep('saving');
-
-      try {
-        let savedLocationNote = "Your file has been saved using your browser's download settings.";
-
-        if (usePicker && typeof window.showSaveFilePicker === 'function') {
-          // File System Access API
-          try {
-            const extClean = currentExtension.replace('.', '');
-            const typeAccept = {};
-            typeAccept[activeBlob.type || activeMimeType || 'application/octet-stream'] = currentExtension ? [currentExtension] : ['.bin'];
-
-            const handle = await window.showSaveFilePicker({
-              suggestedName: finalFilename,
-              types: [{
-                description: `${extClean.toUpperCase()} File`,
-                accept: typeAccept
-              }]
-            });
-
-            const writable = await handle.createWritable();
-            await writable.write(activeBlob);
-            await writable.close();
-            savedLocationNote = `Saved to selected location as "${finalFilename}".`;
-          } catch (pickerErr) {
-            if (pickerErr.name === 'AbortError') {
-              // User cancelled native picker - return safely to form
-              isSaving = false;
-              if (downloadBtn) downloadBtn.disabled = false;
-              if (pickerBtn) pickerBtn.disabled = false;
-              if (cancelBtn) cancelBtn.disabled = false;
-              showStep('form');
-              return;
-            }
-            throw pickerErr;
-          }
-        } else {
-          // Standard Browser Blob Download Fallback
-          const url = URL.createObjectURL(activeBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = finalFilename;
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            if (a.parentElement) a.parentElement.removeChild(a);
-            URL.revokeObjectURL(url);
-          }, 1500);
-        }
-
-        // Display Complete View
-        const compFilename = document.getElementById('save-modal-complete-filename');
-        const compMeta = document.getElementById('save-modal-complete-meta');
-        const compLocation = document.getElementById('save-modal-complete-location');
-        const shareBtn = document.getElementById('save-modal-share-btn');
-
-        if (compFilename) compFilename.textContent = finalFilename;
-        if (compMeta) compMeta.textContent = `${formatBytes(activeBlob.size)} • ${activeBlob.type || activeMimeType}`;
-        if (compLocation) compLocation.textContent = savedLocationNote;
-
-        // Check if Web Share API is available for this file
-        if (shareBtn) {
-          const canShare = typeof navigator.canShare === 'function';
-          shareBtn.classList.toggle('hidden', !canShare);
-        }
-
-        showStep('complete');
-      } catch (err) {
-        console.error('Save error:', err);
-        showToast('Save failed: ' + (err.message || 'Unknown error'), 'error');
-        showStep('form');
-      } finally {
-        isSaving = false;
-        if (downloadBtn) downloadBtn.disabled = false;
-        if (pickerBtn) pickerBtn.disabled = false;
-        if (cancelBtn) cancelBtn.disabled = false;
-      }
-    }
-
-    function openSaveDialog({ blob, filename, mimeType = 'application/octet-stream' }) {
-      if (!blob) {
-        showToast('No file data available to save', 'warning');
-        return;
-      }
-
-      initModal();
-
-      activeBlob = blob;
-      activeMimeType = mimeType || blob.type || 'application/octet-stream';
-      const parsed = parseFilename(filename || 'fileforge-file');
-      currentBaseName = parsed.base;
-      currentExtension = parsed.ext;
-
-      const modal = document.getElementById('save-file-modal');
-      if (!modal) {
-        // Fallback to direct download if modal markup is not present
-        directDownload(blob, filename);
-        return;
-      }
-
-      const filenameInput = document.getElementById('save-modal-filename-input');
-      const extBadge = document.getElementById('save-modal-extension-badge');
-      const metaEl = document.getElementById('save-modal-file-meta');
-      const pickerBtn = document.getElementById('save-modal-picker-btn');
-      const locationText = document.getElementById('save-modal-location-text');
-
-      if (filenameInput) {
-        filenameInput.value = currentBaseName;
-      }
-      if (extBadge) {
-        extBadge.textContent = currentExtension || 'FILE';
-      }
-      if (metaEl) {
-        metaEl.textContent = formatBytes(blob.size);
-      }
-
-      // Check for native File System Access API
-      const supportsPicker = typeof window.showSaveFilePicker === 'function';
-      if (pickerBtn) {
-        pickerBtn.classList.toggle('hidden', !supportsPicker);
-      }
-      if (locationText) {
-        if (supportsPicker) {
-          locationText.textContent = "You can choose a custom destination folder or download directly.";
-        } else {
-          locationText.textContent = "Your browser will save this file using your device's default download location.";
-        }
-      }
-
-      showStep('form');
-      modal.classList.remove('hidden');
-
-      if (filenameInput) {
-        setTimeout(() => {
-          filenameInput.focus();
-          filenameInput.select();
-        }, 80);
-      }
-    }
-
-    function directDownload(blob, filename) {
-      filename = sanitizeFilename(filename, 'downloaded_file');
+    function triggerBrowserDownload(blob, filename) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -412,12 +188,57 @@ const Utils = (() => {
       setTimeout(() => {
         if (a.parentElement) a.parentElement.removeChild(a);
         URL.revokeObjectURL(url);
-      }, 1500);
+      }, 2000);
+    }
+
+    function showDownloadComplete(blob, filename, mimeType) {
+      const modal = document.getElementById('save-file-modal');
+      if (!modal) return;
+
+      const stepForm = document.getElementById('save-modal-step-form');
+      const stepSaving = document.getElementById('save-modal-step-saving');
+      const stepComplete = document.getElementById('save-modal-step-complete');
+      const compFilename = document.getElementById('save-modal-complete-filename');
+      const compMeta = document.getElementById('save-modal-complete-meta');
+      const compLocation = document.getElementById('save-modal-complete-location');
+      const shareBtn = document.getElementById('save-modal-share-btn');
+
+      if (stepForm) stepForm.classList.add('hidden');
+      if (stepSaving) stepSaving.classList.add('hidden');
+      if (stepComplete) stepComplete.classList.remove('hidden');
+
+      if (compFilename) compFilename.textContent = filename;
+      if (compMeta && blob) compMeta.textContent = `${formatBytes(blob.size)} • ${mimeType || blob.type || 'File'}`;
+      if (compLocation) {
+        compLocation.textContent = 'Your file has been downloaded successfully.';
+      }
+
+      if (shareBtn) {
+        shareBtn.classList.toggle('hidden', typeof navigator.canShare !== 'function');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function openSaveDialog({ blob, filename, mimeType = 'application/octet-stream' }) {
+      if (!blob) {
+        showToast('No file data available to download', 'warning');
+        return;
+      }
+
+      initModal();
+      activeBlob = blob;
+      activeFilename = sanitizeFilename(filename || 'fileforge-download', 'download');
+      activeMimeType = mimeType || blob.type || 'application/octet-stream';
+
+      // Desktop browser download flow: normal browser download -> Download Complete modal
+      triggerBrowserDownload(activeBlob, activeFilename);
+      showDownloadComplete(activeBlob, activeFilename, activeMimeType);
     }
 
     return {
       save: openSaveDialog,
-      directDownload: directDownload
+      directDownload: triggerBrowserDownload
     };
   })();
 

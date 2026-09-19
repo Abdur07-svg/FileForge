@@ -252,12 +252,18 @@ const ImageCompressor = (() => {
       dom.compDimensionsText.textContent = `${active.compressedWidth} × ${active.compressedHeight} px`;
       dom.downloadBtn.disabled = false;
       const reduction = Utils.calculateReduction(active.originalSize, active.compressedBlob.size);
-      if (reduction > 0) {
+      if (active.retainedOriginal) {
+        dom.savedBadge.textContent = 'Original retained';
+        dom.savedBadge.className = 'metric-badge badge-neutral';
+      } else if (reduction > 0) {
         dom.savedBadge.textContent = `-${reduction}%`;
         dom.savedBadge.className = 'metric-badge badge-success';
       } else if (reduction === 0) {
         dom.savedBadge.textContent = `0%`;
         dom.savedBadge.className = 'metric-badge badge-neutral';
+      } else if (active.isExplicitConversion) {
+        dom.savedBadge.textContent = `Converted (larger)`;
+        dom.savedBadge.className = 'metric-badge badge-warning';
       } else {
         dom.savedBadge.textContent = `+${Math.abs(reduction)}%`;
         dom.savedBadge.className = 'metric-badge badge-warning';
@@ -364,23 +370,38 @@ const ImageCompressor = (() => {
 
   async function compressSingle(fileItem, quality, format, targetWidth, targetHeight) {
     const img = await Utils.loadImage(fileItem.originalDataUrl);
-    const canvas = document.createElement('canvas');
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    const ctx = canvas.getContext('2d');
+    const originalWidth = fileItem.originalWidth || img.naturalWidth || img.width;
+    const originalHeight = fileItem.originalHeight || img.naturalHeight || img.height;
+    const dimensionsUnchanged = (targetWidth === originalWidth && targetHeight === originalHeight);
+
+    const masterCanvas = document.createElement('canvas');
+    masterCanvas.width = targetWidth;
+    masterCanvas.height = targetHeight;
+    const masterCtx = masterCanvas.getContext('2d', { willReadFrequently: true });
 
     // Smooth image scaling
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    masterCtx.imageSmoothingEnabled = true;
+    masterCtx.imageSmoothingQuality = 'high';
 
     // Handle format specifics strictly based on user selection or source file
     let outputMime = 'image/jpeg';
+    let isExplicitConversion = false;
+
     if (format === 'png') {
       outputMime = 'image/png';
+      if (!fileItem.file.type.includes('png') && !fileItem.name.toLowerCase().endsWith('.png')) {
+        isExplicitConversion = true;
+      }
     } else if (format === 'webp') {
       outputMime = 'image/webp';
+      if (!fileItem.file.type.includes('webp') && !fileItem.name.toLowerCase().endsWith('.webp')) {
+        isExplicitConversion = true;
+      }
     } else if (format === 'jpeg') {
       outputMime = 'image/jpeg';
+      if (!fileItem.file.type.includes('jpeg') && !fileItem.file.type.includes('jpg') && !/\.(jpg|jpeg)$/i.test(fileItem.name)) {
+        isExplicitConversion = true;
+      }
     } else if (format === 'original') {
       const fname = (fileItem.name || '').toLowerCase();
       const ftype = (fileItem.file && fileItem.file.type) || '';
@@ -396,69 +417,72 @@ const ImageCompressor = (() => {
     }
 
     if (outputMime === 'image/jpeg') {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, targetWidth, targetHeight);
+      masterCtx.fillStyle = '#FFFFFF';
+      masterCtx.fillRect(0, 0, targetWidth, targetHeight);
     }
 
-    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+    masterCtx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
     let blob;
+    let retainedOriginal = false;
 
     if (outputMime === 'image/png') {
-      // For PNG: Apply adaptive color quantization to achieve true lossy PNG size reduction
+      // For PNG: Draw master canvas to work canvas and apply quantization on fresh cloned ImageData
       const workCanvas = document.createElement('canvas');
       workCanvas.width = targetWidth;
       workCanvas.height = targetHeight;
       const workCtx = workCanvas.getContext('2d');
-      workCtx.drawImage(canvas, 0, 0);
+      workCtx.drawImage(masterCanvas, 0, 0);
 
-      const imgData = workCtx.getImageData(0, 0, targetWidth, targetHeight);
-      applyPngQuantization(imgData.data, targetWidth, targetHeight, quality);
-      workCtx.putImageData(imgData, 0, 0);
+      const origImageData = masterCtx.getImageData(0, 0, targetWidth, targetHeight);
+      const clonedData = new Uint8ClampedArray(origImageData.data);
+      applyPngQuantization(clonedData, targetWidth, targetHeight, quality);
+      workCtx.putImageData(new ImageData(clonedData, targetWidth, targetHeight), 0, 0);
 
       blob = await Utils.canvasToBlob(workCanvas, 'image/png');
 
-      // If output is still larger than original and dimensions are unchanged, try stronger quantization
-      if (blob.size >= fileItem.originalSize && targetWidth === fileItem.originalWidth && targetHeight === fileItem.originalHeight) {
-        let testQuality = quality;
-        while (blob.size >= fileItem.originalSize && testQuality > 0.15) {
-          testQuality -= 0.2;
-          const freshData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-          applyPngQuantization(freshData.data, targetWidth, targetHeight, Math.max(0.1, testQuality));
-          workCtx.putImageData(freshData, 0, 0);
+      // If output is still >= original and dimensions are unchanged, step down quantization
+      if (blob.size >= fileItem.originalSize && dimensionsUnchanged) {
+        const testQualities = [0.65, 0.45, 0.25, 0.15];
+        for (const testQ of testQualities) {
+          if (testQ >= quality) continue;
+          const freshCloned = new Uint8ClampedArray(origImageData.data);
+          applyPngQuantization(freshCloned, targetWidth, targetHeight, testQ);
+          workCtx.putImageData(new ImageData(freshCloned, targetWidth, targetHeight), 0, 0);
           const lowerBlob = await Utils.canvasToBlob(workCanvas, 'image/png');
-          if (lowerBlob.size < blob.size) {
+          if (lowerBlob && lowerBlob.size < blob.size) {
             blob = lowerBlob;
-          } else {
-            break;
+            if (blob.size < fileItem.originalSize) break;
           }
         }
+      }
 
-        // Absolute Safety Guard: If original file was already hyper-optimized PNG, never increase size
-        if (blob.size > fileItem.originalSize && format === 'original') {
-          blob = fileItem.file;
-        }
+      // Safety Guard: If output is still >= original with unchanged dimensions & format is original
+      if (blob.size >= fileItem.originalSize && dimensionsUnchanged && !isExplicitConversion) {
+        blob = fileItem.file;
+        retainedOriginal = true;
       }
     } else {
       // For JPEG and WebP: standard quality encoding with iterative tuning
-      blob = await Utils.canvasToBlob(canvas, outputMime, quality);
+      blob = await Utils.canvasToBlob(masterCanvas, outputMime, quality);
 
-      if (blob.size >= fileItem.originalSize && targetWidth === fileItem.originalWidth && targetHeight === fileItem.originalHeight) {
+      if (blob.size >= fileItem.originalSize && dimensionsUnchanged && !isExplicitConversion) {
         let tryQuality = quality;
-        while (blob.size >= fileItem.originalSize && tryQuality > 0.15) {
-          tryQuality -= 0.15;
-          const lowerBlob = await Utils.canvasToBlob(canvas, outputMime, tryQuality);
-          if (lowerBlob.size < blob.size) {
+        while (tryQuality > 0.18 && blob.size >= fileItem.originalSize) {
+          tryQuality -= 0.12;
+          const lowerBlob = await Utils.canvasToBlob(masterCanvas, outputMime, Math.max(0.1, tryQuality));
+          if (lowerBlob && lowerBlob.size < blob.size) {
             blob = lowerBlob;
           } else {
             break;
           }
         }
+      }
 
-        // Absolute Safety Guard: Never output larger file than original in original format mode
-        if (blob.size > fileItem.originalSize && format === 'original') {
-          blob = fileItem.file;
-        }
+      // Safety Guard: Never output larger file than original in original format mode
+      if (blob.size >= fileItem.originalSize && dimensionsUnchanged && !isExplicitConversion) {
+        blob = fileItem.file;
+        retainedOriginal = true;
       }
     }
 
@@ -466,7 +490,9 @@ const ImageCompressor = (() => {
       blob,
       width: targetWidth,
       height: targetHeight,
-      mime: outputMime
+      mime: outputMime,
+      retainedOriginal,
+      isExplicitConversion
     };
   }
 
@@ -494,11 +520,17 @@ const ImageCompressor = (() => {
       active.compressedWidth = result.width;
       active.compressedHeight = result.height;
       active.outputMime = result.mime;
+      active.retainedOriginal = result.retainedOriginal;
+      active.isExplicitConversion = result.isExplicitConversion;
 
       // Update UI
       updateActiveFileControls();
       renderFileList();
-      Utils.showToast('Image compressed successfully! Click Download Image to save.', 'success');
+
+      const toastMsg = result.retainedOriginal
+        ? 'Original image retained (already optimal).'
+        : 'Image compressed successfully! Click Download Image to save.';
+      Utils.showToast(toastMsg, 'success');
     } catch (err) {
       console.error('Compression error:', err);
       Utils.showToast('Compression error: ' + err.message, 'error');
@@ -536,6 +568,8 @@ const ImageCompressor = (() => {
         item.compressedWidth = res.width;
         item.compressedHeight = res.height;
         item.outputMime = res.mime;
+        item.retainedOriginal = res.retainedOriginal;
+        item.isExplicitConversion = res.isExplicitConversion;
       }
 
       updateActiveFileControls();
@@ -561,7 +595,9 @@ const ImageCompressor = (() => {
     const active = currentFiles[activeIndex];
     if (!active || !active.compressedBlob) return;
     const ext = getOutputExtension(active.outputMime);
-    const filename = `${Utils.getBaseName(active.name)}-compressed.${ext}`;
+    const filename = active.retainedOriginal
+      ? active.name
+      : `${Utils.getBaseName(active.name)}-compressed.${ext}`;
     Utils.downloadBlob(active.compressedBlob, filename);
   }
 
@@ -578,7 +614,9 @@ const ImageCompressor = (() => {
     currentFiles.forEach((item, idx) => {
       if (item.compressedBlob) {
         const ext = getOutputExtension(item.outputMime);
-        const name = `${Utils.getBaseName(item.name)}-compressed-${idx + 1}.${ext}`;
+        const name = item.retainedOriginal
+          ? item.name
+          : `${Utils.getBaseName(item.name)}-compressed-${idx + 1}.${ext}`;
         filesToZip.push({ name, blob: item.compressedBlob });
       }
     });

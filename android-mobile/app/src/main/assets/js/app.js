@@ -569,18 +569,35 @@ const MobileApp = (() => {
             format = 'image/webp';
             ext = 'webp';
           }
-          compressedResult = await MobileImageEngine.compressImage(currentFile, { quality, format });
+          compressedResult = await MobileImageEngine.compressImage(currentFile, { quality, format, formatChoice: 'original' });
           compressedResult.ext = ext;
+
+          let statusHtml = '';
+          let toastMsg = '';
+
+          if (compressedResult.retainedOriginal) {
+            statusHtml = '<div class="stat-pill"><span class="label">Status:</span> <strong style="color: var(--text-muted);">Original retained</strong></div>';
+            toastMsg = 'Original file retained (already optimal)';
+          } else if (compressedResult.savingsPercent > 0) {
+            statusHtml = `<div class="stat-pill"><span class="label">Saved:</span> <strong class="text-primary">${compressedResult.savingsPercent}%</strong></div>`;
+            toastMsg = `Compressed! Saved ${compressedResult.savingsPercent}%`;
+          } else if (compressedResult.isExplicitConversion && compressedResult.newSize > compressedResult.originalSize) {
+            statusHtml = '<div class="stat-pill"><span class="label">Status:</span> <strong style="color: var(--color-warning);">Converted (larger)</strong></div>';
+            toastMsg = 'Image converted — output is larger';
+          } else {
+            statusHtml = '<div class="stat-pill"><span class="label">Status:</span> <strong style="color: var(--text-muted);">Original retained</strong></div>';
+            toastMsg = 'Original file retained';
+          }
 
           resultStats.innerHTML = `
             <div class="stat-pill"><span class="label">Original:</span> <strong>${MobileUtils.formatBytes(compressedResult.originalSize)}</strong></div>
             <div class="stat-pill"><span class="label">New:</span> <strong class="text-success">${MobileUtils.formatBytes(compressedResult.newSize)}</strong></div>
-            <div class="stat-pill"><span class="label">Saved:</span> <strong class="text-primary">${compressedResult.savingsPercent}%</strong></div>
+            ${statusHtml}
           `;
           previewImg.src = compressedResult.previewUrl;
           resultBox.classList.remove('hidden');
           MobileUtils.triggerHaptic('success');
-          MobileUtils.showToast(`Compressed! Saved ${compressedResult.savingsPercent}%`, 'success');
+          MobileUtils.showToast(toastMsg, 'success');
         } catch (err) {
           MobileUtils.showToast(err.message || 'Compression failed', 'error');
         } finally {
@@ -594,7 +611,10 @@ const MobileApp = (() => {
       downloadBtn.addEventListener('click', () => {
         if (compressedResult && compressedResult.blob) {
           const ext = compressedResult.ext || 'jpg';
-          MobileUtils.downloadBlob(compressedResult.blob, `${MobileUtils.getBaseName(currentFile.name)}_compressed.${ext}`);
+          const outName = compressedResult.retainedOriginal 
+            ? currentFile.name 
+            : `${MobileUtils.getBaseName(currentFile.name)}_compressed.${ext}`;
+          MobileUtils.downloadBlob(compressedResult.blob, outName);
         }
       });
     }
