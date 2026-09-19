@@ -1135,10 +1135,18 @@ const MobileApp = (() => {
       isSigResizing = false;
     });
 
+    // Page Navigation in Editor Modal
+    const editorPrevBtn = document.getElementById('btn-i2p-editor-prev-page');
+    const editorNextBtn = document.getElementById('btn-i2p-editor-next-page');
+    const editorPageInfo = document.getElementById('mobile-i2p-editor-page-info');
+    const editorMagnifier = document.getElementById('mobile-i2p-magnifier');
+    const editorMagnifierCanvas = document.getElementById('mobile-i2p-magnifier-canvas');
+
     // =========================================================================
     // IMAGE EDITOR MODAL (TRANSFORM, CROP & FILTER PRESETS)
     // =========================================================================
     async function openEditorModal(index) {
+      if (index < 0 || index >= imageItems.length) return;
       editingIndex = index;
       const item = imageItems[index];
       if (!item) return;
@@ -1147,8 +1155,19 @@ const MobileApp = (() => {
       editorCropActive = false;
       editorCropRatio = 'free';
 
+      if (editorPageInfo) {
+        editorPageInfo.textContent = `Page ${editingIndex + 1} of ${imageItems.length}`;
+      }
+      if (editorPrevBtn) {
+        editorPrevBtn.disabled = (editingIndex === 0);
+      }
+      if (editorNextBtn) {
+        editorNextBtn.disabled = (editingIndex === imageItems.length - 1);
+      }
+
       if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
       if (editorCropPanel) editorCropPanel.classList.add('hidden');
+      if (editorMagnifier) editorMagnifier.classList.add('hidden');
 
       editingImgObj = await MobileUtils.loadImageFromSrc(item.dataUrl);
 
@@ -1158,11 +1177,49 @@ const MobileApp = (() => {
       if (editorModal) editorModal.classList.remove('hidden');
     }
 
+    async function switchEditorPage(targetIndex) {
+      if (targetIndex < 0 || targetIndex >= imageItems.length || targetIndex === editingIndex) return;
+
+      // 1. Save current page's temporary edits to its independent state
+      if (editingIndex >= 0 && editingIndex < imageItems.length) {
+        const curItem = imageItems[editingIndex];
+        curItem.editState = JSON.parse(JSON.stringify(editorTempState));
+
+        const offscreen = document.createElement('canvas');
+        MobileImageToPdf.renderEditedImageToCanvas(offscreen, editingImgObj, curItem.editState);
+        curItem.previewUrl = offscreen.toDataURL('image/jpeg', 0.88);
+        curItem.width = offscreen.width;
+        curItem.height = offscreen.height;
+      }
+
+      // 2. Open new page
+      await openEditorModal(targetIndex);
+      renderImageList();
+      updateLivePreview();
+    }
+
+    if (editorPrevBtn) {
+      editorPrevBtn.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
+        if (editingIndex > 0) switchEditorPage(editingIndex - 1);
+      });
+    }
+
+    if (editorNextBtn) {
+      editorNextBtn.addEventListener('click', () => {
+        MobileUtils.triggerHaptic('light');
+        if (editingIndex < imageItems.length - 1) switchEditorPage(editingIndex + 1);
+      });
+    }
+
     function closeEditorModal() {
       if (editorModal) editorModal.classList.add('hidden');
+      if (editorMagnifier) editorMagnifier.classList.add('hidden');
       editingIndex = -1;
       editingImgObj = null;
       editorCropActive = false;
+      isCropDragging = false;
+      cropDragMode = null;
     }
 
     if (editorCloseBtn) editorCloseBtn.addEventListener('click', closeEditorModal);
@@ -1227,6 +1284,7 @@ const MobileApp = (() => {
         editorCropActive = !editorCropActive;
         editorToggleCropBtn.classList.toggle('active', editorCropActive);
         if (editorCropPanel) editorCropPanel.classList.toggle('hidden', !editorCropActive);
+        if (editorMagnifier) editorMagnifier.classList.add('hidden');
         if (editorCropActive) initCropRect();
         drawEditorCanvas();
       });
@@ -1247,8 +1305,8 @@ const MobileApp = (() => {
         const cw = editorCanvas.width;
         const ch = editorCanvas.height;
         const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
-        const baseW = isRotated90 ? editingImgObj.naturalHeight : editingImgObj.naturalWidth;
-        const baseH = isRotated90 ? editingImgObj.naturalWidth : editingImgObj.naturalHeight;
+        const baseW = isRotated90 ? (editingImgObj.naturalHeight || editingImgObj.height) : (editingImgObj.naturalWidth || editingImgObj.width);
+        const baseH = isRotated90 ? (editingImgObj.naturalWidth || editingImgObj.width) : (editingImgObj.naturalHeight || editingImgObj.height);
 
         const scaleX = baseW / cw;
         const scaleY = baseH / ch;
@@ -1263,6 +1321,7 @@ const MobileApp = (() => {
         editorCropActive = false;
         if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
         if (editorCropPanel) editorCropPanel.classList.add('hidden');
+        if (editorMagnifier) editorMagnifier.classList.add('hidden');
 
         drawEditorCanvas();
         renderFilterCards();
@@ -1276,6 +1335,7 @@ const MobileApp = (() => {
         editorCropActive = false;
         if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
         if (editorCropPanel) editorCropPanel.classList.add('hidden');
+        if (editorMagnifier) editorMagnifier.classList.add('hidden');
         drawEditorCanvas();
         renderFilterCards();
         MobileUtils.showToast('Crop reset to full image.', 'info');
@@ -1287,6 +1347,7 @@ const MobileApp = (() => {
         editorCropActive = false;
         if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
         if (editorCropPanel) editorCropPanel.classList.add('hidden');
+        if (editorMagnifier) editorMagnifier.classList.add('hidden');
         drawEditorCanvas();
       });
     }
@@ -1296,10 +1357,10 @@ const MobileApp = (() => {
       const cw = editorCanvas.width;
       const ch = editorCanvas.height;
       editorCropRect = {
-        x: Math.round(cw * 0.1),
-        y: Math.round(ch * 0.1),
-        w: Math.round(cw * 0.8),
-        h: Math.round(ch * 0.8)
+        x: Math.round(cw * 0.08),
+        y: Math.round(ch * 0.08),
+        w: Math.round(cw * 0.84),
+        h: Math.round(ch * 0.84)
       };
       adjustCropRectToRatio();
     }
@@ -1343,24 +1404,33 @@ const MobileApp = (() => {
       }
     }
 
+    /**
+     * 8-Handle Crop Overlay Matching Reference UI:
+     * - Darkened outside mask
+     * - Solid bright blue crop border
+     * - 4 Circular corner handles (blue outer ring + white ring + center dot)
+     * - 4 Side middle pill handles (white rounded pill with blue border)
+     */
     function drawCropOverlay(canvas) {
       const ctx = canvas.getContext('2d');
       const cw = canvas.width;
       const ch = canvas.height;
       const r = editorCropRect;
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+      // Darkened overlay outside the crop rect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
       ctx.fillRect(0, 0, cw, r.y);
       ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h));
       ctx.fillRect(0, r.y, r.x, r.h);
       ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h);
 
-      ctx.strokeStyle = '#6366f1';
-      ctx.lineWidth = 2;
+      // Solid blue crop boundary
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
       ctx.strokeRect(r.x, r.y, r.w, r.h);
 
-      // Rule of thirds grid
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      // Rule of thirds subtle grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -1375,23 +1445,56 @@ const MobileApp = (() => {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Corner Drag Handles
-      const handles = [
-        { x: r.x, y: r.y },
-        { x: r.x + r.w, y: r.y },
-        { x: r.x + r.w, y: r.y + r.h },
-        { x: r.x, y: r.y + r.h }
-      ];
-
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = '#6366f1';
-      ctx.lineWidth = 2;
-      handles.forEach(h => {
+      // Draw rounded pill handles on edges
+      function drawPill(x, y, w, h, radius) {
+        ctx.save();
         ctx.beginPath();
-        ctx.arc(h.x, h.y, 6, 0, Math.PI * 2);
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(x - w / 2, y - h / 2, w, h, radius);
+        } else {
+          const rx = x - w / 2, ry = y - h / 2;
+          ctx.rect(rx, ry, w, h);
+        }
+        ctx.fillStyle = '#ffffff';
         ctx.fill();
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 2.5;
         ctx.stroke();
-      });
+        ctx.restore();
+      }
+
+      // Draw circular corner handles
+      function drawCorner(x, y) {
+        ctx.save();
+        // Outer Blue Circle
+        ctx.beginPath();
+        ctx.arc(x, y, 9, 0, Math.PI * 2);
+        ctx.fillStyle = '#0284c7';
+        ctx.fill();
+        // Inner White Ring
+        ctx.beginPath();
+        ctx.arc(x, y, 6.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        // Center Blue Dot
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#0284c7';
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 4 Edge / Middle Pill Handles (North, South, West, East)
+      drawPill(r.x + r.w / 2, r.y, 30, 10, 5); // Top (N)
+      drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5); // Bottom (S)
+      drawPill(r.x, r.y + r.h / 2, 10, 30, 5); // Left (W)
+      drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5); // Right (E)
+
+      // 4 Circular Corner Handles
+      drawCorner(r.x, r.y); // NW
+      drawCorner(r.x + r.w, r.y); // NE
+      drawCorner(r.x + r.w, r.y + r.h); // SE
+      drawCorner(r.x, r.y + r.h); // SW
     }
 
     // Touch & Cursor Crop Pointer Events
@@ -1408,13 +1511,90 @@ const MobileApp = (() => {
 
     function getCropHandleAt(x, y) {
       const r = editorCropRect;
-      const pad = 28; // Touch area
-      if (Math.hypot(x - r.x, y - r.y) < pad) return 'nw';
-      if (Math.hypot(x - (r.x + r.w), y - r.y) < pad) return 'ne';
-      if (Math.hypot(x - (r.x + r.w), y - (r.y + r.h)) < pad) return 'se';
-      if (Math.hypot(x - r.x, y - (r.y + r.h)) < pad) return 'sw';
+      const cornerPad = 32; // Generous touch hit area for corners
+      const edgePad = 26;   // Generous touch hit area for edges
+
+      // 1. Check 4 corners first
+      if (Math.hypot(x - r.x, y - r.y) < cornerPad) return 'nw';
+      if (Math.hypot(x - (r.x + r.w), y - r.y) < cornerPad) return 'ne';
+      if (Math.hypot(x - (r.x + r.w), y - (r.y + r.h)) < cornerPad) return 'se';
+      if (Math.hypot(x - r.x, y - (r.y + r.h)) < cornerPad) return 'sw';
+
+      // 2. Check 4 edge pills
+      if (Math.abs(y - r.y) < edgePad && Math.abs(x - (r.x + r.w / 2)) < 28) return 'n';
+      if (Math.abs(y - (r.y + r.h)) < edgePad && Math.abs(x - (r.x + r.w / 2)) < 28) return 's';
+      if (Math.abs(x - r.x) < edgePad && Math.abs(y - (r.y + r.h / 2)) < 28) return 'w';
+      if (Math.abs(x - (r.x + r.w)) < edgePad && Math.abs(y - (r.y + r.h / 2)) < 28) return 'e';
+
+      // 3. Inside box
       if (x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h) return 'move';
       return null;
+    }
+
+    /**
+     * Renders Live Magnifier at Top Area showing zoomed area under handle with crosshairs
+     */
+    function renderMagnifier(focusCanvasX, focusCanvasY) {
+      if (!editorMagnifier || !editorMagnifierCanvas || !editingImgObj || !editorCanvas) return;
+      editorMagnifier.classList.remove('hidden');
+
+      const magCanvas = editorMagnifierCanvas;
+      const magCtx = magCanvas.getContext('2d');
+      const magW = magCanvas.width;
+      const magH = magCanvas.height;
+
+      // Smart positioning: place in opposite quadrant so finger never blocks it
+      const cw = editorCanvas.width;
+      if (focusCanvasX < cw / 2) {
+        editorMagnifier.style.left = 'auto';
+        editorMagnifier.style.right = '10px';
+        editorMagnifier.style.top = '10px';
+      } else {
+        editorMagnifier.style.right = 'auto';
+        editorMagnifier.style.left = '10px';
+        editorMagnifier.style.top = '10px';
+      }
+
+      magCtx.clearRect(0, 0, magW, magH);
+
+      // Render full uncropped transformed image to offscreen canvas
+      const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
+      const baseW = isRotated90 ? (editingImgObj.naturalHeight || editingImgObj.height) : (editingImgObj.naturalWidth || editingImgObj.width);
+      const baseH = isRotated90 ? (editingImgObj.naturalWidth || editingImgObj.width) : (editingImgObj.naturalHeight || editingImgObj.height);
+
+      const offscreen = document.createElement('canvas');
+      const tempStateNoCrop = {
+        crop: null,
+        rotate: editorTempState.rotate,
+        flipH: editorTempState.flipH,
+        flipV: editorTempState.flipV,
+        filter: editorTempState.filter
+      };
+      MobileImageToPdf.renderEditedImageToCanvas(offscreen, editingImgObj, tempStateNoCrop, baseW, baseH);
+
+      // Map canvas display coords to full offscreen coords
+      const scaleX = baseW / (editorCanvas.width || 1);
+      const scaleY = baseH / (editorCanvas.height || 1);
+      const imgCenterX = focusCanvasX * scaleX;
+      const imgCenterY = focusCanvasY * scaleY;
+
+      const zoom = 2.4;
+      const srcCropW = magW / zoom;
+      const srcCropH = magH / zoom;
+      const srcX = imgCenterX - srcCropW / 2;
+      const srcY = imgCenterY - srcCropH / 2;
+
+      magCtx.drawImage(
+        offscreen,
+        srcX, srcY, srcCropW, srcCropH,
+        0, 0, magW, magH
+      );
+    }
+
+    function stopCropDrag() {
+      isCropDragging = false;
+      cropDragMode = null;
+      if (editorMagnifier) editorMagnifier.classList.add('hidden');
     }
 
     if (editorCanvas) {
@@ -1425,6 +1605,7 @@ const MobileApp = (() => {
         if (cropDragMode) {
           isCropDragging = true;
           cropDragStart = { x, y, rectX: editorCropRect.x, rectY: editorCropRect.y, rectW: editorCropRect.w, rectH: editorCropRect.h };
+          updateCropDrag(e.clientX, e.clientY);
         }
       });
 
@@ -1436,6 +1617,7 @@ const MobileApp = (() => {
           e.preventDefault();
           isCropDragging = true;
           cropDragStart = { x, y, rectX: editorCropRect.x, rectY: editorCropRect.y, rectW: editorCropRect.w, rectH: editorCropRect.h };
+          updateCropDrag(e.touches[0].clientX, e.touches[0].clientY);
         }
       }, { passive: false });
     }
@@ -1463,21 +1645,51 @@ const MobileApp = (() => {
       } else if (cropDragMode === 'nw') {
         newW = Math.max(minSize, cropDragStart.rectW - dx);
         newH = Math.max(minSize, cropDragStart.rectH - dy);
-        newX = cropDragStart.rectX + (cropDragStart.rectW - newW);
-        newY = cropDragStart.rectY + (cropDragStart.rectH - newH);
+        newX = Math.max(0, Math.min(cropDragStart.rectX + cropDragStart.rectW - minSize, cropDragStart.rectX + (cropDragStart.rectW - newW)));
+        newY = Math.max(0, Math.min(cropDragStart.rectY + cropDragStart.rectH - minSize, cropDragStart.rectY + (cropDragStart.rectH - newH)));
+        newW = (cropDragStart.rectX + cropDragStart.rectW) - newX;
+        newH = (cropDragStart.rectY + cropDragStart.rectH) - newY;
       } else if (cropDragMode === 'ne') {
         newW = Math.max(minSize, Math.min(cw - newX, cropDragStart.rectW + dx));
         newH = Math.max(minSize, cropDragStart.rectH - dy);
-        newY = cropDragStart.rectY + (cropDragStart.rectH - newH);
+        newY = Math.max(0, Math.min(cropDragStart.rectY + cropDragStart.rectH - minSize, cropDragStart.rectY + (cropDragStart.rectH - newH)));
+        newH = (cropDragStart.rectY + cropDragStart.rectH) - newY;
       } else if (cropDragMode === 'sw') {
         newW = Math.max(minSize, cropDragStart.rectW - dx);
         newH = Math.max(minSize, Math.min(ch - newY, cropDragStart.rectH + dy));
-        newX = cropDragStart.rectX + (cropDragStart.rectW - newW);
+        newX = Math.max(0, Math.min(cropDragStart.rectX + cropDragStart.rectW - minSize, cropDragStart.rectX + (cropDragStart.rectW - newW)));
+        newW = (cropDragStart.rectX + cropDragStart.rectW) - newX;
+      } else if (cropDragMode === 'n') {
+        newH = Math.max(minSize, cropDragStart.rectH - dy);
+        newY = Math.max(0, Math.min(cropDragStart.rectY + cropDragStart.rectH - minSize, cropDragStart.rectY + (cropDragStart.rectH - newH)));
+        newH = (cropDragStart.rectY + cropDragStart.rectH) - newY;
+      } else if (cropDragMode === 's') {
+        newH = Math.max(minSize, Math.min(ch - newY, cropDragStart.rectH + dy));
+      } else if (cropDragMode === 'w') {
+        newW = Math.max(minSize, cropDragStart.rectW - dx);
+        newX = Math.max(0, Math.min(cropDragStart.rectX + cropDragStart.rectW - minSize, cropDragStart.rectX + (cropDragStart.rectW - newW)));
+        newW = (cropDragStart.rectX + cropDragStart.rectW) - newX;
+      } else if (cropDragMode === 'e') {
+        newW = Math.max(minSize, Math.min(cw - newX, cropDragStart.rectW + dx));
       }
 
       editorCropRect = { x: newX, y: newY, w: newW, h: newH };
       adjustCropRectToRatio();
       drawEditorCanvas();
+
+      // Find center point of the active drag handle for live magnifier
+      let focusCanvasX = newX + newW / 2;
+      let focusCanvasY = newY + newH / 2;
+      if (cropDragMode === 'nw') { focusCanvasX = newX; focusCanvasY = newY; }
+      else if (cropDragMode === 'ne') { focusCanvasX = newX + newW; focusCanvasY = newY; }
+      else if (cropDragMode === 'se') { focusCanvasX = newX + newW; focusCanvasY = newY + newH; }
+      else if (cropDragMode === 'sw') { focusCanvasX = newX; focusCanvasY = newY + newH; }
+      else if (cropDragMode === 'n') { focusCanvasX = newX + newW / 2; focusCanvasY = newY; }
+      else if (cropDragMode === 's') { focusCanvasX = newX + newW / 2; focusCanvasY = newY + newH; }
+      else if (cropDragMode === 'w') { focusCanvasX = newX; focusCanvasY = newY + newH / 2; }
+      else if (cropDragMode === 'e') { focusCanvasX = newX + newW; focusCanvasY = newY + newH / 2; }
+
+      renderMagnifier(focusCanvasX, focusCanvasY);
     }
 
     window.addEventListener('mousemove', (e) => {
@@ -1488,8 +1700,9 @@ const MobileApp = (() => {
       if (isCropDragging && e.touches[0]) updateCropDrag(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
 
-    window.addEventListener('mouseup', () => { isCropDragging = false; cropDragMode = null; });
-    window.addEventListener('touchend', () => { isCropDragging = false; cropDragMode = null; });
+    window.addEventListener('mouseup', stopCropDrag);
+    window.addEventListener('touchend', stopCropDrag);
+    window.addEventListener('touchcancel', stopCropDrag);
 
     // Render Filter Preset Cards
     function renderFilterCards() {

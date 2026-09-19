@@ -4310,6 +4310,11 @@
           <span id="i2p-editor-filename" class="i2p-editor-file-badge">image.jpg</span>
           <span id="i2p-editor-dims" class="badge badge-neutral">1920 × 1080 px</span>
         </div>
+        <div class="i2p-editor-page-nav" style="display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 14px;">
+          <button type="button" id="i2p-editor-prev-btn" class="btn btn-xs btn-secondary" title="Previous Page">◀ Prev Page</button>
+          <span id="i2p-editor-page-info" class="badge badge-info" style="font-size: 0.82rem; font-weight: 700;">Page 1 of 1</span>
+          <button type="button" id="i2p-editor-next-btn" class="btn btn-xs btn-secondary" title="Next Page">Next Page ▶</button>
+        </div>
         <button type="button" id="i2p-editor-close-btn" class="modal-close-btn" aria-label="Close modal" title="Close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -4320,9 +4325,17 @@
 
       <div class="modal-body i2p-editor-body">
         <!-- Canvas Stage -->
-        <div class="i2p-editor-stage">
-          <div class="i2p-canvas-container">
+        <div class="i2p-editor-stage" style="position: relative;">
+          <div class="i2p-canvas-container" style="position: relative;">
             <canvas id="i2p-editor-canvas" class="i2p-editor-canvas"></canvas>
+            <div id="i2p-editor-magnifier" class="crop-live-magnifier hidden">
+              <canvas id="i2p-editor-magnifier-canvas" width="140" height="140"></canvas>
+              <div class="magnifier-crosshair">
+                <div class="crosshair-h"></div>
+                <div class="crosshair-v"></div>
+                <div class="crosshair-center-dot"></div>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -1401,9 +1401,24 @@
         </div>
 
         <div class="mobile-modal-body">
-          <!-- Live Interactive Canvas Stage with Touch Crop Overlay -->
+          <!-- Page-by-Page Navigation -->
+          <div class="mobile-editor-page-nav">
+            <button type="button" id="btn-i2p-editor-prev-page" class="btn btn-xs btn-secondary" title="Previous Page">◀ Prev Page</button>
+            <span class="mobile-editor-page-badge" id="mobile-i2p-editor-page-info">Page 1 of 1</span>
+            <button type="button" id="btn-i2p-editor-next-page" class="btn btn-xs btn-secondary" title="Next Page">Next Page ▶</button>
+          </div>
+
+          <!-- Live Interactive Canvas Stage with Touch Crop Overlay & Live Magnifier -->
           <div id="mobile-i2p-canvas-stage" class="mobile-canvas-stage">
             <canvas id="mobile-i2p-editor-canvas"></canvas>
+            <div id="mobile-i2p-magnifier" class="crop-live-magnifier hidden">
+              <canvas id="mobile-i2p-magnifier-canvas" width="130" height="130"></canvas>
+              <div class="magnifier-crosshair">
+                <div class="crosshair-h"></div>
+                <div class="crosshair-v"></div>
+                <div class="crosshair-center-dot"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Transform & Crop Toolbar -->

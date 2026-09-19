@@ -1316,7 +1316,7 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000000;
+  background: #ffffff;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   overflow: hidden;
@@ -1329,6 +1329,98 @@ button, input, select, textarea {
   max-height: 320px;
   object-fit: contain;
   display: block;
+}
+
+/* Page-by-Page Editor Navigation */
+.mobile-editor-page-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
+.mobile-editor-page-badge {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--color-primary-light);
+  letter-spacing: 0.02em;
+}
+
+/* Crop Live Magnifier */
+.crop-live-magnifier {
+  position: absolute;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  border: 3.5px solid #0284c7;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 0 1.5px rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 50;
+  background: #000000;
+  top: 10px;
+  left: 10px;
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
+}
+
+.crop-live-magnifier.hidden {
+  display: none !important;
+}
+
+.crop-live-magnifier canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 50%;
+}
+
+.magnifier-crosshair {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.magnifier-crosshair .crosshair-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: #0284c7;
+  transform: translateY(-50%);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+}
+
+.magnifier-crosshair .crosshair-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: #0284c7;
+  transform: translateX(-50%);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+}
+
+.magnifier-crosshair .crosshair-center-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #0284c7;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
 }
 
 /* Editor Action Bar (Rotate, Flip, Crop) */
