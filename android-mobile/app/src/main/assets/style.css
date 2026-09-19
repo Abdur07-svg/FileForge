@@ -1739,6 +1739,47 @@ button, input, select, textarea {
   margin: 0 auto;
 }
 
+/* Modal Close & Icon Button */
+.modal-close-btn,
+.mobile-icon-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.modal-close-btn:hover,
+.modal-close-btn:active,
+.mobile-icon-btn:hover,
+.mobile-icon-btn:active {
+  background-color: var(--color-danger-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  transform: scale(1.06);
+}
+
+.modal-close-btn svg,
+.mobile-icon-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  display: block;
+}
+
 .save-filename-input-wrap {
   position: relative;
   display: flex;
