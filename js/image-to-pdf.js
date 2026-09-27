@@ -502,21 +502,31 @@ const ImageToPDF = (() => {
   // NON-DESTRUCTIVE RENDERING PIPELINE & 8 FILTER PRESETS
   // =========================================================================
 
-  function renderEditedImageToCanvas(canvas, imgObj, editState, targetWidth = null, targetHeight = null) {
-    const isRotated90 = (editState.rotate === 90 || editState.rotate === 270);
+  // =========================================================================
+  // NON-DESTRUCTIVE RENDERING PIPELINE & 8 FILTER PRESETS
+  // =========================================================================
 
-    let sx = 0, sy = 0, sw = imgObj.naturalWidth, sh = imgObj.naturalHeight;
-    if (editState.crop) {
-      sx = editState.crop.x;
-      sy = editState.crop.y;
-      sw = editState.crop.w;
-      sh = editState.crop.h;
+  function renderEditedImageToCanvas(canvas, imgObj, editState = {}, targetWidth = null, targetHeight = null) {
+    const rot = ((editState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
+
+    const natW = imgObj.naturalWidth || imgObj.width || 100;
+    const natH = imgObj.naturalHeight || imgObj.height || 100;
+    const fullRotatedW = isRotated90 ? natH : natW;
+    const fullRotatedH = isRotated90 ? natW : natH;
+
+    const hasCrop = editState.crop && editState.crop.w > 0 && editState.crop.h > 0;
+    let cropX = 0, cropY = 0, cropW = fullRotatedW, cropH = fullRotatedH;
+
+    if (hasCrop) {
+      cropX = Math.max(0, Math.min(fullRotatedW - 1, editState.crop.x));
+      cropY = Math.max(0, Math.min(fullRotatedH - 1, editState.crop.y));
+      cropW = Math.max(1, Math.min(fullRotatedW - cropX, editState.crop.w));
+      cropH = Math.max(1, Math.min(fullRotatedH - cropY, editState.crop.h));
     }
 
-    const unrotatedW = sw;
-    const unrotatedH = sh;
-    const finalW = isRotated90 ? unrotatedH : unrotatedW;
-    const finalH = isRotated90 ? unrotatedW : unrotatedH;
+    const finalW = hasCrop ? cropW : fullRotatedW;
+    const finalH = hasCrop ? cropH : fullRotatedH;
 
     canvas.width = targetWidth || finalW;
     canvas.height = targetHeight || finalH;
@@ -544,24 +554,45 @@ const ImageToPDF = (() => {
       filterCSS = 'contrast(1.35) brightness(1.15) saturate(0.9)';
     }
 
-    ctx.filter = filterCSS;
+    if (!hasCrop) {
+      ctx.save();
+      ctx.filter = filterCSS;
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      if (rot) ctx.rotate((rot * Math.PI) / 180);
+      const scaleX = editState.flipH ? -1 : 1;
+      const scaleY = editState.flipV ? -1 : 1;
+      ctx.scale(scaleX, scaleY);
 
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
+      const drawW = isRotated90 ? canvas.height : canvas.width;
+      const drawH = isRotated90 ? canvas.width : canvas.height;
+      ctx.drawImage(imgObj, -drawW / 2, -drawH / 2, drawW, drawH);
+      ctx.restore();
+      ctx.filter = 'none';
+    } else {
+      const rotCanvas = document.createElement('canvas');
+      rotCanvas.width = fullRotatedW;
+      rotCanvas.height = fullRotatedH;
+      const rotCtx = rotCanvas.getContext('2d');
 
-    if (editState.rotate) {
-      ctx.rotate((editState.rotate * Math.PI) / 180);
+      rotCtx.translate(fullRotatedW / 2, fullRotatedH / 2);
+      if (rot) rotCtx.rotate((rot * Math.PI) / 180);
+      const scaleX = editState.flipH ? -1 : 1;
+      const scaleY = editState.flipV ? -1 : 1;
+      rotCtx.scale(scaleX, scaleY);
+
+      const drawW = isRotated90 ? fullRotatedH : fullRotatedW;
+      const drawH = isRotated90 ? fullRotatedW : fullRotatedH;
+      rotCtx.drawImage(imgObj, -drawW / 2, -drawH / 2, drawW, drawH);
+
+      ctx.save();
+      ctx.filter = filterCSS;
+      ctx.drawImage(rotCanvas, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      ctx.filter = 'none';
+
+      rotCanvas.width = 1;
+      rotCanvas.height = 1;
     }
-    const scaleX = editState.flipH ? -1 : 1;
-    const scaleY = editState.flipV ? -1 : 1;
-    ctx.scale(scaleX, scaleY);
-
-    const drawW = isRotated90 ? canvas.height : canvas.width;
-    const drawH = isRotated90 ? canvas.width : canvas.height;
-
-    ctx.drawImage(imgObj, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
-    ctx.restore();
-    ctx.filter = 'none';
 
     // Secondary pixel pass for Clean Document / Sharp Black if needed
     if (f === 'clean-document') {
@@ -600,17 +631,21 @@ const ImageToPDF = (() => {
   // IMAGE EDITOR MODAL WITH LIVE FILTER CARDS, 8-HANDLE CROP & LIVE MAGNIFIER
   // =========================================================================
 
+  let initialSavedStateJson = '';
+  let hasCropRectChanged = false;
+
   async function openEditor(index) {
     if (index < 0 || index >= imageList.length) return;
     currentEditingIndex = index;
     const item = imageList[index];
 
     editorTempState = JSON.parse(JSON.stringify(item.editState));
+    initialSavedStateJson = JSON.stringify(item.editState);
+    hasCropRectChanged = false;
     editorCropActive = false;
     editorCropRatio = 'free';
 
     if (dom.editorFilename) dom.editorFilename.textContent = item.name;
-    if (dom.editorDimsBadge) dom.editorDimsBadge.textContent = `${item.width} × ${item.height} px`;
     if (dom.editorPageInfo) dom.editorPageInfo.textContent = `Page ${currentEditingIndex + 1} of ${imageList.length}`;
     if (dom.editorPrevBtn) dom.editorPrevBtn.disabled = (currentEditingIndex === 0);
     if (dom.editorNextBtn) dom.editorNextBtn.disabled = (currentEditingIndex === imageList.length - 1);
@@ -629,7 +664,12 @@ const ImageToPDF = (() => {
   async function switchEditorPage(targetIndex) {
     if (targetIndex < 0 || targetIndex >= imageList.length || targetIndex === currentEditingIndex) return;
 
-    // 1. Save current page's temporary edits to its independent state
+    // 1. If actively cropping, commit crop box into editorTempState before switching
+    if (editorCropActive) {
+      commitActiveCropRect();
+    }
+
+    // 2. Save current page's temporary edits to its independent state
     if (currentEditingIndex >= 0 && currentEditingIndex < imageList.length) {
       const curItem = imageList[currentEditingIndex];
       curItem.editState = JSON.parse(JSON.stringify(editorTempState));
@@ -641,7 +681,7 @@ const ImageToPDF = (() => {
       curItem.height = offscreen.height;
     }
 
-    // 2. Open new page
+    // 3. Open new page
     await openEditor(targetIndex);
     renderList();
     updatePDFPreview();
@@ -706,23 +746,46 @@ const ImageToPDF = (() => {
     const maxDisplayW = Math.min(540, stageW);
     const maxDisplayH = Math.min(380, Math.max(180, window.innerHeight * 0.42));
 
-    const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
-    let baseW = editorTempState.crop ? editorTempState.crop.w : (editorImgObj.naturalWidth || editorImgObj.width);
-    let baseH = editorTempState.crop ? editorTempState.crop.h : (editorImgObj.naturalHeight || editorImgObj.height);
-    let dispW = isRotated90 ? baseH : baseW;
-    let dispH = isRotated90 ? baseW : baseH;
+    const rot = ((editorTempState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
+    const natW = editorImgObj.naturalWidth || editorImgObj.width || 100;
+    const natH = editorImgObj.naturalHeight || editorImgObj.height || 100;
+    const fullRotatedW = isRotated90 ? natH : natW;
+    const fullRotatedH = isRotated90 ? natW : natH;
 
-    const scale = Math.min(maxDisplayW / dispW, maxDisplayH / dispH, 1);
-    const canvasW = Math.max(80, Math.round(dispW * scale));
-    const canvasH = Math.max(80, Math.round(dispH * scale));
+    if (editorCropActive) {
+      // When actively cropping, render full uncropped transformed image so user can position crop rect
+      const scale = Math.min(maxDisplayW / fullRotatedW, maxDisplayH / fullRotatedH, 1);
+      const canvasW = Math.max(80, Math.round(fullRotatedW * scale));
+      const canvasH = Math.max(80, Math.round(fullRotatedH * scale));
 
-    renderEditedImageToCanvas(dom.editorCanvas, editorImgObj, editorTempState, canvasW, canvasH);
+      const displayState = {
+        crop: null,
+        rotate: editorTempState.rotate,
+        flipH: editorTempState.flipH,
+        flipV: editorTempState.flipV,
+        filter: editorTempState.filter
+      };
+
+      renderEditedImageToCanvas(dom.editorCanvas, editorImgObj, displayState, canvasW, canvasH);
+      drawCropOverlay(dom.editorCanvas);
+    } else {
+      let baseW = editorTempState.crop ? editorTempState.crop.w : fullRotatedW;
+      let baseH = editorTempState.crop ? editorTempState.crop.h : fullRotatedH;
+
+      const scale = Math.min(maxDisplayW / baseW, maxDisplayH / baseH, 1);
+      const canvasW = Math.max(80, Math.round(baseW * scale));
+      const canvasH = Math.max(80, Math.round(baseH * scale));
+
+      renderEditedImageToCanvas(dom.editorCanvas, editorImgObj, editorTempState, canvasW, canvasH);
+    }
 
     dom.editorCanvas.style.maxWidth = '100%';
     dom.editorCanvas.style.height = 'auto';
 
-    if (editorCropActive) {
-      drawCropOverlay(dom.editorCanvas);
+    if (dom.editorDimsBadge) {
+      const currentDims = getItemEffectiveDimensions({ editState: editorTempState, originalWidth: natW, originalHeight: natH });
+      dom.editorDimsBadge.textContent = `${currentDims.width} × ${currentDims.height} px`;
     }
   }
 
@@ -738,9 +801,15 @@ const ImageToPDF = (() => {
   }
 
   function bindEditorEvents() {
-    if (dom.editorCloseBtn) dom.editorCloseBtn.addEventListener('click', closeEditor);
-    if (dom.editorCancelBtn) dom.editorCancelBtn.addEventListener('click', closeEditor);
+    if (dom.editorCloseBtn) dom.editorCloseBtn.addEventListener('click', handleCancelClick);
+    if (dom.editorCancelBtn) dom.editorCancelBtn.addEventListener('click', handleCancelClick);
     if (dom.editorSaveBtn) dom.editorSaveBtn.addEventListener('click', saveEditorChanges);
+
+    // Discard Confirmation Modal buttons
+    const keepBtn = document.getElementById('i2p-discard-keep-btn');
+    const discardBtn = document.getElementById('i2p-discard-confirm-btn');
+    if (keepBtn) keepBtn.addEventListener('click', keepEditing);
+    if (discardBtn) discardBtn.addEventListener('click', confirmDiscard);
 
     // Page-by-Page navigation buttons
     if (dom.editorPrevBtn) {
@@ -762,7 +831,10 @@ const ImageToPDF = (() => {
         dom.cropToggleBtn.classList.toggle('active', editorCropActive);
         if (dom.cropControlsPanel) dom.cropControlsPanel.classList.toggle('hidden', !editorCropActive);
         if (dom.editorMagnifier) dom.editorMagnifier.classList.add('hidden');
-        if (editorCropActive) initCropRect();
+        if (editorCropActive) {
+          hasCropRectChanged = true;
+          initCropRect();
+        }
         drawEditorCanvas();
       });
     }
@@ -771,6 +843,7 @@ const ImageToPDF = (() => {
       dom.cropRatioBtns.forEach(btn => {
         btn.addEventListener('click', () => {
           editorCropRatio = btn.dataset.ratio;
+          hasCropRectChanged = true;
           dom.cropRatioBtns.forEach(b => b.classList.toggle('active', b === btn));
           adjustCropRectToRatio();
           drawEditorCanvas();
@@ -778,7 +851,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    if (dom.applyCropBtn) dom.applyCropBtn.addEventListener('click', applyCropToTempState);
     if (dom.cancelCropBtn) {
       dom.cancelCropBtn.addEventListener('click', () => {
         editorCropActive = false;
@@ -788,10 +860,12 @@ const ImageToPDF = (() => {
         drawEditorCanvas();
       });
     }
+
     if (dom.resetCropBtn) {
       dom.resetCropBtn.addEventListener('click', () => {
         editorTempState.crop = null;
         editorCropActive = false;
+        hasCropRectChanged = true;
         if (dom.cropToggleBtn) dom.cropToggleBtn.classList.remove('active');
         if (dom.cropControlsPanel) dom.cropControlsPanel.classList.add('hidden');
         if (dom.editorMagnifier) dom.editorMagnifier.classList.add('hidden');
@@ -804,32 +878,22 @@ const ImageToPDF = (() => {
     // Rotate & Flip
     if (dom.rotateCwBtn) {
       dom.rotateCwBtn.addEventListener('click', () => {
-        editorTempState.rotate = (editorTempState.rotate + 90) % 360;
-        drawEditorCanvas();
-        renderFilterPresetCards();
+        rotateCW();
       });
     }
     if (dom.rotateCcwBtn) {
       dom.rotateCcwBtn.addEventListener('click', () => {
-        editorTempState.rotate = (editorTempState.rotate - 90 + 360) % 360;
-        drawEditorCanvas();
-        renderFilterPresetCards();
+        rotateCCW();
       });
     }
     if (dom.flipHBtn) {
       dom.flipHBtn.addEventListener('click', () => {
-        editorTempState.flipH = !editorTempState.flipH;
-        dom.flipHBtn.classList.toggle('active', editorTempState.flipH);
-        drawEditorCanvas();
-        renderFilterPresetCards();
+        flipH();
       });
     }
     if (dom.flipVBtn) {
       dom.flipVBtn.addEventListener('click', () => {
-        editorTempState.flipV = !editorTempState.flipV;
-        dom.flipVBtn.classList.toggle('active', editorTempState.flipV);
-        drawEditorCanvas();
-        renderFilterPresetCards();
+        flipV();
       });
     }
 
@@ -846,16 +910,125 @@ const ImageToPDF = (() => {
     }
   }
 
+  function rotateCW() {
+    const rot = ((editorTempState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
+    const natW = editorImgObj ? (editorImgObj.naturalWidth || editorImgObj.width || 100) : 100;
+    const natH = editorImgObj ? (editorImgObj.naturalHeight || editorImgObj.height || 100) : 100;
+    const currentW = isRotated90 ? natH : natW;
+    const currentH = isRotated90 ? natW : natH;
+
+    if (editorTempState.crop) {
+      editorTempState.crop = {
+        x: Math.max(0, currentH - (editorTempState.crop.y + editorTempState.crop.h)),
+        y: Math.max(0, editorTempState.crop.x),
+        w: editorTempState.crop.h,
+        h: editorTempState.crop.w
+      };
+    }
+    editorTempState.rotate = (editorTempState.rotate + 90) % 360;
+    if (editorCropActive) {
+      drawEditorCanvas();
+      initCropRect();
+    }
+    drawEditorCanvas();
+    renderFilterPresetCards();
+  }
+
+  function rotateCCW() {
+    const rot = ((editorTempState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
+    const natW = editorImgObj ? (editorImgObj.naturalWidth || editorImgObj.width || 100) : 100;
+    const natH = editorImgObj ? (editorImgObj.naturalHeight || editorImgObj.height || 100) : 100;
+    const currentW = isRotated90 ? natH : natW;
+    const currentH = isRotated90 ? natW : natH;
+
+    if (editorTempState.crop) {
+      editorTempState.crop = {
+        x: Math.max(0, editorTempState.crop.y),
+        y: Math.max(0, currentW - (editorTempState.crop.x + editorTempState.crop.w)),
+        w: editorTempState.crop.h,
+        h: editorTempState.crop.w
+      };
+    }
+    editorTempState.rotate = (editorTempState.rotate - 90 + 360) % 360;
+    if (editorCropActive) {
+      drawEditorCanvas();
+      initCropRect();
+    }
+    drawEditorCanvas();
+    renderFilterPresetCards();
+  }
+
+  function flipH() {
+    const rot = ((editorTempState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
+    const natW = editorImgObj ? (editorImgObj.naturalWidth || editorImgObj.width || 100) : 100;
+    const natH = editorImgObj ? (editorImgObj.naturalHeight || editorImgObj.height || 100) : 100;
+    const currentW = isRotated90 ? natH : natW;
+
+    if (editorTempState.crop) {
+      editorTempState.crop.x = Math.max(0, currentW - (editorTempState.crop.x + editorTempState.crop.w));
+    }
+    editorTempState.flipH = !editorTempState.flipH;
+    if (dom.flipHBtn) dom.flipHBtn.classList.toggle('active', editorTempState.flipH);
+    if (editorCropActive) {
+      drawEditorCanvas();
+      initCropRect();
+    }
+    drawEditorCanvas();
+    renderFilterPresetCards();
+  }
+
+  function flipV() {
+    const rot = ((editorTempState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
+    const natW = editorImgObj ? (editorImgObj.naturalWidth || editorImgObj.width || 100) : 100;
+    const natH = editorImgObj ? (editorImgObj.naturalHeight || editorImgObj.height || 100) : 100;
+    const currentH = isRotated90 ? natW : natH;
+
+    if (editorTempState.crop) {
+      editorTempState.crop.y = Math.max(0, currentH - (editorTempState.crop.y + editorTempState.crop.h));
+    }
+    editorTempState.flipV = !editorTempState.flipV;
+    if (dom.flipVBtn) dom.flipVBtn.classList.toggle('active', editorTempState.flipV);
+    if (editorCropActive) {
+      drawEditorCanvas();
+      initCropRect();
+    }
+    drawEditorCanvas();
+    renderFilterPresetCards();
+  }
+
   function initCropRect() {
-    if (!dom.editorCanvas) return;
+    if (!dom.editorCanvas || !editorImgObj) return;
     const cw = dom.editorCanvas.width;
     const ch = dom.editorCanvas.height;
-    editorCropRect = {
-      x: Math.round(cw * 0.08),
-      y: Math.round(ch * 0.08),
-      w: Math.round(cw * 0.84),
-      h: Math.round(ch * 0.84)
-    };
+
+    const rot = ((editorTempState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
+    const natW = editorImgObj.naturalWidth || editorImgObj.width || 100;
+    const natH = editorImgObj.naturalHeight || editorImgObj.height || 100;
+    const fullRotatedW = isRotated90 ? natH : natW;
+    const fullRotatedH = isRotated90 ? natW : natH;
+
+    if (editorTempState.crop && editorTempState.crop.w > 0 && editorTempState.crop.h > 0) {
+      const scaleX = cw / fullRotatedW;
+      const scaleY = ch / fullRotatedH;
+      editorCropRect = {
+        x: Math.round(editorTempState.crop.x * scaleX),
+        y: Math.round(editorTempState.crop.y * scaleY),
+        w: Math.round(editorTempState.crop.w * scaleX),
+        h: Math.round(editorTempState.crop.h * scaleY)
+      };
+    } else {
+      editorCropRect = {
+        x: Math.round(cw * 0.08),
+        y: Math.round(ch * 0.08),
+        w: Math.round(cw * 0.84),
+        h: Math.round(ch * 0.84)
+      };
+    }
     adjustCropRectToRatio();
   }
 
@@ -867,11 +1040,11 @@ const ImageToPDF = (() => {
     else if (editorCropRatio === '16:9') targetRatio = 16 / 9;
     else if (editorCropRatio === 'a4') targetRatio = 210 / 297;
 
-    const currentRatio = editorCropRect.w / editorCropRect.h;
+    const currentRatio = editorCropRect.w / (editorCropRect.h || 1);
     if (currentRatio > targetRatio) {
-      editorCropRect.w = editorCropRect.h * targetRatio;
+      editorCropRect.w = Math.round(editorCropRect.h * targetRatio);
     } else {
-      editorCropRect.h = editorCropRect.w / targetRatio;
+      editorCropRect.h = Math.round(editorCropRect.w / targetRatio);
     }
   }
 
@@ -1016,9 +1189,12 @@ const ImageToPDF = (() => {
     magCtx.clearRect(0, 0, magW, magH);
 
     // Render full uncropped transformed image to offscreen canvas
-    const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
-    const baseW = isRotated90 ? (editorImgObj.naturalHeight || editorImgObj.height) : (editorImgObj.naturalWidth || editorImgObj.width);
-    const baseH = isRotated90 ? (editorImgObj.naturalWidth || editorImgObj.width) : (editorImgObj.naturalHeight || editorImgObj.height);
+    const rot = ((editorTempState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
+    const natW = editorImgObj.naturalWidth || editorImgObj.width || 100;
+    const natH = editorImgObj.naturalHeight || editorImgObj.height || 100;
+    const baseW = isRotated90 ? natH : natW;
+    const baseH = isRotated90 ? natW : natH;
 
     const offscreen = document.createElement('canvas');
     const tempStateNoCrop = {
@@ -1055,6 +1231,7 @@ const ImageToPDF = (() => {
     cropDragMode = getCropHandleAt(x, y);
     if (cropDragMode) {
       isDraggingCrop = true;
+      hasCropRectChanged = true;
       cropDragStart = { x, y, rectX: editorCropRect.x, rectY: editorCropRect.y, rectW: editorCropRect.w, rectH: editorCropRect.h };
       updateCropDrag(x, y);
     }
@@ -1068,6 +1245,7 @@ const ImageToPDF = (() => {
     if (cropDragMode) {
       e.preventDefault();
       isDraggingCrop = true;
+      hasCropRectChanged = true;
       cropDragStart = { x, y, rectX: editorCropRect.x, rectY: editorCropRect.y, rectW: editorCropRect.w, rectH: editorCropRect.h };
       updateCropDrag(x, y);
     }
@@ -1161,41 +1339,37 @@ const ImageToPDF = (() => {
     renderMagnifier(focusCanvasX, focusCanvasY);
   }
 
-  function applyCropToTempState() {
+  function commitActiveCropRect() {
     if (!dom.editorCanvas || !editorImgObj) return;
 
     const cw = dom.editorCanvas.width;
     const ch = dom.editorCanvas.height;
-    const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
+    const rot = ((editorTempState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
 
-    let baseW = editorImgObj.naturalWidth || editorImgObj.width;
-    let baseH = editorImgObj.naturalHeight || editorImgObj.height;
-    let dispW = isRotated90 ? baseH : baseW;
-    let dispH = isRotated90 ? baseW : baseH;
+    const natW = editorImgObj.naturalWidth || editorImgObj.width || 100;
+    const natH = editorImgObj.naturalHeight || editorImgObj.height || 100;
+    const fullRotatedW = isRotated90 ? natH : natW;
+    const fullRotatedH = isRotated90 ? natW : natH;
 
-    const scaleX = dispW / cw;
-    const scaleY = dispH / ch;
+    const scaleX = fullRotatedW / cw;
+    const scaleY = fullRotatedH / ch;
 
     editorTempState.crop = {
-      x: Math.max(0, Math.round(editorCropRect.x * scaleX)),
-      y: Math.max(0, Math.round(editorCropRect.y * scaleY)),
-      w: Math.min(dispW, Math.round(editorCropRect.w * scaleX)),
-      h: Math.min(dispH, Math.round(editorCropRect.h * scaleY))
+      x: Math.max(0, Math.min(fullRotatedW - 1, Math.round(editorCropRect.x * scaleX))),
+      y: Math.max(0, Math.min(fullRotatedH - 1, Math.round(editorCropRect.y * scaleY))),
+      w: Math.max(1, Math.min(fullRotatedW, Math.round(editorCropRect.w * scaleX))),
+      h: Math.max(1, Math.min(fullRotatedH, Math.round(editorCropRect.h * scaleY)))
     };
-
-    editorCropActive = false;
-    if (dom.cropToggleBtn) dom.cropToggleBtn.classList.remove('active');
-    if (dom.cropControlsPanel) dom.cropControlsPanel.classList.add('hidden');
-    if (dom.editorMagnifier) dom.editorMagnifier.classList.add('hidden');
-
-    drawEditorCanvas();
-    renderFilterPresetCards();
-    Utils.showToast('Crop applied! Click Save Changes to keep.', 'info');
   }
 
   async function saveEditorChanges() {
     if (currentEditingIndex < 0 || currentEditingIndex >= imageList.length) return;
     const item = imageList[currentEditingIndex];
+
+    if (editorCropActive) {
+      commitActiveCropRect();
+    }
 
     item.editState = JSON.parse(JSON.stringify(editorTempState));
 
@@ -1208,15 +1382,61 @@ const ImageToPDF = (() => {
 
     renderList();
     updatePDFPreview();
-    closeEditor();
+    forceCloseEditor();
     Utils.showToast(`Saved changes for "${item.name}"!`, 'success');
   }
 
-  function closeEditor() {
+  function hasChanges() {
+    if (JSON.stringify(editorTempState) !== initialSavedStateJson) return true;
+    if (hasCropRectChanged) return true;
+    if (editorCropActive && (!currentEditingIndex >= 0 || !imageList[currentEditingIndex] || !imageList[currentEditingIndex].editState.crop)) return true;
+    return false;
+  }
+
+  function handleCancelClick() {
+    if (!hasChanges()) {
+      forceCloseEditor();
+      return;
+    }
+    showDiscardModal();
+  }
+
+  function showDiscardModal() {
+    const modal = document.getElementById('i2p-discard-confirm-modal');
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  function hideDiscardModal() {
+    const modal = document.getElementById('i2p-discard-confirm-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function confirmDiscard() {
+    hideDiscardModal();
+    if (currentEditingIndex >= 0 && currentEditingIndex < imageList.length) {
+      editorTempState = JSON.parse(JSON.stringify(imageList[currentEditingIndex].editState));
+    }
+    forceCloseEditor();
+  }
+
+  function keepEditing() {
+    hideDiscardModal();
+  }
+
+  function forceCloseEditor() {
+    hideDiscardModal();
     if (dom.editorModal) dom.editorModal.classList.add('hidden');
+    if (dom.editorMagnifier) dom.editorMagnifier.classList.add('hidden');
     currentEditingIndex = -1;
     editorImgObj = null;
     editorCropActive = false;
+    isDraggingCrop = false;
+    cropDragMode = null;
+    hasCropRectChanged = false;
+  }
+
+  function closeEditor() {
+    handleCancelClick();
   }
 
   // =========================================================================
@@ -1638,15 +1858,14 @@ const ImageToPDF = (() => {
 
   function getItemEffectiveDimensions(item) {
     if (!item) return { width: 100, height: 100 };
+    if (item.editState && item.editState.crop && item.editState.crop.w > 0 && item.editState.crop.h > 0) {
+      return { width: Math.max(1, item.editState.crop.w), height: Math.max(1, item.editState.crop.h) };
+    }
     let w = item.originalWidth || item.width || 100;
     let h = item.originalHeight || item.height || 100;
 
-    if (item.editState && item.editState.crop) {
-      w = item.editState.crop.w;
-      h = item.editState.crop.h;
-    }
-
-    if (item.editState && (item.editState.rotate === 90 || item.editState.rotate === 270)) {
+    const rot = ((item.editState ? item.editState.rotate : 0) % 360 + 360) % 360;
+    if (rot === 90 || rot === 270) {
       const temp = w;
       w = h;
       h = temp;

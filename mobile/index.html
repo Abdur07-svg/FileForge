@@ -1459,9 +1459,8 @@
               <button type="button" class="mobile-crop-ratio-btn" data-ratio="a4">A4</button>
             </div>
             <div style="display: flex; gap: 8px;">
-              <button type="button" id="btn-i2p-apply-crop" class="btn btn-xs btn-primary" style="flex: 1;">Apply Crop</button>
-              <button type="button" id="btn-i2p-reset-crop" class="btn btn-xs btn-secondary">Reset</button>
-              <button type="button" id="btn-i2p-cancel-crop" class="btn btn-xs btn-secondary">Cancel</button>
+              <button type="button" id="btn-i2p-reset-crop" class="btn btn-xs btn-secondary" style="flex: 1;">Reset Crop</button>
+              <button type="button" id="btn-i2p-cancel-crop" class="btn btn-xs btn-ghost" style="flex: 1;">Close Crop Box</button>
             </div>
           </div>
 
@@ -1475,8 +1474,23 @@
         </div>
 
         <div class="mobile-modal-footer">
-          <button type="button" id="btn-i2p-discard-editor" class="btn btn-secondary" style="flex: 1;">Discard</button>
+          <button type="button" id="btn-i2p-discard-editor" class="btn btn-secondary" style="flex: 1;">Cancel</button>
           <button type="button" id="btn-i2p-save-editor" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Discard Confirmation Modal -->
+    <div id="mobile-i2p-discard-modal" class="mobile-modal-overlay hidden" role="dialog" aria-modal="true" style="z-index: 100000;">
+      <div class="mobile-modal-sheet" style="text-align: center; padding: 24px 20px; max-width: 360px; margin: auto; border-radius: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">Discard Changes?</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 18px; line-height: 1.4;">Your crop changes haven't been saved.</p>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="btn-mobile-i2p-keep" class="btn btn-secondary" style="flex: 1;">Keep Editing</button>
+          <button type="button" id="btn-mobile-i2p-discard" class="btn btn-danger" style="flex: 1;">Discard</button>
         </div>
       </div>
     </div>

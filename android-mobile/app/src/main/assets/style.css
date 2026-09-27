@@ -893,9 +893,33 @@ button, input, select, textarea {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 280px;
+  max-height: clamp(380px, 55vh, 500px);
   overflow-y: auto;
-  padding-right: 4px;
+  overflow-x: hidden;
+  padding: 2px 4px 2px 2px;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.mobile-dynamic-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.mobile-dynamic-list::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.mobile-dynamic-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.mobile-dynamic-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .mobile-reorder-item {
@@ -906,6 +930,11 @@ button, input, select, textarea {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 8px 10px;
+  flex-shrink: 0;
+  min-height: fit-content;
+  height: auto;
+  overflow: visible;
+  box-sizing: border-box;
 }
 
 .reorder-thumb img {

@@ -1873,6 +1873,9 @@ body.is-native-app #apk-download-btn {
   border-radius: var(--radius-md);
   padding: 12px 16px;
   transition: all var(--transition-fast);
+  flex-shrink: 0;
+  min-height: fit-content;
+  height: auto;
 }
 
 .i2p-item-card:hover, .pm-item-card:hover {
@@ -3607,6 +3610,38 @@ input.form-control.input-success {
    Tool 51: Image to PDF & Image Editor Styles
    ========================================================================== */
 
+#i2p-image-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: clamp(500px, 58vh, 580px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 6px 4px 2px;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+#i2p-image-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#i2p-image-list::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+#i2p-image-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+#i2p-image-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
 .i2p-item-card {
   display: flex;
   flex-direction: column;
@@ -3615,13 +3650,16 @@ input.form-control.input-success {
   background-color: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  margin-bottom: 10px;
+  margin-bottom: 0;
   transition: all var(--transition-fast);
   user-select: none;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
+  flex-shrink: 0;
+  min-height: fit-content;
+  height: auto;
+  overflow: visible;
 }
 
 .i2p-item-card:hover {
@@ -4405,7 +4443,13 @@ input.form-control.input-success {
     font-size: 0.96rem;
   }
 
-  /* Image Reorder Item Cards on Mobile */
+  /* Image Reorder Item Container & Cards on Mobile */
+  #i2p-image-list {
+    max-height: clamp(400px, 55vh, 500px);
+    padding-right: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .i2p-item-card {
     display: flex;
     flex-direction: column;
@@ -4414,6 +4458,10 @@ input.form-control.input-success {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+    flex-shrink: 0;
+    min-height: fit-content;
+    height: auto;
+    overflow: visible;
   }
 
   .i2p-item-main-row {

@@ -1145,6 +1145,33 @@ const MobileApp = (() => {
     // =========================================================================
     // IMAGE EDITOR MODAL (TRANSFORM, CROP & FILTER PRESETS)
     // =========================================================================
+    let mobileInitialSavedState = '';
+    let mobileCropRectChanged = false;
+
+    // Discard Confirmation Modal DOM
+    const discardModal = document.getElementById('mobile-i2p-discard-modal');
+    const btnDiscardKeep = document.getElementById('btn-mobile-i2p-keep');
+    const btnDiscardConfirm = document.getElementById('btn-mobile-i2p-discard');
+
+    if (btnDiscardKeep) {
+      btnDiscardKeep.addEventListener('click', () => {
+        if (discardModal) discardModal.classList.add('hidden');
+      });
+    }
+
+    if (btnDiscardConfirm) {
+      btnDiscardConfirm.addEventListener('click', () => {
+        if (discardModal) discardModal.classList.add('hidden');
+        if (editingIndex >= 0 && editingIndex < imageItems.length) {
+          editorTempState = JSON.parse(JSON.stringify(imageItems[editingIndex].editState));
+        }
+        forceCloseEditorModal();
+      });
+    }
+
+    // =========================================================================
+    // IMAGE EDITOR MODAL (TRANSFORM, CROP & FILTER PRESETS)
+    // =========================================================================
     async function openEditorModal(index) {
       if (index < 0 || index >= imageItems.length) return;
       editingIndex = index;
@@ -1152,6 +1179,8 @@ const MobileApp = (() => {
       if (!item) return;
 
       editorTempState = JSON.parse(JSON.stringify(item.editState));
+      mobileInitialSavedState = JSON.stringify(item.editState);
+      mobileCropRectChanged = false;
       editorCropActive = false;
       editorCropRatio = 'free';
 
@@ -1180,7 +1209,12 @@ const MobileApp = (() => {
     async function switchEditorPage(targetIndex) {
       if (targetIndex < 0 || targetIndex >= imageItems.length || targetIndex === editingIndex) return;
 
-      // 1. Save current page's temporary edits to its independent state
+      // 1. If actively cropping, commit crop box into editorTempState before switching
+      if (editorCropActive) {
+        commitMobileActiveCropRect();
+      }
+
+      // 2. Save current page's temporary edits to its independent state
       if (editingIndex >= 0 && editingIndex < imageItems.length) {
         const curItem = imageItems[editingIndex];
         curItem.editState = JSON.parse(JSON.stringify(editorTempState));
@@ -1192,7 +1226,7 @@ const MobileApp = (() => {
         curItem.height = offscreen.height;
       }
 
-      // 2. Open new page
+      // 3. Open new page
       await openEditorModal(targetIndex);
       renderImageList();
       updateLivePreview();
@@ -1212,7 +1246,23 @@ const MobileApp = (() => {
       });
     }
 
-    function closeEditorModal() {
+    function hasMobileChanges() {
+      if (JSON.stringify(editorTempState) !== mobileInitialSavedState) return true;
+      if (mobileCropRectChanged) return true;
+      if (editorCropActive && (!editingIndex >= 0 || !imageItems[editingIndex] || !imageItems[editingIndex].editState.crop)) return true;
+      return false;
+    }
+
+    function handleMobileCancelClick() {
+      if (!hasMobileChanges()) {
+        forceCloseEditorModal();
+        return;
+      }
+      if (discardModal) discardModal.classList.remove('hidden');
+    }
+
+    function forceCloseEditorModal() {
+      if (discardModal) discardModal.classList.add('hidden');
       if (editorModal) editorModal.classList.add('hidden');
       if (editorMagnifier) editorMagnifier.classList.add('hidden');
       editingIndex = -1;
@@ -1220,15 +1270,47 @@ const MobileApp = (() => {
       editorCropActive = false;
       isCropDragging = false;
       cropDragMode = null;
+      mobileCropRectChanged = false;
     }
 
-    if (editorCloseBtn) editorCloseBtn.addEventListener('click', closeEditorModal);
-    if (editorDiscardBtn) editorDiscardBtn.addEventListener('click', closeEditorModal);
+    function closeEditorModal() {
+      handleMobileCancelClick();
+    }
+
+    if (editorCloseBtn) editorCloseBtn.addEventListener('click', handleMobileCancelClick);
+    if (editorDiscardBtn) editorDiscardBtn.addEventListener('click', handleMobileCancelClick);
+
+    function commitMobileActiveCropRect() {
+      if (!editorCanvas || !editingImgObj) return;
+      const cw = editorCanvas.width;
+      const ch = editorCanvas.height;
+      const rot = ((editorTempState.rotate % 360) + 360) % 360;
+      const isRotated90 = (rot === 90 || rot === 270);
+      const natW = editingImgObj.naturalWidth || editingImgObj.width || 100;
+      const natH = editingImgObj.naturalHeight || editingImgObj.height || 100;
+      const fullRotatedW = isRotated90 ? natH : natW;
+      const fullRotatedH = isRotated90 ? natW : natH;
+
+      const scaleX = fullRotatedW / cw;
+      const scaleY = fullRotatedH / ch;
+
+      editorTempState.crop = {
+        x: Math.max(0, Math.min(fullRotatedW - 1, Math.round(editorCropRect.x * scaleX))),
+        y: Math.max(0, Math.min(fullRotatedH - 1, Math.round(editorCropRect.y * scaleY))),
+        w: Math.max(1, Math.min(fullRotatedW, Math.round(editorCropRect.w * scaleX))),
+        h: Math.max(1, Math.min(fullRotatedH, Math.round(editorCropRect.h * scaleY)))
+      };
+    }
 
     if (editorSaveBtn) {
       editorSaveBtn.addEventListener('click', async () => {
         if (editingIndex < 0 || editingIndex >= imageItems.length) return;
         const item = imageItems[editingIndex];
+
+        if (editorCropActive) {
+          commitMobileActiveCropRect();
+        }
+
         item.editState = JSON.parse(JSON.stringify(editorTempState));
 
         // Create updated thumbnail preview
@@ -1240,7 +1322,7 @@ const MobileApp = (() => {
 
         renderImageList();
         updateLivePreview();
-        closeEditorModal();
+        forceCloseEditorModal();
         MobileUtils.showToast('Changes saved!', 'success');
       });
     }
@@ -1248,7 +1330,27 @@ const MobileApp = (() => {
     // Transform buttons
     if (editorRotateCw) {
       editorRotateCw.addEventListener('click', () => {
+        mobileCropRectChanged = true;
+        const rot = ((editorTempState.rotate % 360) + 360) % 360;
+        const isRotated90 = (rot === 90 || rot === 270);
+        const natW = editingImgObj ? (editingImgObj.naturalWidth || editingImgObj.width || 100) : 100;
+        const natH = editingImgObj ? (editingImgObj.naturalHeight || editingImgObj.height || 100) : 100;
+        const currentW = isRotated90 ? natH : natW;
+        const currentH = isRotated90 ? natW : natH;
+
+        if (editorTempState.crop) {
+          editorTempState.crop = {
+            x: Math.max(0, currentH - (editorTempState.crop.y + editorTempState.crop.h)),
+            y: Math.max(0, editorTempState.crop.x),
+            w: editorTempState.crop.h,
+            h: editorTempState.crop.w
+          };
+        }
         editorTempState.rotate = (editorTempState.rotate + 90) % 360;
+        if (editorCropActive) {
+          drawEditorCanvas();
+          initCropRect();
+        }
         drawEditorCanvas();
         renderFilterCards();
       });
@@ -1256,7 +1358,27 @@ const MobileApp = (() => {
 
     if (editorRotateCcw) {
       editorRotateCcw.addEventListener('click', () => {
+        mobileCropRectChanged = true;
+        const rot = ((editorTempState.rotate % 360) + 360) % 360;
+        const isRotated90 = (rot === 90 || rot === 270);
+        const natW = editingImgObj ? (editingImgObj.naturalWidth || editingImgObj.width || 100) : 100;
+        const natH = editingImgObj ? (editingImgObj.naturalHeight || editingImgObj.height || 100) : 100;
+        const currentW = isRotated90 ? natH : natW;
+        const currentH = isRotated90 ? natW : natH;
+
+        if (editorTempState.crop) {
+          editorTempState.crop = {
+            x: Math.max(0, editorTempState.crop.y),
+            y: Math.max(0, currentW - (editorTempState.crop.x + editorTempState.crop.w)),
+            w: editorTempState.crop.h,
+            h: editorTempState.crop.w
+          };
+        }
         editorTempState.rotate = (editorTempState.rotate - 90 + 360) % 360;
+        if (editorCropActive) {
+          drawEditorCanvas();
+          initCropRect();
+        }
         drawEditorCanvas();
         renderFilterCards();
       });
@@ -1264,7 +1386,22 @@ const MobileApp = (() => {
 
     if (editorFlipH) {
       editorFlipH.addEventListener('click', () => {
+        mobileCropRectChanged = true;
+        const rot = ((editorTempState.rotate % 360) + 360) % 360;
+        const isRotated90 = (rot === 90 || rot === 270);
+        const natW = editingImgObj ? (editingImgObj.naturalWidth || editingImgObj.width || 100) : 100;
+        const natH = editingImgObj ? (editingImgObj.naturalHeight || editingImgObj.height || 100) : 100;
+        const currentW = isRotated90 ? natH : natW;
+
+        if (editorTempState.crop) {
+          editorTempState.crop.x = Math.max(0, currentW - (editorTempState.crop.x + editorTempState.crop.w));
+        }
         editorTempState.flipH = !editorTempState.flipH;
+        if (editorFlipH) editorFlipH.classList.toggle('active', editorTempState.flipH);
+        if (editorCropActive) {
+          drawEditorCanvas();
+          initCropRect();
+        }
         drawEditorCanvas();
         renderFilterCards();
       });
@@ -1272,7 +1409,22 @@ const MobileApp = (() => {
 
     if (editorFlipV) {
       editorFlipV.addEventListener('click', () => {
+        mobileCropRectChanged = true;
+        const rot = ((editorTempState.rotate % 360) + 360) % 360;
+        const isRotated90 = (rot === 90 || rot === 270);
+        const natW = editingImgObj ? (editingImgObj.naturalWidth || editingImgObj.width || 100) : 100;
+        const natH = editingImgObj ? (editingImgObj.naturalHeight || editingImgObj.height || 100) : 100;
+        const currentH = isRotated90 ? natW : natH;
+
+        if (editorTempState.crop) {
+          editorTempState.crop.y = Math.max(0, currentH - (editorTempState.crop.y + editorTempState.crop.h));
+        }
         editorTempState.flipV = !editorTempState.flipV;
+        if (editorFlipV) editorFlipV.classList.toggle('active', editorTempState.flipV);
+        if (editorCropActive) {
+          drawEditorCanvas();
+          initCropRect();
+        }
         drawEditorCanvas();
         renderFilterCards();
       });
@@ -1285,7 +1437,10 @@ const MobileApp = (() => {
         editorToggleCropBtn.classList.toggle('active', editorCropActive);
         if (editorCropPanel) editorCropPanel.classList.toggle('hidden', !editorCropActive);
         if (editorMagnifier) editorMagnifier.classList.add('hidden');
-        if (editorCropActive) initCropRect();
+        if (editorCropActive) {
+          mobileCropRectChanged = true;
+          initCropRect();
+        }
         drawEditorCanvas();
       });
     }
@@ -1293,46 +1448,18 @@ const MobileApp = (() => {
     editorRatioBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         editorCropRatio = btn.dataset.ratio;
+        mobileCropRectChanged = true;
         editorRatioBtns.forEach(b => b.classList.toggle('active', b === btn));
         adjustCropRectToRatio();
         drawEditorCanvas();
       });
     });
 
-    if (editorApplyCropBtn) {
-      editorApplyCropBtn.addEventListener('click', () => {
-        if (!editorCanvas || !editingImgObj) return;
-        const cw = editorCanvas.width;
-        const ch = editorCanvas.height;
-        const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
-        const baseW = isRotated90 ? (editingImgObj.naturalHeight || editingImgObj.height) : (editingImgObj.naturalWidth || editingImgObj.width);
-        const baseH = isRotated90 ? (editingImgObj.naturalWidth || editingImgObj.width) : (editingImgObj.naturalHeight || editingImgObj.height);
-
-        const scaleX = baseW / cw;
-        const scaleY = baseH / ch;
-
-        editorTempState.crop = {
-          x: Math.max(0, Math.round(editorCropRect.x * scaleX)),
-          y: Math.max(0, Math.round(editorCropRect.y * scaleY)),
-          w: Math.min(baseW, Math.round(editorCropRect.w * scaleX)),
-          h: Math.min(baseH, Math.round(editorCropRect.h * scaleY))
-        };
-
-        editorCropActive = false;
-        if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
-        if (editorCropPanel) editorCropPanel.classList.add('hidden');
-        if (editorMagnifier) editorMagnifier.classList.add('hidden');
-
-        drawEditorCanvas();
-        renderFilterCards();
-        MobileUtils.showToast('Crop applied! Tap Save Changes to keep.', 'info');
-      });
-    }
-
     if (editorResetCropBtn) {
       editorResetCropBtn.addEventListener('click', () => {
         editorTempState.crop = null;
         editorCropActive = false;
+        mobileCropRectChanged = true;
         if (editorToggleCropBtn) editorToggleCropBtn.classList.remove('active');
         if (editorCropPanel) editorCropPanel.classList.add('hidden');
         if (editorMagnifier) editorMagnifier.classList.add('hidden');
@@ -1353,15 +1480,34 @@ const MobileApp = (() => {
     }
 
     function initCropRect() {
-      if (!editorCanvas) return;
+      if (!editorCanvas || !editingImgObj) return;
       const cw = editorCanvas.width;
       const ch = editorCanvas.height;
-      editorCropRect = {
-        x: Math.round(cw * 0.08),
-        y: Math.round(ch * 0.08),
-        w: Math.round(cw * 0.84),
-        h: Math.round(ch * 0.84)
-      };
+
+      const rot = ((editorTempState.rotate % 360) + 360) % 360;
+      const isRotated90 = (rot === 90 || rot === 270);
+      const natW = editingImgObj.naturalWidth || editingImgObj.width || 100;
+      const natH = editingImgObj.naturalHeight || editingImgObj.height || 100;
+      const fullRotatedW = isRotated90 ? natH : natW;
+      const fullRotatedH = isRotated90 ? natW : natH;
+
+      if (editorTempState.crop && editorTempState.crop.w > 0 && editorTempState.crop.h > 0) {
+        const scaleX = cw / fullRotatedW;
+        const scaleY = ch / fullRotatedH;
+        editorCropRect = {
+          x: Math.round(editorTempState.crop.x * scaleX),
+          y: Math.round(editorTempState.crop.y * scaleY),
+          w: Math.round(editorTempState.crop.w * scaleX),
+          h: Math.round(editorTempState.crop.h * scaleY)
+        };
+      } else {
+        editorCropRect = {
+          x: Math.round(cw * 0.08),
+          y: Math.round(ch * 0.08),
+          w: Math.round(cw * 0.84),
+          h: Math.round(ch * 0.84)
+        };
+      }
       adjustCropRectToRatio();
     }
 
@@ -1373,34 +1519,51 @@ const MobileApp = (() => {
       else if (editorCropRatio === '16:9') targetRatio = 16 / 9;
       else if (editorCropRatio === 'a4') targetRatio = 210 / 297;
 
-      const currentRatio = editorCropRect.w / editorCropRect.h;
+      const currentRatio = editorCropRect.w / (editorCropRect.h || 1);
       if (currentRatio > targetRatio) {
-        editorCropRect.w = editorCropRect.h * targetRatio;
+        editorCropRect.w = Math.round(editorCropRect.h * targetRatio);
       } else {
-        editorCropRect.h = editorCropRect.w / targetRatio;
+        editorCropRect.h = Math.round(editorCropRect.w / targetRatio);
       }
     }
 
     function drawEditorCanvas() {
       if (!editorCanvas || !editingImgObj) return;
 
-      const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
-      let baseW = editorTempState.crop ? editorTempState.crop.w : (editingImgObj.naturalWidth || editingImgObj.width);
-      let baseH = editorTempState.crop ? editorTempState.crop.h : (editingImgObj.naturalHeight || editingImgObj.height);
-      let dispW = isRotated90 ? baseH : baseW;
-      let dispH = isRotated90 ? baseW : baseH;
+      const rot = ((editorTempState.rotate % 360) + 360) % 360;
+      const isRotated90 = (rot === 90 || rot === 270);
+      const natW = editingImgObj.naturalWidth || editingImgObj.width || 100;
+      const natH = editingImgObj.naturalHeight || editingImgObj.height || 100;
+      const fullRotatedW = isRotated90 ? natH : natW;
+      const fullRotatedH = isRotated90 ? natW : natH;
 
       const maxDisplayW = Math.min(320, window.innerWidth - 48);
       const maxDisplayH = 260;
-      const scale = Math.min(maxDisplayW / dispW, maxDisplayH / dispH, 1);
-
-      const canvasW = Math.max(80, Math.round(dispW * scale));
-      const canvasH = Math.max(80, Math.round(dispH * scale));
-
-      MobileImageToPdf.renderEditedImageToCanvas(editorCanvas, editingImgObj, editorTempState, canvasW, canvasH);
 
       if (editorCropActive) {
+        const scale = Math.min(maxDisplayW / fullRotatedW, maxDisplayH / fullRotatedH, 1);
+        const canvasW = Math.max(80, Math.round(fullRotatedW * scale));
+        const canvasH = Math.max(80, Math.round(fullRotatedH * scale));
+
+        const displayState = {
+          crop: null,
+          rotate: editorTempState.rotate,
+          flipH: editorTempState.flipH,
+          flipV: editorTempState.flipV,
+          filter: editorTempState.filter
+        };
+
+        MobileImageToPdf.renderEditedImageToCanvas(editorCanvas, editingImgObj, displayState, canvasW, canvasH);
         drawCropOverlay(editorCanvas);
+      } else {
+        let baseW = editorTempState.crop ? editorTempState.crop.w : fullRotatedW;
+        let baseH = editorTempState.crop ? editorTempState.crop.h : fullRotatedH;
+
+        const scale = Math.min(maxDisplayW / baseW, maxDisplayH / baseH, 1);
+        const canvasW = Math.max(80, Math.round(baseW * scale));
+        const canvasH = Math.max(80, Math.round(baseH * scale));
+
+        MobileImageToPdf.renderEditedImageToCanvas(editorCanvas, editingImgObj, editorTempState, canvasW, canvasH);
       }
     }
 

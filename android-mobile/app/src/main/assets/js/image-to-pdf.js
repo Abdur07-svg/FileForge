@@ -36,20 +36,26 @@ const MobileImageToPdf = (() => {
    * Renders an edited image item (with crop, rotation, flip, and filter preset) to a target canvas
    */
   function renderEditedImageToCanvas(canvas, imgObj, editState = {}, targetWidth = null, targetHeight = null) {
-    const isRotated90 = (editState.rotate === 90 || editState.rotate === 270);
+    const rot = ((editState.rotate % 360) + 360) % 360;
+    const isRotated90 = (rot === 90 || rot === 270);
 
-    let sx = 0, sy = 0, sw = imgObj.naturalWidth || imgObj.width, sh = imgObj.naturalHeight || imgObj.height;
-    if (editState.crop && editState.crop.w > 0 && editState.crop.h > 0) {
-      sx = editState.crop.x;
-      sy = editState.crop.y;
-      sw = editState.crop.w;
-      sh = editState.crop.h;
+    const natW = imgObj.naturalWidth || imgObj.width || 100;
+    const natH = imgObj.naturalHeight || imgObj.height || 100;
+    const fullRotatedW = isRotated90 ? natH : natW;
+    const fullRotatedH = isRotated90 ? natW : natH;
+
+    const hasCrop = editState.crop && editState.crop.w > 0 && editState.crop.h > 0;
+    let cropX = 0, cropY = 0, cropW = fullRotatedW, cropH = fullRotatedH;
+
+    if (hasCrop) {
+      cropX = Math.max(0, Math.min(fullRotatedW - 1, editState.crop.x));
+      cropY = Math.max(0, Math.min(fullRotatedH - 1, editState.crop.y));
+      cropW = Math.max(1, Math.min(fullRotatedW - cropX, editState.crop.w));
+      cropH = Math.max(1, Math.min(fullRotatedH - cropY, editState.crop.h));
     }
 
-    const unrotatedW = sw;
-    const unrotatedH = sh;
-    const finalW = isRotated90 ? unrotatedH : unrotatedW;
-    const finalH = isRotated90 ? unrotatedW : unrotatedH;
+    const finalW = hasCrop ? cropW : fullRotatedW;
+    const finalH = hasCrop ? cropH : fullRotatedH;
 
     canvas.width = targetWidth || finalW;
     canvas.height = targetHeight || finalH;
@@ -77,24 +83,45 @@ const MobileImageToPdf = (() => {
       filterCSS = 'contrast(1.35) brightness(1.15) saturate(0.9)';
     }
 
-    ctx.filter = filterCSS;
+    if (!hasCrop) {
+      ctx.save();
+      ctx.filter = filterCSS;
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      if (rot) ctx.rotate((rot * Math.PI) / 180);
+      const scaleX = editState.flipH ? -1 : 1;
+      const scaleY = editState.flipV ? -1 : 1;
+      ctx.scale(scaleX, scaleY);
 
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
+      const drawW = isRotated90 ? canvas.height : canvas.width;
+      const drawH = isRotated90 ? canvas.width : canvas.height;
+      ctx.drawImage(imgObj, -drawW / 2, -drawH / 2, drawW, drawH);
+      ctx.restore();
+      ctx.filter = 'none';
+    } else {
+      const rotCanvas = document.createElement('canvas');
+      rotCanvas.width = fullRotatedW;
+      rotCanvas.height = fullRotatedH;
+      const rotCtx = rotCanvas.getContext('2d');
 
-    if (editState.rotate) {
-      ctx.rotate(((editState.rotate % 360) * Math.PI) / 180);
+      rotCtx.translate(fullRotatedW / 2, fullRotatedH / 2);
+      if (rot) rotCtx.rotate((rot * Math.PI) / 180);
+      const scaleX = editState.flipH ? -1 : 1;
+      const scaleY = editState.flipV ? -1 : 1;
+      rotCtx.scale(scaleX, scaleY);
+
+      const drawW = isRotated90 ? fullRotatedH : fullRotatedW;
+      const drawH = isRotated90 ? fullRotatedW : fullRotatedH;
+      rotCtx.drawImage(imgObj, -drawW / 2, -drawH / 2, drawW, drawH);
+
+      ctx.save();
+      ctx.filter = filterCSS;
+      ctx.drawImage(rotCanvas, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      ctx.filter = 'none';
+
+      rotCanvas.width = 1;
+      rotCanvas.height = 1;
     }
-    const scaleX = editState.flipH ? -1 : 1;
-    const scaleY = editState.flipV ? -1 : 1;
-    ctx.scale(scaleX, scaleY);
-
-    const drawW = isRotated90 ? canvas.height : canvas.width;
-    const drawH = isRotated90 ? canvas.width : canvas.height;
-
-    ctx.drawImage(imgObj, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
-    ctx.restore();
-    ctx.filter = 'none';
 
     // Secondary pixel pass for Clean Document
     if (f === 'clean-document') {

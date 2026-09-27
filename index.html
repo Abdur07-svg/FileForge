@@ -3956,7 +3956,6 @@
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                  <button type="button" id="fprv-download-btn" class="btn btn-primary btn-sm">Download File</button>
                   <button type="button" id="fprv-reset-btn" class="btn btn-secondary btn-sm">Preview Another File</button>
                 </div>
               </div>
@@ -4378,9 +4377,8 @@
                 <button type="button" class="i2p-crop-ratio-btn" data-ratio="a4">A4</button>
               </div>
               <div style="display: flex; gap: 8px; margin-top: 10px;">
-                <button type="button" id="i2p-apply-crop-btn" class="btn btn-xs btn-primary">Apply Crop</button>
-                <button type="button" id="i2p-cancel-crop-btn" class="btn btn-xs btn-secondary">Cancel</button>
-                <button type="button" id="i2p-reset-crop-btn" class="btn btn-xs btn-ghost">Reset Full</button>
+                <button type="button" id="i2p-reset-crop-btn" class="btn btn-xs btn-secondary">Reset Crop</button>
+                <button type="button" id="i2p-cancel-crop-btn" class="btn btn-xs btn-ghost">Close Crop Box</button>
               </div>
             </div>
           </div>
@@ -4399,8 +4397,24 @@
       </div>
 
       <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" id="i2p-editor-cancel-btn" class="btn btn-secondary">Discard &amp; Close</button>
+        <button type="button" id="i2p-editor-cancel-btn" class="btn btn-secondary">Cancel</button>
         <button type="button" id="i2p-editor-save-btn" class="btn btn-primary">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image to PDF Discard Confirmation Modal -->
+  <div id="i2p-discard-confirm-modal" class="modal-container hidden" role="dialog" aria-modal="true" style="z-index: 99999;">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card" style="max-width: 380px; text-align: center; padding: 24px 20px;">
+      <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">Discard Changes?</h3>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 18px; line-height: 1.45;">Your crop changes haven't been saved.</p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button type="button" id="i2p-discard-keep-btn" class="btn btn-secondary" style="flex: 1;">Keep Editing</button>
+        <button type="button" id="i2p-discard-confirm-btn" class="btn btn-danger" style="flex: 1;">Discard</button>
       </div>
     </div>
   </div>
