@@ -1,10 +1,5 @@
-/**
- * FileForge - PDF Metadata Editor Tool
- * View, edit, or strip PDF document properties (Title, Author, Subject, Keywords, Creator, Producer).
- */
-
 const PDFMetadataEditor = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount }
+  let currentFile = null;
   let editedPdfBlob = null;
 
   let dom = {};
@@ -17,19 +12,16 @@ const PDFMetadataEditor = (() => {
       browseBtn: document.getElementById('pme-browse-btn'),
       workspace: document.getElementById('pme-workspace'),
       emptyState: document.getElementById('pme-empty-state'),
-      
-      // Form Fields
+
       titleInput: document.getElementById('pme-title'),
       authorInput: document.getElementById('pme-author'),
       subjectInput: document.getElementById('pme-subject'),
       keywordsInput: document.getElementById('pme-keywords'),
       creatorInput: document.getElementById('pme-creator'),
       producerInput: document.getElementById('pme-producer'),
-      
-      // Quick action
+
       stripBtn: document.getElementById('pme-strip-btn'),
-      
-      // Actions
+
       saveBtn: document.getElementById('pme-save-btn'),
       downloadBtn: document.getElementById('pme-download-btn'),
       resetBtn: document.getElementById('pme-reset-btn'),
@@ -97,7 +89,6 @@ const PDFMetadataEditor = (() => {
         pageCount: pdfDoc.getPageCount()
       };
 
-      // Populate current metadata
       dom.titleInput.value = pdfDoc.getTitle() || '';
       dom.authorInput.value = pdfDoc.getAuthor() || '';
       dom.subjectInput.value = pdfDoc.getSubject() || '';

@@ -1,8 +1,3 @@
-/**
- * FileForge - Tool-Specific How-to-Use Mobile Guides Configuration
- * Lightweight, zero-dependency contextual guides for all FileForge tools.
- */
-
 const ToolGuides = (() => {
   const GUIDES = {
     'pdf-compressor': {
@@ -486,10 +481,9 @@ const ToolGuides = (() => {
       guide.steps.forEach((step, index) => {
         const li = document.createElement('li');
         li.className = 'guide-step-item';
-        
-        // Format markdown bold text inside desc (e.g. **+ Choose PDF**)
+
         const formattedDesc = step.desc.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        
+
         li.innerHTML = `
           <div class="guide-step-num">${index + 1}</div>
           <div class="guide-step-body">
@@ -502,7 +496,7 @@ const ToolGuides = (() => {
     }
 
     if (detailsEl) {
-      detailsEl.open = false; // Collapsed by default
+      detailsEl.open = false;
       detailsEl.setAttribute('aria-expanded', 'false');
     }
   }

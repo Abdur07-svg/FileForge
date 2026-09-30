@@ -1,18 +1,10 @@
-/**
- * FileForge Mobile - PDF Engine
- * Utilizes pdf-lib and PDF.js locally for 100% Client-side Processing
- */
 const MobilePdfEngine = (() => {
 
-  /**
-   * Compress PDF by re-encoding pages with canvas JPEG streams
-   */
   async function compressPdf(file, qualityLevel = 'medium', onProgress = null) {
     if (!window.PDFLib || !window.pdfjsLib) {
       throw new Error('PDF libraries are not loaded');
     }
 
-    // Quality presets: scale and jpeg quality
     const presets = {
       extreme: { scale: 1.0, quality: 0.45 },
       medium:  { scale: 1.25, quality: 0.65 },
@@ -45,7 +37,6 @@ const MobilePdfEngine = (() => {
       const jpegBytes = await fetch(jpegDataUrl).then(res => res.arrayBuffer());
       const embeddedImage = await newPdfDoc.embedJpg(jpegBytes);
 
-      // Create page with original dimensions (at 72 DPI)
       const origViewport = page.getViewport({ scale: 1.0 });
       const newPage = newPdfDoc.addPage([origViewport.width, origViewport.height]);
       newPage.drawImage(embeddedImage, {
@@ -73,9 +64,6 @@ const MobilePdfEngine = (() => {
     };
   }
 
-  /**
-   * Merge multiple PDF files into one
-   */
   async function mergePdfs(files, onProgress = null) {
     if (!window.PDFLib) throw new Error('PDF-Lib is not loaded');
     if (!files || files.length < 2) throw new Error('Please select at least 2 PDF files');
@@ -104,9 +92,6 @@ const MobilePdfEngine = (() => {
     };
   }
 
-  /**
-   * Split PDF by range, specific pages, or burst into all single pages
-   */
   async function splitPdf(file, mode = 'ranges', rangeStr = '', onProgress = null) {
     if (!window.PDFLib) throw new Error('PDF-Lib is not loaded');
 
@@ -115,7 +100,7 @@ const MobilePdfEngine = (() => {
     const totalPages = srcDoc.getPageCount();
 
     if (mode === 'all') {
-      // Split each page into individual PDF files
+
       const splitFiles = [];
       for (let i = 0; i < totalPages; i++) {
         if (onProgress) onProgress(i + 1, totalPages);
@@ -135,7 +120,6 @@ const MobilePdfEngine = (() => {
       return { type: 'multi', files: splitFiles };
     }
 
-    // Parse page ranges (e.g., "1-3, 5, 7-9")
     const selectedIndices = parsePageRanges(rangeStr, totalPages);
     if (selectedIndices.length === 0) {
       throw new Error('Please enter valid page numbers or ranges (e.g. 1-3, 5)');
@@ -157,9 +141,6 @@ const MobilePdfEngine = (() => {
     };
   }
 
-  /**
-   * Extract specified page indices into a new PDF
-   */
   async function extractPages(file, pageIndices = []) {
     if (!window.PDFLib) throw new Error('PDF-Lib is not loaded');
     if (!pageIndices || pageIndices.length === 0) {
@@ -170,7 +151,6 @@ const MobilePdfEngine = (() => {
     const srcDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
     const totalPages = srcDoc.getPageCount();
 
-    // Filter valid 0-based indices
     const validIndices = pageIndices.filter(idx => idx >= 0 && idx < totalPages);
     if (validIndices.length === 0) {
       throw new Error('Selected pages are out of range');
@@ -191,9 +171,6 @@ const MobilePdfEngine = (() => {
     };
   }
 
-  /**
-   * Convert PDF pages to JPG or PNG images
-   */
   async function pdfToImages(file, format = 'image/jpeg', scale = 1.5, onProgress = null) {
     if (!window.pdfjsLib) throw new Error('PDF.js library is not loaded');
 
@@ -240,9 +217,6 @@ const MobilePdfEngine = (() => {
     };
   }
 
-  /**
-   * Helper: Parse page ranges string into array of 0-based page indices
-   */
   function parsePageRanges(rangeStr, totalPages) {
     if (!rangeStr || !rangeStr.trim()) {
       return Array.from({ length: totalPages }, (_, i) => i);
@@ -274,9 +248,6 @@ const MobilePdfEngine = (() => {
     return Array.from(indices).sort((a, b) => a - b);
   }
 
-  /**
-   * Load thumbnail list of PDF pages for visual page selection
-   */
   async function loadPdfThumbnails(file, scale = 0.3) {
     if (!window.pdfjsLib) throw new Error('PDF.js library is not loaded');
 

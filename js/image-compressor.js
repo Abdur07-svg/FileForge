@@ -1,14 +1,8 @@
-/**
- * FileForge - Image Compressor Tool
- * Compresses JPG, PNG, WebP with quality control, optional dimensions & live side-by-side preview.
- */
-
 const ImageCompressor = (() => {
-  let currentFiles = []; // Array of { file, originalDataUrl, originalWidth, originalHeight, compressedBlob, compressedUrl, name }
+  let currentFiles = [];
   let activeIndex = 0;
   let originalRatio = 1;
 
-  // DOM Elements cache
   let dom = {};
 
   function init() {
@@ -20,8 +14,7 @@ const ImageCompressor = (() => {
       workspace: document.getElementById('ic-workspace'),
       emptyState: document.getElementById('ic-empty-state'),
       fileList: document.getElementById('ic-file-list'),
-      
-      // Controls
+
       qualitySlider: document.getElementById('ic-quality'),
       qualityNum: document.getElementById('ic-quality-num'),
       qualityVal: document.getElementById('ic-quality-val'),
@@ -31,8 +24,7 @@ const ImageCompressor = (() => {
       heightInput: document.getElementById('ic-height'),
       aspectRatioCheck: document.getElementById('ic-aspect-ratio'),
       resetDimsBtn: document.getElementById('ic-reset-dims'),
-      
-      // Stats & Preview
+
       origSizeText: document.getElementById('ic-orig-size'),
       compSizeText: document.getElementById('ic-comp-size'),
       savedBadge: document.getElementById('ic-saved-badge'),
@@ -40,8 +32,7 @@ const ImageCompressor = (() => {
       compDimensionsText: document.getElementById('ic-comp-dims'),
       previewBefore: document.getElementById('ic-preview-before'),
       previewAfter: document.getElementById('ic-preview-after'),
-      
-      // Actions
+
       compressBtn: document.getElementById('ic-compress-btn'),
       downloadBtn: document.getElementById('ic-download-btn'),
       downloadAllBtn: document.getElementById('ic-download-all-btn'),
@@ -61,7 +52,7 @@ const ImageCompressor = (() => {
   }
 
   function bindEvents() {
-    // Dropzone
+
     Utils.setupDropZone(dom.dropzone, handleFiles, ['image/', '.jpg', '.jpeg', '.png', '.webp']);
     dom.browseBtn.addEventListener('click', () => dom.fileInput.click());
     dom.fileInput.addEventListener('change', (e) => {
@@ -69,7 +60,6 @@ const ImageCompressor = (() => {
       dom.fileInput.value = '';
     });
 
-    // Quality slider
     dom.qualitySlider.addEventListener('input', (e) => {
       const val = parseInt(e.target.value, 10);
       if (dom.qualityNum) dom.qualityNum.value = val;
@@ -78,7 +68,6 @@ const ImageCompressor = (() => {
       debounceAutoCompress();
     });
 
-    // Quality direct number input
     if (dom.qualityNum) {
       dom.qualityNum.addEventListener('input', (e) => {
         let val = parseInt(e.target.value, 10);
@@ -102,7 +91,6 @@ const ImageCompressor = (() => {
       });
     }
 
-    // Preset buttons
     if (dom.presetBtns) {
       dom.presetBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -124,10 +112,8 @@ const ImageCompressor = (() => {
       }
     }
 
-    // Format select
     dom.formatSelect.addEventListener('change', debounceAutoCompress);
 
-    // Dimension inputs with aspect ratio lock
     dom.widthInput.addEventListener('input', () => {
       if (dom.aspectRatioCheck.checked && originalRatio && dom.widthInput.value) {
         dom.heightInput.value = Math.round(dom.widthInput.value / originalRatio);
@@ -151,7 +137,6 @@ const ImageCompressor = (() => {
       }
     });
 
-    // Action buttons
     dom.compressBtn.addEventListener('click', handleCompressClick);
     dom.downloadBtn.addEventListener('click', downloadCurrent);
     dom.downloadAllBtn.addEventListener('click', downloadAll);
@@ -220,11 +205,10 @@ const ImageCompressor = (() => {
       activeIndex = 0;
       updateActiveFileControls();
       renderFileList();
-      
-      // Ensure download button remains disabled upon initial upload until user compresses
+
       if (dom.downloadBtn) dom.downloadBtn.disabled = true;
       if (dom.downloadAllBtn) dom.downloadAllBtn.disabled = true;
-      
+
       Utils.showToast(`Loaded ${validImages.length} image(s). Adjust settings and click "Compress Image".`, 'info');
     } catch (err) {
       console.error(err);
@@ -335,16 +319,8 @@ const ImageCompressor = (() => {
     updateActiveFileControls();
   }
 
-  /**
-   * Adaptive Color Quantization for PNG images
-   * Reduces bit depth and palette variance so PNG deflate compression achieves high ratio
-   */
   function applyPngQuantization(data, width, height, quality) {
-    // Quality mapping: 
-    // 0.85 - 1.0 -> 64 levels (6-bit)
-    // 0.65 - 0.85 -> 32 levels (5-bit)
-    // 0.40 - 0.65 -> 16 levels (4-bit)
-    // < 0.40 -> 8 levels (3-bit)
+
     let levels = 32;
     if (quality >= 0.85) levels = 64;
     else if (quality >= 0.65) levels = 32;
@@ -379,11 +355,9 @@ const ImageCompressor = (() => {
     masterCanvas.height = targetHeight;
     const masterCtx = masterCanvas.getContext('2d', { willReadFrequently: true });
 
-    // Smooth image scaling
     masterCtx.imageSmoothingEnabled = true;
     masterCtx.imageSmoothingQuality = 'high';
 
-    // Handle format specifics strictly based on user selection or source file
     let outputMime = 'image/jpeg';
     let isExplicitConversion = false;
 
@@ -427,7 +401,7 @@ const ImageCompressor = (() => {
     let retainedOriginal = false;
 
     if (outputMime === 'image/png') {
-      // For PNG: Draw master canvas to work canvas and apply quantization on fresh cloned ImageData
+
       const workCanvas = document.createElement('canvas');
       workCanvas.width = targetWidth;
       workCanvas.height = targetHeight;
@@ -441,7 +415,6 @@ const ImageCompressor = (() => {
 
       blob = await Utils.canvasToBlob(workCanvas, 'image/png');
 
-      // If output is still >= original and dimensions are unchanged, step down quantization
       if (blob.size >= fileItem.originalSize && dimensionsUnchanged) {
         const testQualities = [0.65, 0.45, 0.25, 0.15];
         for (const testQ of testQualities) {
@@ -457,13 +430,12 @@ const ImageCompressor = (() => {
         }
       }
 
-      // Safety Guard: If output is still >= original with unchanged dimensions & format is original
       if (blob.size >= fileItem.originalSize && dimensionsUnchanged && !isExplicitConversion) {
         blob = fileItem.file;
         retainedOriginal = true;
       }
     } else {
-      // For JPEG and WebP: standard quality encoding with iterative tuning
+
       blob = await Utils.canvasToBlob(masterCanvas, outputMime, quality);
 
       if (blob.size >= fileItem.originalSize && dimensionsUnchanged && !isExplicitConversion) {
@@ -479,7 +451,6 @@ const ImageCompressor = (() => {
         }
       }
 
-      // Safety Guard: Never output larger file than original in original format mode
       if (blob.size >= fileItem.originalSize && dimensionsUnchanged && !isExplicitConversion) {
         blob = fileItem.file;
         retainedOriginal = true;
@@ -510,7 +481,7 @@ const ImageCompressor = (() => {
 
     try {
       const result = await compressSingle(active, quality, format, targetWidth, targetHeight);
-      
+
       if (active.compressedUrl) {
         URL.revokeObjectURL(active.compressedUrl);
       }
@@ -523,7 +494,6 @@ const ImageCompressor = (() => {
       active.retainedOriginal = result.retainedOriginal;
       active.isExplicitConversion = result.isExplicitConversion;
 
-      // Update UI
       updateActiveFileControls();
       renderFileList();
 

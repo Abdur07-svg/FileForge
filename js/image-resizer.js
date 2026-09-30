@@ -1,19 +1,12 @@
-/**
- * FileForge - Image Resizer Tool
- * Batch image resizing with interactive canvas drag-handles (laptop cursor & mobile touch support),
- * pixel dimension lock, percentage scaling, and format output.
- */
-
 const ImageResizer = (() => {
-  let files = []; // { file, name, dataUrl, img, origWidth, origHeight, origSize, resizedBlob, resizedUrl, resizedWidth, resizedHeight }
+  let files = [];
   let activeIndex = 0;
-  let resizeMode = 'dimensions'; // 'dimensions' or 'percentage'
+  let resizeMode = 'dimensions';
 
-  // Interactive Canvas Drag State
   let resizeRect = { x: 0, y: 0, w: 200, h: 200 };
   let canvasScale = 1;
   let isDragging = false;
-  let dragMode = null; // 'nw' | 'ne' | 'se' | 'sw' | 'e' | 's' | 'move'
+  let dragMode = null;
   let dragStart = { x: 0, y: 0, rectX: 0, rectY: 0, rectW: 0, rectH: 0 };
 
   let dom = {};
@@ -27,39 +20,32 @@ const ImageResizer = (() => {
       workspace: document.getElementById('ir-workspace'),
       emptyState: document.getElementById('ir-empty-state'),
       fileList: document.getElementById('ir-file-list'),
-      
-      // Interactive Canvas & Magnifier
+
       resizeCanvas: document.getElementById('ir-canvas'),
       magnifier: document.getElementById('ir-magnifier'),
       magnifierCanvas: document.getElementById('ir-magnifier-canvas'),
 
-      // Mode switch
       modeDimsRadio: document.getElementById('ir-mode-dims'),
       modePctRadio: document.getElementById('ir-mode-pct'),
       dimsPanel: document.getElementById('ir-dims-panel'),
       pctPanel: document.getElementById('ir-pct-panel'),
-      
-      // Dimension inputs
+
       widthInput: document.getElementById('ir-width'),
       heightInput: document.getElementById('ir-height'),
       aspectRatioCheck: document.getElementById('ir-aspect-ratio'),
-      
-      // Percentage inputs
+
       pctSlider: document.getElementById('ir-pct-slider'),
       pctVal: document.getElementById('ir-pct-val'),
       pctPresets: document.querySelectorAll('.ir-pct-preset'),
-      
-      // Format & options
+
       formatSelect: document.getElementById('ir-format'),
-      
-      // Preview & stats
+
       origDimsText: document.getElementById('ir-orig-dims'),
       origSizeText: document.getElementById('ir-orig-size'),
       newDimsText: document.getElementById('ir-new-dims'),
       newSizeText: document.getElementById('ir-new-size'),
       previewImg: document.getElementById('ir-preview'),
-      
-      // Actions
+
       resizeBtn: document.getElementById('ir-resize-btn'),
       cropBtn: document.getElementById('ir-crop-btn'),
       downloadBtn: document.getElementById('ir-download-btn'),
@@ -83,7 +69,6 @@ const ImageResizer = (() => {
       dom.fileInput.value = '';
     });
 
-    // Mode toggle
     if (dom.modeDimsRadio) {
       dom.modeDimsRadio.addEventListener('change', () => {
         resizeMode = 'dimensions';
@@ -104,7 +89,6 @@ const ImageResizer = (() => {
       });
     }
 
-    // Percentage slider & presets
     if (dom.pctSlider) {
       dom.pctSlider.addEventListener('input', (e) => {
         dom.pctVal.textContent = e.target.value + '%';
@@ -125,7 +109,6 @@ const ImageResizer = (() => {
       });
     }
 
-    // Dimension inputs with ratio lock
     if (dom.widthInput) {
       dom.widthInput.addEventListener('input', () => {
         const active = files[activeIndex];
@@ -150,7 +133,6 @@ const ImageResizer = (() => {
       });
     }
 
-    // Interactive Canvas Pointer & Touch Events (Laptop Cursor & Mobile Touch Finger Support)
     if (dom.resizeCanvas) {
       dom.resizeCanvas.addEventListener('mousedown', onPointerDown);
       window.addEventListener('mousemove', onPointerMove);
@@ -306,23 +288,19 @@ const ImageResizer = (() => {
     const ch = canvas.height;
     const r = resizeRect;
 
-    // 1. Draw base image scaled to display canvas
     ctx.clearRect(0, 0, cw, ch);
     ctx.drawImage(active.img, 0, 0, cw, ch);
 
-    // 2. Darkened area outside target resize box
     ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
     ctx.fillRect(0, 0, cw, r.y);
     ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h));
     ctx.fillRect(0, r.y, r.x, r.h);
     ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h);
 
-    // 3. Solid bright blue crop border (matching reference image)
     ctx.strokeStyle = '#0284c7';
     ctx.lineWidth = 2.5;
     ctx.strokeRect(r.x, r.y, r.w, r.h);
 
-    // 4. Rule of thirds subtle grid
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
@@ -338,7 +316,6 @@ const ImageResizer = (() => {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Helper for rounded pill handles (North, South, West, East)
     function drawPill(x, y, w, h, radius) {
       ctx.save();
       ctx.beginPath();
@@ -355,20 +332,19 @@ const ImageResizer = (() => {
       ctx.restore();
     }
 
-    // Helper for circular corner handles (NW, NE, SE, SW)
     function drawCorner(x, y) {
       ctx.save();
-      // Outer Blue Circle
+
       ctx.beginPath();
       ctx.arc(x, y, 9, 0, Math.PI * 2);
       ctx.fillStyle = '#0284c7';
       ctx.fill();
-      // Inner White Ring
+
       ctx.beginPath();
       ctx.arc(x, y, 6.5, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
-      // Center Blue Dot
+
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, Math.PI * 2);
       ctx.fillStyle = '#0284c7';
@@ -376,19 +352,16 @@ const ImageResizer = (() => {
       ctx.restore();
     }
 
-    // 4 Edge / Middle Pill Handles (North, South, West, East)
-    drawPill(r.x + r.w / 2, r.y, 30, 10, 5); // Top (N)
-    drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5); // Bottom (S)
-    drawPill(r.x, r.y + r.h / 2, 10, 30, 5); // Left (W)
-    drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5); // Right (E)
+    drawPill(r.x + r.w / 2, r.y, 30, 10, 5);
+    drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5);
+    drawPill(r.x, r.y + r.h / 2, 10, 30, 5);
+    drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5);
 
-    // 4 Circular Corner Handles
-    drawCorner(r.x, r.y); // NW
-    drawCorner(r.x + r.w, r.y); // NE
-    drawCorner(r.x + r.w, r.y + r.h); // SE
-    drawCorner(r.x, r.y + r.h); // SW
+    drawCorner(r.x, r.y);
+    drawCorner(r.x + r.w, r.y);
+    drawCorner(r.x + r.w, r.y + r.h);
+    drawCorner(r.x, r.y + r.h);
 
-    // 5. Dimension Badge on top of resize box
     const realW = Math.round(r.w / canvasScale);
     const realH = Math.round(r.h / canvasScale);
     const badgeText = `${realW} × ${realH} px`;
@@ -426,19 +399,16 @@ const ImageResizer = (() => {
     const cornerPad = 32;
     const edgePad = 26;
 
-    // 1. Check 4 corners first
     if (Math.hypot(coords.x - r.x, coords.y - r.y) < cornerPad) return 'nw';
     if (Math.hypot(coords.x - (r.x + r.w), coords.y - r.y) < cornerPad) return 'ne';
     if (Math.hypot(coords.x - (r.x + r.w), coords.y - (r.y + r.h)) < cornerPad) return 'se';
     if (Math.hypot(coords.x - r.x, coords.y - (r.y + r.h)) < cornerPad) return 'sw';
 
-    // 2. Check 4 edge pills
     if (Math.abs(coords.y - r.y) < edgePad && Math.abs(coords.x - (r.x + r.w / 2)) < 28) return 'n';
     if (Math.abs(coords.y - (r.y + r.h)) < edgePad && Math.abs(coords.x - (r.x + r.w / 2)) < 28) return 's';
     if (Math.abs(coords.x - r.x) < edgePad && Math.abs(coords.y - (r.y + r.h / 2)) < 28) return 'w';
     if (Math.abs(coords.x - (r.x + r.w)) < edgePad && Math.abs(coords.y - (r.y + r.h / 2)) < 28) return 'e';
 
-    // 3. Inside box
     if (coords.x > r.x && coords.x < r.x + r.w && coords.y > r.y && coords.y < r.y + r.h) return 'move';
     return null;
   }
@@ -465,7 +435,6 @@ const ImageResizer = (() => {
     const magW = magCanvas.width;
     const magH = magCanvas.height;
 
-    // Smart positioning: opposite quadrant so cursor/finger never covers it
     const cw = dom.resizeCanvas.width;
     if (focusCanvasX < cw / 2) {
       dom.magnifier.style.left = 'auto';
@@ -479,7 +448,6 @@ const ImageResizer = (() => {
 
     magCtx.clearRect(0, 0, magW, magH);
 
-    // Map canvas display coords to source image coords
     const scaleX = active.origWidth / (dom.resizeCanvas.width || 1);
     const scaleY = active.origHeight / (dom.resizeCanvas.height || 1);
     const srcCenterX = focusCanvasX * scaleX;

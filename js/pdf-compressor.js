@@ -1,30 +1,13 @@
-/**
- * FileForge - PDF Compressor Tool (Quality-First Architecture)
- * 
- * High-fidelity client-side PDF optimization engine:
- * 1. Intelligent PDF Content Detection: Classifies document as text/vector, scanned/image-only, or mixed.
- * 2. Quality-First Compression: Prioritizes lossless structural & object-stream optimization for text/vector documents.
- *    Does NOT destructively rasterize text/vector pages into low-res JPEG images.
- * 3. Compression Intensity Levels: Low (30%), Medium (50%), Balanced (60%), High (70%), Maximum (85%) represent intensity, not guaranteed reduction.
- * 4. Target File Size Mode: Adaptive tuning for image-heavy/scanned documents.
- * 5. Safeguards: Never returns a file larger than the original; preserves selectable text, vectors, page count, and dimensions.
- * 6. Memory Safety: Per-page canvas cleanup and UI yielding to handle 100+ page documents on mobile and desktop.
- */
-
 const PDFCompressor = (() => {
-  // Application State
-  let currentFile = null; // { file, name, size, buffer, pageCount, docType }
+
+  let currentFile = null;
   let compressedBlob = null;
   let compressedSize = 0;
-  let activeMode = 'percentage'; // 'percentage' | 'target-size'
-  let targetSizeBytes = 2 * 1024 * 1024; // Default: 2 MB
+  let activeMode = 'percentage';
+  let targetSizeBytes = 2 * 1024 * 1024;
 
-  // DOM Elements cache
   let dom = {};
 
-  /**
-   * Initialize module and bind UI
-   */
   function init() {
     dom = {
       container: document.getElementById('tool-pdf-compressor'),
@@ -33,27 +16,23 @@ const PDFCompressor = (() => {
       browseBtn: document.getElementById('pc-browse-btn'),
       workspace: document.getElementById('pc-workspace'),
       emptyState: document.getElementById('pc-empty-state'),
-      
-      // File Details
+
       fileNameText: document.getElementById('pc-file-name'),
       origSizeText: document.getElementById('pc-orig-size'),
       pageCountText: document.getElementById('pc-page-count'),
-      
-      // Controls: Slider Bar & Direct Number Input
+
       compressSlider: document.getElementById('pc-compress-slider'),
       compressNum: document.getElementById('pc-compress-num'),
       compressVal: document.getElementById('pc-compress-val'),
       compressDesc: document.getElementById('pc-compress-desc'),
       estSizeText: document.getElementById('pc-est-size'),
       presetBtns: document.querySelectorAll('.pc-preset-btn'),
-      
-      // Results
+
       compSizeText: document.getElementById('pc-comp-size'),
       savingsBadge: document.getElementById('pc-savings-badge'),
       resultsCard: document.getElementById('pc-results-card'),
       resultsEmpty: document.getElementById('pc-results-empty'),
-      
-      // Actions
+
       compressBtn: document.getElementById('pc-compress-btn'),
       downloadBtn: document.getElementById('pc-download-btn'),
       resetBtn: document.getElementById('pc-reset-btn'),
@@ -69,9 +48,6 @@ const PDFCompressor = (() => {
     updateCompressionUI(parseInt(dom.compressSlider ? dom.compressSlider.value : 60, 10) || 60);
   }
 
-  /**
-   * Injects the dynamic "Target File Size" tab and inputs into the settings panel
-   */
   function injectTargetSizeControls() {
     if (document.getElementById('pc-mode-toggle-wrap')) return;
 
@@ -81,7 +57,7 @@ const PDFCompressor = (() => {
     const modeWrap = document.createElement('div');
     modeWrap.id = 'pc-mode-toggle-wrap';
     modeWrap.style.cssText = 'display: flex; gap: 8px; margin-bottom: 16px; background: rgba(255,255,255,0.04); padding: 4px; border-radius: var(--radius-md, 8px); border: 1px solid var(--border-color, rgba(255,255,255,0.1));';
-    
+
     modeWrap.innerHTML = `
       <button type="button" id="pc-mode-pct-btn" class="btn btn-sm btn-primary" style="flex: 1; padding: 6px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; transition: all 0.2s ease;">
         ⚡ Compression Intensity
@@ -131,9 +107,6 @@ const PDFCompressor = (() => {
     dom.targetHint = document.getElementById('pc-target-hint');
   }
 
-  /**
-   * Bind event listeners
-   */
   function bindEvents() {
     Utils.setupDropZone(dom.dropzone, handleFiles, ['.pdf', 'application/pdf']);
     dom.browseBtn.addEventListener('click', () => dom.fileInput.click());
@@ -142,14 +115,12 @@ const PDFCompressor = (() => {
       dom.fileInput.value = '';
     });
 
-    // Slider input
     dom.compressSlider.addEventListener('input', (e) => {
       const val = parseInt(e.target.value, 10);
       dom.compressNum.value = val;
       updateCompressionUI(val);
     });
 
-    // Number input
     dom.compressNum.addEventListener('input', (e) => {
       let val = parseInt(e.target.value, 10);
       if (isNaN(val)) return;
@@ -167,7 +138,6 @@ const PDFCompressor = (() => {
       updateCompressionUI(val);
     });
 
-    // Preset buttons
     dom.presetBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const pct = parseInt(btn.dataset.pct, 10);
@@ -177,19 +147,17 @@ const PDFCompressor = (() => {
       });
     });
 
-    // Mode toggles
     if (dom.modePctBtn && dom.modeTargetBtn) {
       dom.modePctBtn.addEventListener('click', () => switchMode('percentage'));
       dom.modeTargetBtn.addEventListener('click', () => switchMode('target-size'));
     }
 
-    // Target size inputs
     if (dom.targetInput && dom.targetUnit) {
       const updateTarget = () => {
         const num = parseFloat(dom.targetInput.value) || 2;
         const unit = dom.targetUnit.value;
         targetSizeBytes = unit === 'MB' ? num * 1024 * 1024 : num * 1024;
-        
+
         if (dom.targetChips) {
           dom.targetChips.forEach(chip => {
             const chipSize = parseFloat(chip.dataset.size);
@@ -221,9 +189,6 @@ const PDFCompressor = (() => {
     dom.resetBtn.addEventListener('click', resetTool);
   }
 
-  /**
-   * Switch between Percentage Mode and Target File Size Mode
-   */
   function switchMode(mode) {
     activeMode = mode;
     if (mode === 'percentage') {
@@ -245,9 +210,6 @@ const PDFCompressor = (() => {
     }
   }
 
-  /**
-   * Update UI labels, descriptions and estimated size based on selected percentage
-   */
   function updateCompressionUI(pct) {
     if (dom.compressVal) dom.compressVal.textContent = pct + '%';
 
@@ -275,9 +237,6 @@ const PDFCompressor = (() => {
     updateEstimatedSize();
   }
 
-  /**
-   * Live Estimated Size Calculation based on document type and selected intensity
-   */
   function updateEstimatedSize() {
     if (!dom.estSizeText) return;
 
@@ -299,8 +258,7 @@ const PDFCompressor = (() => {
 
     const pct = parseInt(dom.compressSlider ? dom.compressSlider.value : 60, 10) || 60;
     const isTextDoc = currentFile.docType === 'text';
-    
-    // Honest estimates: text/vector PDFs reduce moderately through object streams; image PDFs reduce more
+
     const maxReduction = isTextDoc ? 0.35 : 0.75;
     const intensity = (pct / 100);
     const estimatedReduction = intensity * maxReduction;
@@ -308,13 +266,10 @@ const PDFCompressor = (() => {
       Math.round(currentFile.size * 0.2),
       Math.round(currentFile.size * (1 - estimatedReduction))
     );
-    
+
     dom.estSizeText.textContent = `~${Utils.formatBytes(estimatedBytes)} (estimated with ${isTextDoc ? 'text/vector' : 'image'} optimization)`;
   }
 
-  /**
-   * Detect whether PDF is primarily text/vector, scanned/image-heavy, or mixed
-   */
   async function detectPdfContent(buffer, pageCount) {
     if (!window.pdfjsLib) return 'mixed';
 
@@ -322,7 +277,7 @@ const PDFCompressor = (() => {
     try {
       const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer.slice(0)) });
       pdf = await loadingTask.promise;
-      const pagesToCheck = Math.min(pageCount, 5); // Check up to first 5 pages
+      const pagesToCheck = Math.min(pageCount, 5);
       let totalTextChars = 0;
 
       for (let i = 1; i <= pagesToCheck; i++) {
@@ -337,11 +292,11 @@ const PDFCompressor = (() => {
 
       const avgCharsPerPage = totalTextChars / pagesToCheck;
       if (avgCharsPerPage > 150) {
-        return 'text'; // Primarily text & vector document
+        return 'text';
       } else if (avgCharsPerPage > 20) {
         return 'mixed';
       } else {
-        return 'scanned'; // Scanned / image-only document
+        return 'scanned';
       }
     } catch (err) {
       console.warn('PDF content detection fallback:', err);
@@ -353,9 +308,6 @@ const PDFCompressor = (() => {
     }
   }
 
-  /**
-   * Handle uploaded PDF file
-   */
   async function handleFiles(files) {
     if (!files || files.length === 0) return;
     const file = files[0];
@@ -375,7 +327,7 @@ const PDFCompressor = (() => {
 
     try {
       const buffer = await Utils.readFileAsArrayBuffer(file);
-      
+
       let pdfDoc = null;
       try {
         pdfDoc = await PDFLib.PDFDocument.load(buffer, { ignoreEncryption: true });
@@ -388,7 +340,7 @@ const PDFCompressor = (() => {
 
       const pageCount = pdfDoc.getPageCount();
       showProgress(50, 'Analyzing content (text, vectors, images)...');
-      
+
       const docType = await detectPdfContent(buffer, pageCount);
 
       currentFile = {
@@ -400,13 +352,11 @@ const PDFCompressor = (() => {
         docType
       };
 
-      // Update UI file details
       dom.fileNameText.textContent = file.name;
       dom.origSizeText.textContent = Utils.formatBytes(file.size);
       const typeLabel = docType === 'text' ? ' (Text/Vector)' : (docType === 'scanned' ? ' (Scanned/Images)' : ' (Mixed)');
       dom.pageCountText.textContent = `${pageCount} page${pageCount > 1 ? 's' : ''}${typeLabel}`;
 
-      // Switch view to workspace
       dom.emptyState.classList.add('hidden');
       dom.workspace.classList.remove('hidden');
       dom.resultsCard.classList.add('hidden');
@@ -439,9 +389,6 @@ const PDFCompressor = (() => {
     }
   }
 
-  /**
-   * Main Compression Function: Quality-First Pipeline
-   */
   async function compressPDF() {
     if (!currentFile) return;
 
@@ -460,7 +407,6 @@ const PDFCompressor = (() => {
         finalBytes = await compressByLevel(currentFile.buffer, pct);
       }
 
-      // Safeguard: Compare against original size
       if (!finalBytes || finalBytes.byteLength >= currentFile.size) {
         showProgress(85, 'Applying lossless structural optimization pass...');
         const lossless = await losslessStructuralOptimization(currentFile.buffer);
@@ -474,7 +420,6 @@ const PDFCompressor = (() => {
       compressedBlob = new Blob([finalBytes], { type: 'application/pdf' });
       compressedSize = compressedBlob.size;
 
-      // Update Results Card
       dom.compSizeText.textContent = Utils.formatBytes(compressedSize);
       const reduction = Utils.calculateReduction(currentFile.size, compressedSize);
 
@@ -501,15 +446,10 @@ const PDFCompressor = (() => {
     }
   }
 
-  /**
-   * Compress PDF according to chosen percentage level
-   */
   async function compressByLevel(buffer, pct) {
     const isTextDoc = currentFile && currentFile.docType === 'text';
     const isMixedDoc = currentFile && currentFile.docType === 'mixed';
 
-    // 1. For Low (30%), Medium (50%), Balanced (60%), or Text/Mixed documents:
-    // Strictly preserve selectable text and vector graphics via lossless structural optimization
     if (pct <= 60 || isTextDoc || isMixedDoc) {
       showProgress(35, 'Performing structural & object stream optimization (preserving text/vectors)...');
       const lossless = await losslessStructuralOptimization(buffer);
@@ -521,17 +461,12 @@ const PDFCompressor = (() => {
       }
     }
 
-    // 2. For High (70%) and Maximum (85%) intensity on scanned or photo-heavy documents:
-    // Apply tuned high-clarity re-encoding without aggressive downsampling
     const scale = pct >= 80 ? 1.25 : 1.55;
     const quality = pct >= 80 ? 0.70 : 0.82;
 
     return await highFidelityReencode(buffer, scale, quality);
   }
 
-  /**
-   * Compress PDF adaptively to fit under "Target File Size"
-   */
   async function compressToTargetSize(buffer, originalSize, targetBytes) {
     if (originalSize <= targetBytes) {
       showProgress(40, 'File already under target size. Running structural optimization...');
@@ -539,21 +474,18 @@ const PDFCompressor = (() => {
       return (lossless && lossless.byteLength < originalSize) ? lossless : new Uint8Array(buffer);
     }
 
-    // Pass 1: Lossless Structural Pass
     showProgress(25, 'Pass 1: Checking structural stream optimization...');
     const lossless = await losslessStructuralOptimization(buffer);
     if (lossless && lossless.byteLength <= targetBytes) {
       return lossless;
     }
 
-    // Pass 2: High Clarity Pass (Scale 1.55, Quality 0.82)
     showProgress(50, 'Pass 2: High-clarity optimization...');
     let bestResult = await highFidelityReencode(buffer, 1.55, 0.82);
     if (bestResult && bestResult.byteLength <= targetBytes) {
       return bestResult;
     }
 
-    // Pass 3: Balanced Pass (Scale 1.30, Quality 0.74)
     showProgress(75, 'Pass 3: Fine-tuning compression to meet target...');
     const pass3 = await highFidelityReencode(buffer, 1.30, 0.74);
     if (pass3 && pass3.byteLength < (bestResult ? bestResult.byteLength : originalSize)) {
@@ -561,7 +493,6 @@ const PDFCompressor = (() => {
       if (bestResult.byteLength <= targetBytes) return bestResult;
     }
 
-    // Pass 4: Maximum Safe Reduction (Scale 1.10, Quality 0.65)
     showProgress(90, 'Pass 4: Safe maximum reduction...');
     const pass4 = await highFidelityReencode(buffer, 1.10, 0.65);
     if (pass4 && pass4.byteLength < (bestResult ? bestResult.byteLength : originalSize)) {
@@ -571,11 +502,6 @@ const PDFCompressor = (() => {
     return bestResult;
   }
 
-  /**
-   * High-Fidelity Page Optimization Engine with Memory Management:
-   * Preserves page dimensions, orientations, and aspect ratios.
-   * Releases canvas elements immediately per page to prevent memory exhaustion.
-   */
   async function highFidelityReencode(buffer, scale, quality) {
     if (!window.pdfjsLib) {
       throw new Error('PDF.js library is not available');
@@ -616,11 +542,9 @@ const PDFCompressor = (() => {
         const pageBytes = await pageBlob.arrayBuffer();
         const embeddedImage = await newDoc.embedJpg(pageBytes);
 
-        // Clean up memory
         canvas.width = 1;
         canvas.height = 1;
 
-        // Preserve exact original page dimensions and orientation
         const origViewport = page.getViewport({ scale: 1.0 });
         const newPage = newDoc.addPage([origViewport.width, origViewport.height]);
         newPage.drawImage(embeddedImage, {
@@ -640,10 +564,6 @@ const PDFCompressor = (() => {
     }
   }
 
-  /**
-   * Lossless Structural Optimization via pdf-lib:
-   * Strips unused objects, compacts cross-reference tables, and compresses object streams.
-   */
   async function losslessStructuralOptimization(buffer) {
     try {
       const srcDoc = await PDFLib.PDFDocument.load(buffer, { ignoreEncryption: true });
@@ -672,19 +592,19 @@ const PDFCompressor = (() => {
     currentFile = null;
     compressedBlob = null;
     compressedSize = 0;
-    
+
     if (dom.emptyState) dom.emptyState.classList.remove('hidden');
     if (dom.workspace) dom.workspace.classList.add('hidden');
     if (dom.resultsCard) dom.resultsCard.classList.add('hidden');
     if (dom.resultsEmpty) dom.resultsEmpty.classList.remove('hidden');
     if (dom.downloadBtn) dom.downloadBtn.disabled = true;
-    
+
     if (dom.fileNameText) dom.fileNameText.textContent = '-';
     if (dom.origSizeText) dom.origSizeText.textContent = '-';
     if (dom.pageCountText) dom.pageCountText.textContent = '-';
     if (dom.compSizeText) dom.compSizeText.textContent = '-';
     if (dom.estSizeText) dom.estSizeText.textContent = '-';
-    
+
     hideProgress();
   }
 
@@ -707,5 +627,4 @@ const PDFCompressor = (() => {
   };
 })();
 
-// Export globally for FileForge
 window.PDFCompressor = PDFCompressor;

@@ -1,10 +1,5 @@
-/**
- * FileForge - Image Rotate Tool
- * Rotate images by 90° increments or custom angle sliders with live canvas preview and lossless options.
- */
-
 const ImageRotator = (() => {
-  let currentFile = null; // { file, name, dataUrl, img, width, height }
+  let currentFile = null;
   let currentAngle = 0;
   let rotatedBlob = null;
 
@@ -18,24 +13,20 @@ const ImageRotator = (() => {
       browseBtn: document.getElementById('irot-browse-btn'),
       workspace: document.getElementById('irot-workspace'),
       emptyState: document.getElementById('irot-empty-state'),
-      
-      // Controls
+
       rotateCwBtn: document.getElementById('irot-cw-btn'),
       rotateCcwBtn: document.getElementById('irot-ccw-btn'),
       rotate180Btn: document.getElementById('irot-180-btn'),
       angleSlider: document.getElementById('irot-angle-slider'),
       angleVal: document.getElementById('irot-angle-val'),
       resetAngleBtn: document.getElementById('irot-reset-angle-btn'),
-      
-      // Output settings
+
       formatSelect: document.getElementById('irot-format'),
       qualitySlider: document.getElementById('irot-quality'),
       qualityVal: document.getElementById('irot-quality-val'),
-      
-      // Preview
+
       previewCanvas: document.getElementById('irot-preview-canvas'),
-      
-      // Actions
+
       applyBtn: document.getElementById('irot-apply-btn'),
       downloadBtn: document.getElementById('irot-download-btn'),
       resetBtn: document.getElementById('irot-reset-btn'),
@@ -60,7 +51,7 @@ const ImageRotator = (() => {
     if (dom.rotateCwBtn) dom.rotateCwBtn.addEventListener('click', () => setAngle(currentAngle + 90));
     if (dom.rotateCcwBtn) dom.rotateCcwBtn.addEventListener('click', () => setAngle(currentAngle - 90));
     if (dom.rotate180Btn) dom.rotate180Btn.addEventListener('click', () => setAngle(currentAngle + 180));
-    
+
     if (dom.angleSlider) {
       dom.angleSlider.addEventListener('input', (e) => {
         setAngle(parseInt(e.target.value, 10) || 0, false);
@@ -162,7 +153,6 @@ const ImageRotator = (() => {
     baseW = Math.round(baseW * scale);
     baseH = Math.round(baseH * scale);
 
-    // Calculate rotated bounding box
     const absCos = Math.abs(Math.cos(rad));
     const absSin = Math.abs(Math.sin(rad));
     const rotW = Math.round(baseW * absCos + baseH * absSin);

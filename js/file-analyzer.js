@@ -1,8 +1,3 @@
-/**
- * FileForge - File Size & Metadata Analyzer Tool
- * Detailed file analytics: exact bytes, MIME type verification, SHA-256 cryptographic checksum, and format breakdown.
- */
-
 const FileAnalyzer = (() => {
   let currentFile = null;
   let dom = {};
@@ -15,8 +10,7 @@ const FileAnalyzer = (() => {
       browseBtn: document.getElementById('fanz-browse-btn'),
       workspace: document.getElementById('fanz-workspace'),
       emptyState: document.getElementById('fanz-empty-state'),
-      
-      // Analytics Fields
+
       fileNameText: document.getElementById('fanz-file-name'),
       sizeFormattedText: document.getElementById('fanz-size-formatted'),
       sizeBytesText: document.getElementById('fanz-size-bytes'),
@@ -27,8 +21,7 @@ const FileAnalyzer = (() => {
       lastModifiedText: document.getElementById('fanz-last-modified'),
       sha256Text: document.getElementById('fanz-sha256'),
       copyHashBtn: document.getElementById('fanz-copy-hash-btn'),
-      
-      // Actions
+
       resetBtn: document.getElementById('fanz-reset-btn')
     };
 
@@ -70,7 +63,6 @@ const FileAnalyzer = (() => {
       const mb = (bytes / (1024 * 1024)).toFixed(3);
       const dateStr = file.lastModified ? new Date(file.lastModified).toLocaleString() : 'Unknown';
 
-      // Compute SHA-256 in memory
       let sha256 = 'Calculating...';
       if (window.crypto && window.crypto.subtle) {
         const arrayBuffer = await Utils.readFileAsArrayBuffer(file);

@@ -1,8 +1,3 @@
-/**
- * FileForge - Image Color Picker Tool
- * Interactive pixel sampler, zoom magnifier loupe, HEX/RGB/HSL extractor & color palette generator.
- */
-
 const ImageColorPicker = (() => {
   let currentFile = null;
   let originalImage = null;
@@ -18,24 +13,22 @@ const ImageColorPicker = (() => {
       browseBtn: document.getElementById('icp-browse-btn'),
       workspace: document.getElementById('icp-workspace'),
       emptyState: document.getElementById('icp-empty-state'),
-      
-      // Stage & Canvas
+
       canvasWrap: document.getElementById('icp-canvas-wrap'),
       canvas: document.getElementById('icp-canvas'),
       loupe: document.getElementById('icp-loupe'),
       loupeCanvas: document.getElementById('icp-loupe-canvas'),
-      
-      // Color Readouts
+
       colorPreview: document.getElementById('icp-color-preview'),
       hexOutput: document.getElementById('icp-hex-output'),
       rgbOutput: document.getElementById('icp-rgb-output'),
       hslOutput: document.getElementById('icp-hsl-output'),
       rgbaOutput: document.getElementById('icp-rgba-output'),
-      
+
       copyHexBtn: document.getElementById('icp-copy-hex'),
       copyRgbBtn: document.getElementById('icp-copy-rgb'),
       copyHslBtn: document.getElementById('icp-copy-hsl'),
-      
+
       paletteContainer: document.getElementById('icp-palette-list'),
       clearPaletteBtn: document.getElementById('icp-clear-palette'),
       resetBtn: document.getElementById('icp-reset-btn')
@@ -63,7 +56,7 @@ const ImageColorPicker = (() => {
     if (dom.copyHexBtn) dom.copyHexBtn.addEventListener('click', () => copyText(dom.hexOutput.textContent, 'HEX Color Copied!'));
     if (dom.copyRgbBtn) dom.copyRgbBtn.addEventListener('click', () => copyText(dom.rgbOutput.textContent, 'RGB Color Copied!'));
     if (dom.copyHslBtn) dom.copyHslBtn.addEventListener('click', () => copyText(dom.hslOutput.textContent, 'HSL Color Copied!'));
-    
+
     if (dom.clearPaletteBtn) dom.clearPaletteBtn.addEventListener('click', clearPalette);
     if (dom.resetBtn) dom.resetBtn.addEventListener('click', resetTool);
   }
@@ -111,7 +104,6 @@ const ImageColorPicker = (() => {
     const canvas = dom.canvas;
     const ctx = canvas.getContext('2d');
 
-    // Display sizing
     const maxWidth = 800;
     const maxHeight = 500;
     let width = originalImage.naturalWidth;
@@ -127,7 +119,6 @@ const ImageColorPicker = (() => {
     canvas.height = height;
     ctx.drawImage(originalImage, 0, 0, width, height);
 
-    // Initial color pick at center
     samplePixel(Math.floor(width / 2), Math.floor(height / 2), false);
   }
 
@@ -197,7 +188,6 @@ const ImageColorPicker = (() => {
     lCanvas.width = 100;
     lCanvas.height = 100;
 
-    // Grab 11x11 sample area around cursor
     const sampleSize = 11;
     const half = Math.floor(sampleSize / 2);
     const sx = Math.max(0, canvasX - half);
@@ -205,7 +195,6 @@ const ImageColorPicker = (() => {
 
     lCtx.drawImage(dom.canvas, sx, sy, sampleSize, sampleSize, 0, 0, 100, 100);
 
-    // Draw center crosshair
     lCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
     lCtx.lineWidth = 2;
     lCtx.strokeRect(45, 45, 10, 10);
@@ -254,7 +243,6 @@ const ImageColorPicker = (() => {
     const h = dom.canvas.height;
     if (w === 0 || h === 0) return;
 
-    // Sample a few strategic grid points across the image
     const stepX = Math.max(1, Math.floor(w / 4));
     const stepY = Math.max(1, Math.floor(h / 4));
 

@@ -1,11 +1,3 @@
-/**
- * FileForge Mobile - Image to PDF Engine
- * Features:
- * - Non-Destructive Visual Filter Preset Cards (Original, Vibrant, Soft Tone, Color, Sharp Black, Grayscale, High Contrast, Clean Document)
- * - Intelligent Client-Side Signature Background Removal & Transparent Overlay
- * - Interactive Signature Placement (Drag/Move, Resize, Multi-Page / Single-Page)
- * - Mixed & Per-Page Orientation, Page Sizing (A4, Letter, Legal, Fit), Margins & Pure Client-Side PDF Generation via pdf-lib
- */
 const MobileImageToPdf = (() => {
 
   const FILTER_PRESETS = [
@@ -27,14 +19,11 @@ const MobileImageToPdf = (() => {
 
   const MARGINS = {
     none: 0,
-    small: 18,   // 0.25 in
-    medium: 36,  // 0.5 in
-    large: 54    // 0.75 in
+    small: 18,
+    medium: 36,
+    large: 54
   };
 
-  /**
-   * Renders an edited image item (with crop, rotation, flip, and filter preset) to a target canvas
-   */
   function renderEditedImageToCanvas(canvas, imgObj, editState = {}, targetWidth = null, targetHeight = null) {
     const rot = ((editState.rotate % 360) + 360) % 360;
     const isRotated90 = (rot === 90 || rot === 270);
@@ -63,7 +52,6 @@ const MobileImageToPdf = (() => {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // CSS filter based on Preset
     let filterCSS = 'none';
     const f = editState.filter || 'original';
 
@@ -123,7 +111,6 @@ const MobileImageToPdf = (() => {
       rotCanvas.height = 1;
     }
 
-    // Secondary pixel pass for Clean Document
     if (f === 'clean-document') {
       try {
         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -143,14 +130,11 @@ const MobileImageToPdf = (() => {
         }
         ctx.putImageData(imgData, 0, 0);
       } catch (e) {
-        // Fallback silently if canvas is tainted
+
       }
     }
   }
 
-  /**
-   * Signature Extraction (White/Paper background remover)
-   */
   function extractSignature(imgObj, settings = {}) {
     const sensitivity = settings.sensitivity !== undefined ? settings.sensitivity : 45;
     const inkColor = settings.inkColor || 'original';
@@ -175,7 +159,7 @@ const MobileImageToPdf = (() => {
       const lum = 0.299 * r + 0.587 * g + 0.114 * b;
 
       if (lum >= threshold) {
-        d[i + 3] = 0; // Transparent
+        d[i + 3] = 0;
       } else {
         const alphaFactor = Math.min(1, Math.max(0, (threshold - lum) / (threshold * 0.45)));
         const alpha = Math.round(alphaFactor * 255);
@@ -232,9 +216,6 @@ const MobileImageToPdf = (() => {
     };
   }
 
-  /**
-   * Generates a multi-page PDF from image item objects with transforms, filters, and signature overlay
-   */
   async function generatePdf(imageItems, options = {}, signatureData = null, onProgress = null) {
     if (!window.PDFLib) throw new Error('PDF-Lib is not loaded');
     if (!imageItems || imageItems.length === 0) throw new Error('No images selected');
@@ -246,7 +227,6 @@ const MobileImageToPdf = (() => {
     const marginPts = MARGINS[marginKey] !== undefined ? MARGINS[marginKey] : 0;
     const quality = options.quality || 0.88;
 
-    // Embed signature image if active
     let embeddedSig = null;
     if (signatureData && signatureData.active && signatureData.dataUrl) {
       const sigImg = await MobileUtils.loadImageFromSrc(signatureData.dataUrl);
@@ -267,11 +247,9 @@ const MobileImageToPdf = (() => {
       const item = imageItems[i];
       const imgObj = await MobileUtils.loadImageFromSrc(item.dataUrl || item.previewUrl);
 
-      // Render image with its editState (crop, rotate, flip, filter)
       const renderCanvas = document.createElement('canvas');
       renderEditedImageToCanvas(renderCanvas, imgObj, item.editState || {});
 
-      // Safe downscaling if canvas > 4000px
       if (renderCanvas.width > 4000 || renderCanvas.height > 4000) {
         const maxDim = 3600;
         const scale = Math.min(maxDim / renderCanvas.width, maxDim / renderCanvas.height);
@@ -302,7 +280,6 @@ const MobileImageToPdf = (() => {
       const imgWidth = renderCanvas.width;
       const imgHeight = renderCanvas.height;
 
-      // Page dimensions
       let pageW, pageH;
       const itemOrientation = item.orientation || globalOrientation;
 
@@ -349,12 +326,11 @@ const MobileImageToPdf = (() => {
         height: drawH
       });
 
-      // Draw Signature if active on this page
       if (embeddedSig && signatureData) {
         const sigPdfW = pageW * signatureData.relW;
         const sigPdfH = sigPdfW / (signatureData.aspectRatio || 1);
         const sigPdfX = pageW * signatureData.relX;
-        // In PDF coordinates, Y=0 is bottom
+
         const sigPdfY = pageH - (pageH * signatureData.relY) - sigPdfH;
 
         page.drawImage(embeddedSig, {

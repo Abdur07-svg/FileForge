@@ -1,14 +1,9 @@
-/**
- * FileForge - PDF to Image Tool (PDF to JPG & PDF to PNG)
- * Renders pages via PDF.js with selectable DPI, page checkboxes, single image & ZIP download.
- */
-
 const PDFToImage = (() => {
   let currentFile = null;
   let pdfDoc = null;
   let totalPages = 0;
-  let pageItems = []; // { pageNum, selected, canvas, blob, url }
-  let currentFormat = 'jpeg'; // 'jpeg' or 'png'
+  let pageItems = [];
+  let currentFormat = 'jpeg';
 
   let dom = {};
 
@@ -20,25 +15,21 @@ const PDFToImage = (() => {
       browseBtn: document.getElementById('p2i-browse-btn'),
       workspace: document.getElementById('p2i-workspace'),
       emptyState: document.getElementById('p2i-empty-state'),
-      
-      // Controls & Settings
+
       formatSelect: document.getElementById('p2i-format'),
       scaleSelect: document.getElementById('p2i-scale'),
       qualityRow: document.getElementById('p2i-quality-row'),
       qualitySlider: document.getElementById('p2i-quality'),
       qualityVal: document.getElementById('p2i-quality-val'),
-      
-      // Selection helpers
+
       selectAllBtn: document.getElementById('p2i-select-all'),
       deselectAllBtn: document.getElementById('p2i-deselect-all'),
       selectOddBtn: document.getElementById('p2i-select-odd'),
       selectEvenBtn: document.getElementById('p2i-select-even'),
       selectedCountText: document.getElementById('p2i-selected-count'),
-      
-      // Page Grid
+
       pagesGrid: document.getElementById('p2i-pages-grid'),
-      
-      // Actions
+
       convertBtn: document.getElementById('p2i-convert-btn'),
       downloadZipBtn: document.getElementById('p2i-download-zip-btn'),
       resetBtn: document.getElementById('p2i-reset-btn'),
@@ -69,7 +60,6 @@ const PDFToImage = (() => {
       dom.qualityVal.textContent = e.target.value + '%';
     });
 
-    // Selection helpers
     dom.selectAllBtn.addEventListener('click', () => setAllSelection(true));
     dom.deselectAllBtn.addEventListener('click', () => setAllSelection(false));
     dom.selectOddBtn.addEventListener('click', () => {
@@ -147,7 +137,6 @@ const PDFToImage = (() => {
       updateSelectedCount();
       updateQualityVisibility();
 
-      // Render initial low-res previews for fast visual selection
       await renderThumbnails();
       Utils.showToast(`PDF loaded: ${totalPages} page(s). Select pages and click Convert.`, 'success');
     } catch (err) {
@@ -209,7 +198,6 @@ const PDFToImage = (() => {
         </div>
       `;
 
-      // Checkbox event
       const cb = card.querySelector('.page-select-checkbox');
       cb.addEventListener('change', (e) => {
         item.selected = e.target.checked;
@@ -217,7 +205,6 @@ const PDFToImage = (() => {
         updateSelectedCount();
       });
 
-      // Card click toggles checkbox if clicking preview
       const thumb = card.querySelector('.page-card-thumb');
       thumb.addEventListener('click', () => {
         cb.checked = !cb.checked;
@@ -226,7 +213,6 @@ const PDFToImage = (() => {
         updateSelectedCount();
       });
 
-      // Single download button
       const dlBtn = card.querySelector('.page-dl-btn');
       if (dlBtn) {
         dlBtn.addEventListener('click', (e) => {

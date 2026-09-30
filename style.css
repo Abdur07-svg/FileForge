@@ -1,31 +1,22 @@
-/* ==========================================================================
-   FileForge - Modern Client-Side Utility Suite Stylesheet
-   Pure Vanilla CSS with Design System Tokens & Responsive Dark/Light Themes
-   ========================================================================== */
-
-/* --- Design Tokens & Color Palettes --- */
 :root {
-  /* Typography Scale */
-  --fs-xs: 0.75rem;     /* 12px - badges, helper hints, captions */
-  --fs-sm: 0.84rem;     /* 13.5px - small labels, chip meta, sub-buttons */
-  --fs-md: 0.95rem;     /* 15.2px - standard body, tool descriptions, inputs */
-  --fs-base: 1rem;      /* 16px - root base font size */
-  --fs-lg: 1.125rem;    /* 18px - tool card titles, dropzone title, panel headers */
-  --fs-xl: 1.35rem;     /* 21.6px - modal titles, prominent headings */
-  --fs-2xl: 1.75rem;    /* 28px - active tool workspace title, section sub-headers */
-  --fs-3xl: 2.25rem;    /* 36px - section main titles */
-  --fs-4xl: 3.2rem;     /* 51.2px - hero headline */
 
-  /* Fonts */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.84rem;
+  --fs-md: 0.95rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.35rem;
+  --fs-2xl: 1.75rem;
+  --fs-3xl: 2.25rem;
+  --fs-4xl: 3.2rem;
+
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  
-  /* Primary Gradients */
+
   --grad-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
   --grad-primary-hover: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
   --grad-accent: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
   --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
-  
-  /* Common Palette */
+
   --color-primary: #6366f1;
   --color-primary-light: #818cf8;
   --color-primary-dark: #4f46e5;
@@ -39,7 +30,6 @@
   --color-info: #0ea5e9;
   --color-info-bg: rgba(14, 165, 233, 0.12);
 
-  /* Border Radii */
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -48,13 +38,11 @@
   --radius-pill: 9999px;
   --radius-full: 9999px;
 
-  /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* --- Dark Theme (Default) --- */
 :root[data-theme="dark"], html:not([data-theme]) {
   --bg-app: #080c14;
   --bg-surface: #0f172a;
@@ -75,7 +63,6 @@
   --dropzone-active-bg: rgba(99, 102, 241, 0.08);
 }
 
-/* --- Light Theme --- */
 :root[data-theme="light"] {
   --bg-app: #f8fafc;
   --bg-surface: #ffffff;
@@ -96,7 +83,6 @@
   --dropzone-active-bg: rgba(99, 102, 241, 0.05);
 }
 
-/* --- Base Reset & Typography --- */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -123,7 +109,6 @@ body {
   position: relative;
 }
 
-/* Ambient Background Glow Effect */
 body::before {
   content: '';
   position: fixed;
@@ -157,7 +142,6 @@ button {
   display: none !important;
 }
 
-/* --- Container & Layout --- */
 .container {
   width: 100%;
   max-width: 1240px;
@@ -165,7 +149,6 @@ button {
   padding: 0 24px;
 }
 
-/* --- Header & Navigation --- */
 .site-header {
   position: sticky;
   top: 0;
@@ -296,7 +279,6 @@ button {
   text-decoration: none !important;
 }
 
-/* --- Navigation Dropdown Menus --- */
 .nav-item-dropdown {
   position: relative;
   list-style: none;
@@ -370,7 +352,6 @@ button {
   transform: translateX(-50%) translateY(12px) !important;
 }
 
-/* Hover bridge */
 .nav-item-dropdown::after {
   content: '';
   position: absolute;
@@ -546,7 +527,6 @@ body.is-native-app #apk-download-btn {
   height: 24px;
 }
 
-/* Mobile Nav Drawer & Backdrop */
 .mobile-nav-backdrop {
   display: none;
   position: fixed;
@@ -692,7 +672,6 @@ body.is-native-app #apk-download-btn {
   transform: translateX(4px);
 }
 
-/* --- Hero Section --- */
 .hero-section {
   position: relative;
   z-index: 1;
@@ -747,7 +726,6 @@ body.is-native-app #apk-download-btn {
   line-height: 1.6;
 }
 
-/* Universal Hero Dropzone */
 .hero-dropzone-container {
   max-width: 720px;
   margin: 0 auto 36px;
@@ -802,7 +780,6 @@ body.is-native-app #apk-download-btn {
   margin-bottom: 16px;
 }
 
-/* --- Search & Filter Bar --- */
 .search-filter-section {
   max-width: 900px;
   margin: 0 auto 20px;
@@ -875,7 +852,6 @@ body.is-native-app #apk-download-btn {
   letter-spacing: 0.02em;
 }
 
-/* Category Filter Pills */
 .filter-pills-row {
   display: flex;
   align-items: center;
@@ -909,7 +885,6 @@ body.is-native-app #apk-download-btn {
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
 }
 
-/* --- Tools Grid Section --- */
 .tools-section {
   position: relative;
   z-index: 1;
@@ -1030,7 +1005,6 @@ body.is-native-app #apk-download-btn {
   font-size: 1.1rem;
 }
 
-/* --- Tools Grid Pagination --- */
 .tools-pagination {
   display: flex;
   flex-direction: column;
@@ -1130,8 +1104,6 @@ body.is-native-app #apk-download-btn {
   font-weight: 700;
 }
 
-
-/* --- Features & Privacy Guarantee Section --- */
 .features-section {
   padding: 72px 0;
   background-color: var(--bg-surface);
@@ -1210,7 +1182,6 @@ body.is-native-app #apk-download-btn {
   line-height: 1.6;
 }
 
-/* --- Dedicated Active Tool Workspace View --- */
 .active-tool-view {
   position: relative;
   z-index: 2;
@@ -1268,7 +1239,6 @@ body.is-native-app #apk-download-btn {
   font-size: 1.05rem;
 }
 
-/* Tool Workspace Container */
 .tool-workspace-container {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -1277,7 +1247,6 @@ body.is-native-app #apk-download-btn {
   box-shadow: var(--shadow-lg);
 }
 
-/* Tool Dedicated Dropzone */
 .tool-dropzone {
   border: 2px dashed var(--dropzone-border);
   background-color: var(--dropzone-bg);
@@ -1293,7 +1262,6 @@ body.is-native-app #apk-download-btn {
   background-color: var(--dropzone-active-bg);
 }
 
-/* Progress Bar Component */
 .progress-container {
   margin: 24px 0;
   background-color: var(--bg-surface-elevated);
@@ -1327,7 +1295,6 @@ body.is-native-app #apk-download-btn {
   transition: width 200ms ease;
 }
 
-/* Tool Workspace Panels */
 .workspace-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1374,7 +1341,6 @@ body.is-native-app #apk-download-btn {
   justify-content: space-between;
 }
 
-/* Form Controls & Inputs */
 .form-group {
   margin-bottom: 18px;
 }
@@ -1439,7 +1405,6 @@ body.is-native-app #apk-download-btn {
   color: var(--text-secondary);
 }
 
-/* Buttons System */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -1588,7 +1553,6 @@ body.is-native-app #apk-download-btn {
   margin-top: 24px;
 }
 
-/* Image Compressor Side-by-Side Preview */
 .preview-comparison-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1624,10 +1588,10 @@ body.is-native-app #apk-download-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: 
-    linear-gradient(45deg, var(--bg-surface-elevated) 25%, transparent 25%), 
-    linear-gradient(-45deg, var(--bg-surface-elevated) 25%, transparent 25%), 
-    linear-gradient(45deg, transparent 75%, var(--bg-surface-elevated) 75%), 
+  background-image:
+    linear-gradient(45deg, var(--bg-surface-elevated) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--bg-surface-elevated) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--bg-surface-elevated) 75%),
     linear-gradient(-45deg, transparent 75%, var(--bg-surface-elevated) 75%);
   background-size: 16px 16px;
   background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
@@ -1641,7 +1605,6 @@ body.is-native-app #apk-download-btn {
   object-fit: contain;
 }
 
-/* Metrics & Stats Row */
 .metrics-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1703,7 +1666,6 @@ body.is-native-app #apk-download-btn {
   color: var(--color-primary-light);
 }
 
-/* Multi-file chips list */
 .file-chips-list {
   display: flex;
   gap: 10px;
@@ -1761,7 +1723,6 @@ body.is-native-app #apk-download-btn {
   color: var(--color-danger);
 }
 
-/* Multi-Page PDF & Image Grid */
 .pages-selection-toolbar {
   display: flex;
   align-items: center;
@@ -1854,7 +1815,6 @@ body.is-native-app #apk-download-btn {
   text-align: center;
 }
 
-/* Reorderable Items (Image to PDF & PDF Merger) */
 .reorder-list-container {
   display: flex;
   flex-direction: column;
@@ -1973,7 +1933,6 @@ body.is-native-app #apk-download-btn {
   gap: 6px;
 }
 
-/* Image Converter Card Grid */
 .conv-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -2025,7 +1984,6 @@ body.is-native-app #apk-download-btn {
   border-top: 1px solid var(--border-subtle);
 }
 
-/* PDF Splitter Results List */
 .ps-result-row {
   display: flex;
   align-items: center;
@@ -2057,7 +2015,6 @@ body.is-native-app #apk-download-btn {
   color: var(--text-muted);
 }
 
-/* Radio Cards */
 .radio-cards-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2103,7 +2060,6 @@ body.is-native-app #apk-download-btn {
   line-height: 1.4;
 }
 
-/* Preset Buttons */
 .presets-row {
   display: flex;
   gap: 8px;
@@ -2134,7 +2090,6 @@ body.is-native-app #apk-download-btn {
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
-/* Slider Bar with Number Input Row */
 .slider-number-row {
   display: flex;
   align-items: center;
@@ -2169,7 +2124,6 @@ body.is-native-app #apk-download-btn {
   border-left: 3px solid var(--color-primary);
 }
 
-/* Background Color Picker Controls */
 .color-picker-wrap {
   display: flex;
   align-items: center;
@@ -2186,7 +2140,6 @@ body.is-native-app #apk-download-btn {
   cursor: pointer;
 }
 
-/* --- Toast Notifications System --- */
 .toast-container {
   position: fixed;
   bottom: 24px;
@@ -2282,7 +2235,6 @@ body.is-native-app #apk-download-btn {
   color: var(--text-primary);
 }
 
-/* --- Modals System --- */
 .modal-container {
   position: fixed;
   inset: 0;
@@ -2448,7 +2400,6 @@ body.is-native-app #apk-download-btn {
   font-size: 0.84rem;
 }
 
-/* --- Footer --- */
 .site-footer {
   margin-top: auto;
   background-color: var(--bg-surface);
@@ -2557,7 +2508,6 @@ body.is-native-app #apk-download-btn {
   color: var(--text-muted);
 }
 
-/* --- Responsive Media Queries --- */
 @media (max-width: 992px) {
   .hero-title {
     font-size: var(--fs-3xl);
@@ -2632,10 +2582,6 @@ body.is-native-app #apk-download-btn {
     grid-template-columns: 1fr;
   }
 }
-
-/* ================================================================= */
-/* NEW TOOLS STYLES: THUMBNAILS, REORDERING, DELETION & CROP */
-/* ================================================================= */
 
 .pages-thumbnail-grid {
   display: grid;
@@ -2726,7 +2672,6 @@ body.is-native-app #apk-download-btn {
   pointer-events: none;
 }
 
-/* Reorder List & Card Styles */
 .reorder-list-container {
   display: flex;
   flex-direction: column;
@@ -2856,7 +2801,6 @@ body.is-native-app #apk-download-btn {
   color: var(--color-danger);
 }
 
-/* Password Validation State Styles */
 .form-control.input-error,
 input.form-control.input-error {
   border-color: #ef4444 !important;
@@ -2889,9 +2833,6 @@ input.form-control.input-success {
   color: #10b981;
 }
 
-/* ------------------------------------------------------------------------- */
-/* IMAGE COLOR PICKER STYLES */
-/* ------------------------------------------------------------------------- */
 .icp-canvas-stage {
   position: relative;
   overflow: hidden;
@@ -2983,9 +2924,6 @@ input.form-control.input-success {
   z-index: 10;
 }
 
-/* ------------------------------------------------------------------------- */
-/* IMAGE PREVIEW INSPECTOR STYLES */
-/* ------------------------------------------------------------------------- */
 .ipv-viewport {
   position: relative;
   overflow: hidden;
@@ -3010,9 +2948,6 @@ input.form-control.input-success {
   border-radius: 4px;
 }
 
-/* ------------------------------------------------------------------------- */
-/* FILE UTILITIES SUITE STYLES (ZIP, ANALYZER, PREVIEWER, RENAMER, BATCH)    */
-/* ------------------------------------------------------------------------- */
 .file-queue-list {
   display: flex;
   flex-direction: column;
@@ -3070,7 +3005,6 @@ input.form-control.input-success {
   flex-shrink: 0;
 }
 
-/* Renamer Live Preview Row */
 .renamer-item {
   display: flex;
   flex-direction: column;
@@ -3113,7 +3047,6 @@ input.form-control.input-success {
   flex: 1;
 }
 
-/* Batch Status Badges */
 .batch-status-badge {
   display: inline-flex;
   align-items: center;
@@ -3147,9 +3080,6 @@ input.form-control.input-success {
   color: #ef4444;
 }
 
-/* ------------------------------------------------------------------------- */
-/* COMPREHENSIVE RESPONSIVE MEDIA QUERIES (<= 992px, <= 768px, <= 480px)      */
-/* ------------------------------------------------------------------------- */
 @media (max-width: 992px) {
   .nav-menu-wrap {
     display: none !important;
@@ -3223,12 +3153,10 @@ input.form-control.input-success {
     display: none;
   }
 
-  /* Container & Global Width Safety */
   .container {
     padding: 0 16px !important;
   }
 
-  /* Filter Pills: Clean wrapping centered chips */
   .filter-pills-row {
     display: flex !important;
     flex-wrap: wrap !important;
@@ -3246,7 +3174,6 @@ input.form-control.input-success {
     flex-shrink: 0;
   }
 
-  /* Tool Cards */
   .tools-grid {
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 12px;
@@ -3272,7 +3199,6 @@ input.form-control.input-success {
     word-break: break-word !important;
   }
 
-  /* Tool Workspace & Panels */
   .tool-workspace-container {
     padding: 16px 12px !important;
     border-radius: var(--radius-lg) !important;
@@ -3319,7 +3245,6 @@ input.form-control.input-success {
     width: 100% !important;
   }
 
-  /* Dimensions Row in Image Resizer */
   .dims-row {
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
@@ -3331,7 +3256,6 @@ input.form-control.input-success {
     width: 100% !important;
   }
 
-  /* Preset Chips Rows */
   .presets-row {
     display: flex !important;
     flex-wrap: wrap !important;
@@ -3346,7 +3270,6 @@ input.form-control.input-success {
     text-align: center !important;
   }
 
-  /* Preview Comparisons */
   .preview-comparison-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
@@ -3396,7 +3319,6 @@ input.form-control.input-success {
     margin-top: 16px !important;
   }
 
-  /* Multi-page grid */
   .pages-selection-toolbar {
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -3420,7 +3342,6 @@ input.form-control.input-success {
     height: 140px !important;
   }
 
-  /* Reorder list items */
   .reorder-item {
     padding: 8px 10px !important;
     gap: 8px !important;
@@ -3443,7 +3364,6 @@ input.form-control.input-success {
     gap: 6px;
   }
 
-  /* Footer on Tablet & Mobile */
   .site-footer {
     padding: 36px 0 24px !important;
   }
@@ -3605,10 +3525,6 @@ input.form-control.input-success {
     font-size: 0.8rem !important;
   }
 }
-
-/* ==========================================================================
-   Tool 51: Image to PDF & Image Editor Styles
-   ========================================================================== */
 
 #i2p-image-list {
   display: flex;
@@ -3814,7 +3730,6 @@ input.form-control.input-success {
   padding: 0;
 }
 
-/* Per-Page Orientation Controls inside Image Cards */
 .i2p-item-orient-row {
   display: flex;
   align-items: center;
@@ -3876,7 +3791,6 @@ input.form-control.input-success {
   box-shadow: 0 1px 4px rgba(99, 102, 241, 0.35);
 }
 
-/* PDF Live Preview Sheet Simulation */
 .i2p-preview-sheet-wrap {
   display: flex;
   align-items: center;
@@ -3915,7 +3829,6 @@ input.form-control.input-success {
   height: 28px;
 }
 
-/* Image Editor Modal Styles */
 .i2p-modal-wide .i2p-editor-card {
   max-width: 960px;
   width: 95%;
@@ -4039,19 +3952,17 @@ input.form-control.input-success {
   color: #ffffff;
 }
 
-/* Checkerboard transparency background pattern */
 .checkerboard-bg {
   background-color: #1e293b;
-  background-image: 
-    linear-gradient(45deg, #0f172a 25%, transparent 25%), 
-    linear-gradient(-45deg, #0f172a 25%, transparent 25%), 
-    linear-gradient(45deg, transparent 75%, #0f172a 75%), 
+  background-image:
+    linear-gradient(45deg, #0f172a 25%, transparent 25%),
+    linear-gradient(-45deg, #0f172a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #0f172a 75%),
     linear-gradient(-45deg, transparent 75%, #0f172a 75%);
   background-size: 16px 16px;
   background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
 }
 
-/* Filter Preset Cards (Horizontal Row in Image Editor) */
 .i2p-filter-cards-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -4109,7 +4020,6 @@ input.form-control.input-success {
   font-weight: 700;
 }
 
-/* Interactive Signature Placement on Preview */
 .i2p-sig-controls-row {
   transition: all var(--transition-fast);
 }
@@ -4179,7 +4089,6 @@ input.form-control.input-success {
   touch-action: none;
 }
 
-/* Handwritten Signature Studio Modal */
 .i2p-signature-card {
   max-width: 860px;
   width: 95%;
@@ -4292,18 +4201,13 @@ input.form-control.input-success {
   border: 1px solid rgba(255,255,255,0.2);
 }
 
-/* ==========================================================================
-   Tool 51: Mobile Responsive Enhancements
-   ========================================================================== */
-
 @media (max-width: 768px) {
-  /* Workspace Layout on Tablet / Mobile */
+
   #tool-image-to-pdf .workspace-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
 
-  /* Modals Layout */
   .modal-container {
     padding: 8px;
   }
@@ -4383,7 +4287,6 @@ input.form-control.input-success {
     margin: 0 auto;
   }
 
-  /* Filter Presets Swipeable Row */
   .i2p-filter-cards-row {
     display: flex;
     overflow-x: auto;
@@ -4407,7 +4310,7 @@ input.form-control.input-success {
 }
 
 @media (max-width: 600px) {
-  /* Settings & Main Buttons */
+
   #tool-image-to-pdf .panel-card {
     padding: 14px;
   }
@@ -4436,14 +4339,12 @@ input.form-control.input-success {
     justify-content: center;
   }
 
-  /* PDF Ready Result Card */
   #i2p-pdf-ready-card .btn {
     width: 100%;
     min-height: 46px;
     font-size: 0.96rem;
   }
 
-  /* Image Reorder Item Container & Cards on Mobile */
   #i2p-image-list {
     max-height: clamp(400px, 55vh, 500px);
     padding-right: 4px;
@@ -4515,7 +4416,6 @@ input.form-control.input-success {
     font-size: 1rem;
   }
 
-  /* Per-Page Orientation Row on Mobile */
   .i2p-item-orient-row {
     width: 100%;
     margin-top: 4px;
@@ -4548,7 +4448,6 @@ input.form-control.input-success {
     font-size: 0.68rem;
   }
 
-  /* Live Preview Card & Signature Controls */
   .i2p-sig-controls-row {
     flex-direction: column;
     align-items: stretch !important;
@@ -4579,7 +4478,6 @@ input.form-control.input-success {
     font-size: 15px;
   }
 
-  /* Sensitivity Slider & Ink Options on Mobile */
   .range-slider {
     height: 8px;
   }
@@ -4594,7 +4492,6 @@ input.form-control.input-success {
     font-size: 0.72rem;
   }
 
-  /* Crop Controls Panel */
   .i2p-ratio-group {
     gap: 4px;
   }
@@ -4604,7 +4501,6 @@ input.form-control.input-success {
     font-size: 0.75rem;
   }
 
-  /* Modal Header & Footers */
   .modal-header {
     padding: 12px 14px;
     gap: 8px;
@@ -4627,11 +4523,6 @@ input.form-control.input-success {
   }
 }
 
-/* ================================================================= */
-/* UNIVERSAL UX ENHANCEMENTS & PROGRESSIVE DISCLOSURE SYSTEM */
-/* ================================================================= */
-
-/* Advanced Options Accordion / Collapsible Details */
 .advanced-options-details {
   background-color: var(--bg-surface-elevated, var(--bg-surface));
   border: 1px solid var(--border-subtle);
@@ -4694,7 +4585,6 @@ input.form-control.input-success {
   gap: 14px;
 }
 
-/* Input Fields with Visible Labels & Unit Badges */
 .input-with-unit-wrap {
   position: relative;
   display: flex;
@@ -4733,7 +4623,6 @@ input.form-control.input-success {
   color: var(--text-muted);
 }
 
-/* Segmented Control / Preset Option Pills */
 .preset-pill-group {
   display: flex;
   background-color: var(--bg-app);
@@ -4774,7 +4663,6 @@ input.form-control.input-success {
   box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
 }
 
-/* Action Button Typography & Icons */
 .btn-action-primary {
   display: inline-flex;
   align-items: center;
@@ -4792,7 +4680,6 @@ input.form-control.input-success {
   height: 18px;
 }
 
-/* Clean File Cards */
 .clean-file-card {
   display: flex;
   align-items: center;
@@ -4843,7 +4730,6 @@ input.form-control.input-success {
   color: var(--text-muted);
 }
 
-/* Legal Disclaimer Box for Add Signature */
 .signature-disclaimer-box {
   margin-top: 14px;
   padding: 10px 14px;
@@ -4859,7 +4745,6 @@ input.form-control.input-success {
   color: #eab308;
 }
 
-/* Visual Selection State for PDF Page Thumbnails */
 .page-thumbnail-card.selected {
   border-color: var(--color-primary) !important;
   background-color: rgba(99, 102, 241, 0.08) !important;
@@ -4887,10 +4772,6 @@ input.form-control.input-success {
   opacity: 1;
   transform: scale(1);
 }
-
-/* ==========================================================================
-   MOBILE-ONLY HOW TO USE TOOL GUIDE COMPONENT
-   ========================================================================== */
 
 .tool-guide-wrapper {
   margin-top: 32px;
@@ -5023,16 +4904,12 @@ input.form-control.input-success {
   font-weight: 700;
 }
 
-/* --- Mobile & APK Tool Guide Visibility Rules --- */
-
-/* Desktop Screens (width > 768px): Hide tool guide wrapper */
 @media (min-width: 769px) {
   .tool-guide-wrapper {
     display: none !important;
   }
 }
 
-/* Mobile Screens, DevTools Emulator & Android APK (width <= 768px) */
 @media (max-width: 768px) {
   .tool-guide-wrapper {
     display: block !important;
@@ -5040,15 +4917,10 @@ input.form-control.input-success {
     margin-bottom: 24px;
   }
 
-  /* When an active tool view is visible, hide generic site footer on mobile */
   body.has-active-tool .site-footer {
     display: none !important;
   }
 }
-
-/* ==========================================================================
-   UNIFIED SAVE & DOWNLOAD COMPLETE MODAL STYLES
-   ========================================================================== */
 
 .save-file-modal-card {
   width: 100%;
@@ -5133,7 +5005,6 @@ input.form-control.input-success {
   margin: 0;
 }
 
-/* Saving State Spinner */
 .save-saving-spinner {
   width: 48px;
   height: 48px;
@@ -5149,7 +5020,6 @@ input.form-control.input-success {
   100% { transform: rotate(360deg); }
 }
 
-/* Download Complete Card */
 .save-complete-card {
   display: flex;
   align-items: center;
@@ -5199,14 +5069,12 @@ input.form-control.input-success {
   color: var(--text-muted);
 }
 
-/* Image to PDF Page-by-Page Editor Navigation */
 .i2p-editor-page-nav {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Crop Live Magnifier */
 .crop-live-magnifier {
   position: absolute;
   width: 140px;
@@ -5277,6 +5145,3 @@ input.form-control.input-success {
   background: transparent;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
 }
-
-
-

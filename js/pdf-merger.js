@@ -1,10 +1,5 @@
-/**
- * FileForge - PDF Merger Tool
- * Combines multiple PDF documents into a single file with drag & drop reordering and page counts.
- */
-
 const PDFMerger = (() => {
-  let pdfList = []; // { file, name, size, buffer, pageCount }
+  let pdfList = [];
   let mergedPdfBlob = null;
 
   let dom = {};
@@ -18,12 +13,10 @@ const PDFMerger = (() => {
       workspace: document.getElementById('pm-workspace'),
       emptyState: document.getElementById('pm-empty-state'),
       fileListContainer: document.getElementById('pm-file-list'),
-      
-      // Stats
+
       fileCountText: document.getElementById('pm-file-count'),
       totalPagesText: document.getElementById('pm-total-pages'),
-      
-      // Actions
+
       mergeBtn: document.getElementById('pm-merge-btn'),
       downloadBtn: document.getElementById('pm-download-btn'),
       resetBtn: document.getElementById('pm-reset-btn'),
@@ -135,7 +128,6 @@ const PDFMerger = (() => {
         </div>
       `;
 
-      // Drag and Drop
       card.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('text/plain', index);
         card.classList.add('dragging');
@@ -162,7 +154,6 @@ const PDFMerger = (() => {
         }
       });
 
-      // Move buttons
       card.querySelector('.pm-move-up').addEventListener('click', () => {
         if (index > 0) {
           const temp = pdfList[index];

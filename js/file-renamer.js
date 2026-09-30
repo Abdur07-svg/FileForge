@@ -1,10 +1,5 @@
-/**
- * FileForge - Batch File Renamer Tool
- * Easily add prefix/suffix, search & replace, sequential numbers, or change casing on multiple files before downloading.
- */
-
 const FileRenamer = (() => {
-  let filesList = []; // { file, origName, newName, size }
+  let filesList = [];
   let dom = {};
 
   function init() {
@@ -15,20 +10,17 @@ const FileRenamer = (() => {
       browseBtn: document.getElementById('frnm-browse-btn'),
       workspace: document.getElementById('frnm-workspace'),
       emptyState: document.getElementById('frnm-empty-state'),
-      
-      // Controls
+
       prefixInput: document.getElementById('frnm-prefix'),
       suffixInput: document.getElementById('frnm-suffix'),
       findInput: document.getElementById('frnm-find'),
       replaceInput: document.getElementById('frnm-replace'),
       numberingCheck: document.getElementById('frnm-numbering'),
       caseSelect: document.getElementById('frnm-case'),
-      
-      // List
+
       fileList: document.getElementById('frnm-file-list'),
       fileCountText: document.getElementById('frnm-count'),
-      
-      // Actions
+
       applyBtn: document.getElementById('frnm-apply-btn'),
       downloadZipBtn: document.getElementById('frnm-download-zip-btn'),
       downloadAllBtn: document.getElementById('frnm-download-all-btn'),
@@ -96,12 +88,10 @@ const FileRenamer = (() => {
       let base = Utils.getBaseName(item.origName);
       let ext = Utils.getExtension(item.origName);
 
-      // Find & Replace
       if (findStr) {
         base = base.split(findStr).join(replaceStr);
       }
 
-      // Case transformation
       if (caseRule === 'lower') {
         base = base.toLowerCase();
       } else if (caseRule === 'upper') {
@@ -110,11 +100,9 @@ const FileRenamer = (() => {
         base = base.replace(/\b\w/g, l => l.toUpperCase());
       }
 
-      // Prefix / Suffix
       if (prefix) base = prefix + base;
       if (suffix) base = base + suffix;
 
-      // Sequential Numbering
       if (useNumbering) {
         const numStr = String(index + 1).padStart(2, '0');
         base = `${base}_${numStr}`;

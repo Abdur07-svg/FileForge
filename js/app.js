@@ -1,10 +1,5 @@
-/**
- * FileForge - Main Application Controller
- * Handles routing, tool activation, search, filtering, dark/light theme, and universal dropzone.
- */
-
 const App = (() => {
-  // Tool metadata mapping
+
   const TOOLS_DATA = [
     {
       id: 'pdf-compressor',
@@ -481,10 +476,8 @@ const App = (() => {
     setupModals();
     handleInitialRoute();
 
-    // Listen to hash changes for browser back/forward buttons
     window.addEventListener('hashchange', handleInitialRoute);
 
-    // Global keyboard shortcuts (Ctrl+K or / to search)
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
@@ -600,7 +593,7 @@ const App = (() => {
   }
 
   function setupNavigation() {
-    // Re-enable dropdown display whenever mouse enters or leaves dropdown container
+
     document.querySelectorAll('.nav-item-dropdown').forEach(dropdown => {
       dropdown.addEventListener('mouseleave', () => {
         dropdown.classList.remove('nav-dropdown-closed');
@@ -610,7 +603,6 @@ const App = (() => {
       });
     });
 
-    // Close desktop dropdowns & mobile nav on outside click
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.nav-item-dropdown')) {
         closeAllDropdowns();
@@ -620,7 +612,6 @@ const App = (() => {
       }
     });
 
-    // Close on Escape key
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeAllDropdowns();
@@ -628,7 +619,6 @@ const App = (() => {
       }
     });
 
-    // Nav Links with category filters or home
     document.querySelectorAll('[data-nav-filter]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -640,7 +630,6 @@ const App = (() => {
       });
     });
 
-    // Logo & Home links
     document.querySelectorAll('.nav-home-link, .brand-home-link, .brand-logo').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -650,7 +639,6 @@ const App = (() => {
       });
     });
 
-    // Back to Tools button in active tool workspace
     document.querySelectorAll('.back-to-tools-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -660,7 +648,6 @@ const App = (() => {
       });
     });
 
-    // Mobile nav toggle & controls
     const mobileMenuBtn = document.getElementById('mobile-menu-toggle');
     const mobileCloseBtn = document.getElementById('mobile-nav-close');
     const mobileBackdrop = document.getElementById('mobile-nav-backdrop');
@@ -688,7 +675,7 @@ const App = (() => {
     }
 
     if (mobileNav) {
-      // Close mobile nav when any link inside it is clicked
+
       mobileNav.querySelectorAll('a, button:not(#mobile-nav-close)').forEach(item => {
         item.addEventListener('click', () => {
           closeMobileNav();
@@ -722,7 +709,6 @@ const App = (() => {
       });
     });
 
-    // Tool card clicks
     document.querySelectorAll('.tool-card').forEach(card => {
       card.addEventListener('click', () => {
         const toolId = card.dataset.tool;
@@ -731,7 +717,6 @@ const App = (() => {
       });
     });
 
-    // Navbar Dropdown item clicks
     document.querySelectorAll('.dropdown-item[data-tool]').forEach(item => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
@@ -741,7 +726,6 @@ const App = (() => {
       });
     });
 
-    // Footer "View all ... tools" links
     document.querySelectorAll('.footer-view-all').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -752,7 +736,6 @@ const App = (() => {
       });
     });
 
-    // Pagination buttons
     if (prevBtn) {
       prevBtn.addEventListener('click', () => {
         if (currentPage > 1) {
@@ -777,7 +760,6 @@ const App = (() => {
       });
     }
 
-    // Initial tool list rendering with pagination
     filterTools('', activeFilter, 1);
   }
 
@@ -916,7 +898,7 @@ const App = (() => {
     const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(file.name);
 
     if (isPdf) {
-      // Offer Quick Action Dialog or route to PDF Compressor by default with file
+
       showQuickToolModal(files, 'pdf');
     } else if (isImage) {
       showQuickToolModal(files, 'image');
@@ -931,7 +913,7 @@ const App = (() => {
     const optionsList = document.getElementById('universal-modal-options');
 
     if (!modal) {
-      // Fallback: direct route
+
       if (type === 'pdf') openTool('pdf-compressor', files);
       else openTool('image-compressor', files);
       return;
@@ -974,7 +956,7 @@ const App = (() => {
   }
 
   function setupModals() {
-    // Universal close button for modals (top-right cross, footer close button, backdrop)
+
     document.querySelectorAll('.modal-close-btn, .modal-close-btn-text, .modal-backdrop').forEach(el => {
       el.addEventListener('click', () => {
         const modal = el.closest('.modal-container');
@@ -982,7 +964,6 @@ const App = (() => {
       });
     });
 
-    // Close on Escape key press
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         document.querySelectorAll('.modal-container:not(.hidden)').forEach(modal => {
@@ -991,7 +972,6 @@ const App = (() => {
       }
     });
 
-    // Privacy modal trigger
     document.querySelectorAll('.open-privacy-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -999,7 +979,6 @@ const App = (() => {
       });
     });
 
-    // Terms modal trigger
     document.querySelectorAll('.open-terms-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1007,7 +986,6 @@ const App = (() => {
       });
     });
 
-    // About modal trigger
     document.querySelectorAll('.open-about-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1015,7 +993,6 @@ const App = (() => {
       });
     });
 
-    // Contact modal trigger
     document.querySelectorAll('.open-contact-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1023,9 +1000,6 @@ const App = (() => {
       });
     });
 
-
-
-    // Get APK button device-specific trigger (Desktop, Android, iOS)
     const apkDownloadBtn = document.getElementById('apk-download-btn');
     const mobileApkDownloadBtn = document.getElementById('mobile-apk-download-btn');
     if (apkDownloadBtn) {
@@ -1036,9 +1010,6 @@ const App = (() => {
     }
   }
 
-  /**
-   * Resolve APK Download URL dynamically across GitHub Pages, custom domain, or direct raw mirror
-   */
   function getApkDownloadUrl() {
     try {
       if (window.location && window.location.href) {
@@ -1048,38 +1019,28 @@ const App = (() => {
     return 'https://raw.githubusercontent.com/Abdur07-svg/FileForge/main/FileForge-Mobile.apk';
   }
 
-  /**
-   * Device Detection Utility
-   * Differentiates Android, iOS/iPadOS, and Desktop/Laptop
-   */
   function getDeviceType() {
     const ua = navigator.userAgent || '';
     const platform = navigator.userAgentData?.platform || navigator.platform || '';
     const maxTouchPoints = navigator.maxTouchPoints || 0;
 
-    // Android Mobile Detection
     if (/Android/i.test(ua) || /Android/i.test(platform)) {
       return 'android';
     }
 
-    // iOS / iPadOS Detection (including modern iPadOS with MacIntel + multi-touch)
     if (/iPad|iPhone|iPod/.test(ua) || (/MacIntel/i.test(platform) && maxTouchPoints > 1)) {
       return 'ios';
     }
 
-    // Desktop / Laptop (Windows, macOS, Linux, ChromeOS)
     return 'desktop';
   }
 
-  /**
-   * Device-specific "Get APK" Click Handler
-   */
   function handleGetApkClick(e) {
     if (e) e.preventDefault();
     const device = getDeviceType();
 
     if (device === 'android') {
-      // ANDROID: Direct APK download without modal or intermediate screens
+
       if (window.Utils && typeof window.Utils.showToast === 'function') {
         window.Utils.showToast('Starting FileForge-Mobile.apk download...', 'info', 3000);
       }
@@ -1094,7 +1055,7 @@ const App = (() => {
         if (link.parentElement) link.parentElement.removeChild(link);
       }, 1000);
     } else if (device === 'ios') {
-      // iOS / iPadOS: Informational modal with disabled download
+
       const msg1 = document.getElementById('apk-modal-message-1');
       const msg2 = document.getElementById('apk-modal-message-2');
       const tag = document.getElementById('apk-modal-device-tag');
@@ -1104,7 +1065,7 @@ const App = (() => {
 
       openModal('apk-info-modal');
     } else {
-      // DESKTOP: Informational modal with disabled download
+
       const msg1 = document.getElementById('apk-modal-message-1');
       const msg2 = document.getElementById('apk-modal-message-2');
       const tag = document.getElementById('apk-modal-device-tag');
@@ -1117,7 +1078,7 @@ const App = (() => {
   }
 
   function openModal(id) {
-    // Ensure all modals are closed and their scroll positions reset to top
+
     document.querySelectorAll('.modal-container').forEach(m => {
       m.classList.add('hidden');
       const c = m.querySelector('.modal-card');
@@ -1135,7 +1096,7 @@ const App = (() => {
       if (card) {
         card.scrollTop = 0;
         card.scrollTo(0, 0);
-        // Secondary reset on next tick to override browser layout memory
+
         requestAnimationFrame(() => {
           card.scrollTop = 0;
           card.scrollTo(0, 0);
@@ -1195,12 +1156,8 @@ const App = (() => {
     () => window.BatchProcessor
   ];
 
-  /**
-   * Completely reset all temporary tool state, uploaded files, previews,
-   * object URLs, canvas memory, and file input values.
-   */
   function resetAllToolStates() {
-    // 1. Call reset() on every registered tool module
+
     TOOL_MODULE_GETTERS.forEach(getMod => {
       try {
         const mod = getMod();
@@ -1212,18 +1169,15 @@ const App = (() => {
       }
     });
 
-    // 2. Clear all file input elements across the DOM
     document.querySelectorAll('input[type="file"]').forEach(input => {
       try {
         input.value = '';
       } catch (e) {}
     });
 
-    // 3. Hide all progress bars, spinners, and reset drag states
     document.querySelectorAll('.progress-container').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.drag-active').forEach(el => el.classList.remove('drag-active'));
 
-    // 4. Unlock global processing state
     if (window.Utils && typeof window.Utils.setProcessing === 'function') {
       window.Utils.setProcessing(false);
     }
@@ -1255,26 +1209,22 @@ const App = (() => {
   }
 
   function showHomeView(updateHash = true) {
-    // Complete reset of previous tool state when returning to homepage
+
     resetAllToolStates();
     activeToolId = null;
     document.body.classList.remove('has-active-tool');
     if (updateHash) history.pushState(null, '', window.location.pathname);
     updateNavActiveState(true);
 
-    // Show homepage sections
     document.getElementById('hero-section').classList.remove('hidden');
     document.getElementById('tools-grid-section').classList.remove('hidden');
     document.getElementById('features-section').classList.remove('hidden');
     document.getElementById('security-section').classList.remove('hidden');
 
-    // Hide tool workspace
     document.getElementById('active-tool-view').classList.add('hidden');
 
-    // Hide all individual tool containers
     document.querySelectorAll('.tool-workspace-container').forEach(c => c.classList.add('hidden'));
 
-    // Refresh pagination view
     const searchInput = document.getElementById('tool-search');
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
     filterTools(query, activeFilter, currentPage);
@@ -1283,7 +1233,7 @@ const App = (() => {
   }
 
   function openTool(toolId, preloadedFiles = null) {
-    // Always start with a completely fresh state before opening the tool
+
     resetAllToolStates();
 
     activeToolId = toolId;
@@ -1291,33 +1241,26 @@ const App = (() => {
     document.body.classList.add('has-active-tool');
     updateNavActiveState(false);
 
-    // Find tool definition
     const tool = TOOLS_DATA.find(t => t.id === toolId);
     if (!tool) return;
 
-    // Render mobile How-To guide for the current active tool
     if (window.ToolGuides) {
       window.ToolGuides.renderGuide(toolId);
     }
 
-    // Hide home sections
     document.getElementById('hero-section').classList.add('hidden');
     document.getElementById('tools-grid-section').classList.add('hidden');
     document.getElementById('features-section').classList.add('hidden');
     document.getElementById('security-section').classList.add('hidden');
 
-    // Show tool workspace container
     const activeView = document.getElementById('active-tool-view');
     activeView.classList.remove('hidden');
 
-    // Update active tool title and description
     document.getElementById('active-tool-title').textContent = tool.name;
     document.getElementById('active-tool-desc').textContent = tool.desc;
 
-    // Hide all tool sub-containers and show current one
     document.querySelectorAll('.tool-workspace-container').forEach(c => c.classList.add('hidden'));
 
-    // Map toolId to corresponding DOM container and module
     let targetContainerId = `tool-${toolId}`;
     let handlerModule = null;
 
@@ -1428,7 +1371,6 @@ const App = (() => {
       targetEl.classList.remove('hidden');
     }
 
-    // If files were pre-loaded from universal dropzone, pass them into the module
     if (preloadedFiles && handlerModule && typeof handlerModule.handleFiles === 'function') {
       handlerModule.handleFiles(preloadedFiles);
     }
@@ -1447,10 +1389,9 @@ const App = (() => {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize PDF.js worker with local bundle
+
   if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdf.worker.min.js';
   }
   App.init();
 });
-

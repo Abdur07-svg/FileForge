@@ -1,13 +1,5 @@
-/**
- * FileForge Mobile - Image Processing Engine
- * 100% Client-side Canvas Processing
- */
 const MobileImageEngine = (() => {
 
-  /**
-   * Adaptive Color Quantization for PNG images on fresh pixel buffer
-   * Reduces palette variance so DEFLATE achieves true compression
-   */
   function applyPngQuantization(data, width, height, quality) {
     let levels = 32;
     if (quality >= 0.85) levels = 64;
@@ -32,9 +24,6 @@ const MobileImageEngine = (() => {
     }
   }
 
-  /**
-   * Safe Canvas to Blob wrapper with WebView fallback
-   */
   function safeCanvasToBlob(canvas, mimeType, quality) {
     return new Promise((resolve, reject) => {
       try {
@@ -42,7 +31,7 @@ const MobileImageEngine = (() => {
           if (blob && blob.size > 0) {
             resolve(blob);
           } else {
-            // Fallback for WebViews with broken toBlob
+
             try {
               const dataUrl = canvas.toDataURL(mimeType, quality);
               const arr = dataUrl.split(',');
@@ -66,15 +55,12 @@ const MobileImageEngine = (() => {
     });
   }
 
-  /**
-   * Compress an image file with strict size comparison & safety guards
-   */
   async function compressImage(file, options = {}) {
     const quality = options.quality !== undefined ? options.quality : 0.75;
     const maxWidth = options.maxWidth || null;
     const maxHeight = options.maxHeight || null;
     const isExplicitFormat = !!options.format && options.formatChoice !== 'original';
-    
+
     let outputFormat = options.format;
     if (!outputFormat) {
       if (file.type === 'image/png' || /\.png$/i.test(file.name)) outputFormat = 'image/png';
@@ -101,7 +87,6 @@ const MobileImageEngine = (() => {
 
     const dimensionsUnchanged = (width === originalWidth && height === originalHeight);
 
-    // Master clean canvas
     const masterCanvas = document.createElement('canvas');
     masterCanvas.width = width;
     masterCanvas.height = height;
@@ -124,14 +109,13 @@ const MobileImageEngine = (() => {
     );
 
     if (outputFormat === 'image/png') {
-      // 1. Initial Quantization Attempt from fresh master canvas
+
       const workCanvas = document.createElement('canvas');
       workCanvas.width = width;
       workCanvas.height = height;
       const workCtx = workCanvas.getContext('2d');
       workCtx.drawImage(masterCanvas, 0, 0);
 
-      // Get ORIGINAL fresh ImageData
       const origImageData = masterCtx.getImageData(0, 0, width, height);
       const clonedData = new Uint8ClampedArray(origImageData.data);
       applyPngQuantization(clonedData, width, height, quality);
@@ -140,7 +124,6 @@ const MobileImageEngine = (() => {
 
       let bestBlob = await safeCanvasToBlob(workCanvas, 'image/png', quality);
 
-      // 2. If PNG is still larger than original with unchanged dimensions, step down quantization
       if (bestBlob.size >= file.size && dimensionsUnchanged) {
         const testQualities = [0.65, 0.45, 0.25, 0.15];
         for (const testQ of testQualities) {
@@ -156,7 +139,6 @@ const MobileImageEngine = (() => {
         }
       }
 
-      // 3. Strict Size Rule for PNG: If still >= original with unchanged dimensions & not explicit conversion
       if (bestBlob.size >= file.size && dimensionsUnchanged && !isExplicitConversion) {
         finalBlob = file;
         retainedOriginal = true;
@@ -164,7 +146,7 @@ const MobileImageEngine = (() => {
         finalBlob = bestBlob;
       }
     } else {
-      // JPEG & WebP Compression with Iterative Quality Stepping
+
       let bestBlob = await safeCanvasToBlob(masterCanvas, outputFormat, quality);
 
       if (bestBlob.size >= file.size && dimensionsUnchanged && !isExplicitConversion) {
@@ -180,7 +162,6 @@ const MobileImageEngine = (() => {
         }
       }
 
-      // Safety check: Never return larger file when format is original and dimensions unchanged
       if (bestBlob.size >= file.size && dimensionsUnchanged && !isExplicitConversion) {
         finalBlob = file;
         retainedOriginal = true;
@@ -212,9 +193,6 @@ const MobileImageEngine = (() => {
     };
   }
 
-  /**
-   * Resize image by dimensions or scale percentage
-   */
   async function resizeImage(file, options = {}) {
     const dataUrl = await MobileUtils.readFileAsDataURL(file);
     const img = await MobileUtils.loadImageFromSrc(dataUrl);
@@ -267,9 +245,6 @@ const MobileImageEngine = (() => {
     });
   }
 
-  /**
-   * Convert image format (JPG, PNG, WebP)
-   */
   async function convertImage(file, targetFormat = 'image/png', quality = 0.92) {
     const dataUrl = await MobileUtils.readFileAsDataURL(file);
     const img = await MobileUtils.loadImageFromSrc(dataUrl);

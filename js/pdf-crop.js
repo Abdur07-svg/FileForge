@@ -1,25 +1,12 @@
-/**
- * FileForge - PDF Crop Tool (Interactive Freeform & Box Clipping)
- * 
- * High-fidelity client-side PDF cropping engine:
- * 1. 100% Lossless: Crops PDF page boxes (CropBox/MediaBox) directly via pdf-lib without rasterization.
- * 2. Interactive Freeform Cropping: Drag & resize crop box directly on canvas using touch or mouse.
- * 3. 8-point Anchor Handles: 4 Corner handles (NW, NE, SE, SW) + 4 Edge handles (N, S, E, W) + Center move.
- * 4. Bi-directional Sync: Dragging canvas updates margin inputs; changing inputs updates canvas.
- * 5. Accurate Coordinate Math with Rotation Support (0°, 90°, 180°, 270°).
- * 6. Preserves selectable text, vector graphics, fonts, and annotations.
- */
-
 const PDFCrop = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount, pdf, pageWidth, pageHeight }
+  let currentFile = null;
   let page1CanvasCache = null;
   let generatedPdfBlob = null;
   let canvasScale = 1;
 
-  // Interactive Crop Rectangle (in display canvas pixels)
   let cropRect = { x: 0, y: 0, w: 0, h: 0 };
   let isDragging = false;
-  let dragMode = null; // 'move' | 'nw' | 'ne' | 'se' | 'sw' | 'n' | 's' | 'e' | 'w'
+  let dragMode = null;
   let dragStart = { x: 0, y: 0, cropX: 0, cropY: 0, cropW: 0, cropH: 0 };
 
   let dom = {};
@@ -32,22 +19,18 @@ const PDFCrop = (() => {
       browseBtn: document.getElementById('pcrop-browse-btn'),
       workspace: document.getElementById('pcrop-workspace'),
       emptyState: document.getElementById('pcrop-empty-state'),
-      
-      // Margin Inputs
+
       topInput: document.getElementById('pcrop-top'),
       bottomInput: document.getElementById('pcrop-bottom'),
       leftInput: document.getElementById('pcrop-left'),
       rightInput: document.getElementById('pcrop-right'),
-      
-      // Presets
+
       trimPresets: document.querySelectorAll('.pcrop-preset-btn'),
       resetCropBtn: document.getElementById('pcrop-reset-crop-btn'),
       sizeBadge: document.getElementById('pcrop-size-badge'),
-      
-      // Preview
+
       previewCanvas: document.getElementById('pcrop-preview-canvas'),
-      
-      // Actions
+
       applyBtn: document.getElementById('pcrop-apply-btn'),
       downloadBtn: document.getElementById('pcrop-download-btn'),
       resetBtn: document.getElementById('pcrop-reset-btn'),
@@ -92,7 +75,6 @@ const PDFCrop = (() => {
       });
     }
 
-    // Pointer Events for Interactive Freeform Cropping (Mouse + Touch)
     if (dom.previewCanvas) {
       dom.previewCanvas.addEventListener('mousedown', onPointerDown);
       window.addEventListener('mousemove', onPointerMove);
@@ -193,7 +175,6 @@ const PDFCrop = (() => {
       dom.previewCanvas.width = offscreen.width;
       dom.previewCanvas.height = offscreen.height;
 
-      // Initialize crop rect to full page by default
       cropRect = {
         x: 0,
         y: 0,
@@ -279,7 +260,6 @@ const PDFCrop = (() => {
     const canvas = dom.previewCanvas;
     const ctx = canvas.getContext('2d', { alpha: false });
 
-    // 1. Draw base page
     ctx.drawImage(page1CanvasCache, 0, 0);
 
     const cx = Math.max(0, Math.min(canvas.width - 10, cropRect.x));
@@ -287,20 +267,17 @@ const PDFCrop = (() => {
     const cw = Math.max(10, Math.min(canvas.width - cx, cropRect.w));
     const ch = Math.max(10, Math.min(canvas.height - cy, cropRect.h));
 
-    // 2. Darkened semi-transparent overlay on cropped-out regions
     ctx.fillStyle = 'rgba(8, 12, 20, 0.62)';
-    ctx.fillRect(0, 0, canvas.width, cy); // Top
-    ctx.fillRect(0, cy + ch, canvas.width, canvas.height - (cy + ch)); // Bottom
-    ctx.fillRect(0, cy, cx, ch); // Left
-    ctx.fillRect(cx + cw, cy, canvas.width - (cx + cw), ch); // Right
+    ctx.fillRect(0, 0, canvas.width, cy);
+    ctx.fillRect(0, cy + ch, canvas.width, canvas.height - (cy + ch));
+    ctx.fillRect(0, cy, cx, ch);
+    ctx.fillRect(cx + cw, cy, canvas.width - (cx + cw), ch);
 
-    // 3. Highlighted Crop Area Box
     ctx.strokeStyle = '#6366f1';
     ctx.lineWidth = 2.5;
     ctx.setLineDash([]);
     ctx.strokeRect(cx, cy, cw, ch);
 
-    // 4. Rule of thirds grid lines
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
@@ -321,7 +298,6 @@ const PDFCrop = (() => {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // 5. Draw 8 Anchor Handles (4 Corners + 4 Edges)
     const handleRadius = 6;
     const drawHandle = (hx, hy) => {
       ctx.fillStyle = '#ffffff';
@@ -333,24 +309,21 @@ const PDFCrop = (() => {
       ctx.stroke();
     };
 
-    // Corners
-    drawHandle(cx, cy); // NW
-    drawHandle(cx + cw, cy); // NE
-    drawHandle(cx + cw, cy + ch); // SE
-    drawHandle(cx, cy + ch); // SW
+    drawHandle(cx, cy);
+    drawHandle(cx + cw, cy);
+    drawHandle(cx + cw, cy + ch);
+    drawHandle(cx, cy + ch);
 
-    // Edges
-    drawHandle(cx + cw / 2, cy); // N
-    drawHandle(cx + cw, cy + ch / 2); // E
-    drawHandle(cx + cw / 2, cy + ch); // S
-    drawHandle(cx, cy + ch / 2); // W
+    drawHandle(cx + cw / 2, cy);
+    drawHandle(cx + cw, cy + ch / 2);
+    drawHandle(cx + cw / 2, cy + ch);
+    drawHandle(cx, cy + ch / 2);
 
     if (syncInputs) {
       updateInputsFromCropRect();
     }
   }
 
-  // Coordinate helper
   function getCanvasCoords(e) {
     const rect = dom.previewCanvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -366,21 +339,18 @@ const PDFCrop = (() => {
     const cy = cropRect.y;
     const cw = cropRect.w;
     const ch = cropRect.h;
-    const hitRadius = 18; // Generous touch target
+    const hitRadius = 18;
 
-    // Check corners
     if (Math.hypot(x - cx, y - cy) <= hitRadius) return 'nw';
     if (Math.hypot(x - (cx + cw), y - cy) <= hitRadius) return 'ne';
     if (Math.hypot(x - (cx + cw), y - (cy + ch)) <= hitRadius) return 'se';
     if (Math.hypot(x - cx, y - (cy + ch)) <= hitRadius) return 'sw';
 
-    // Check edges
     if (Math.hypot(x - (cx + cw / 2), y - cy) <= hitRadius) return 'n';
     if (Math.hypot(x - (cx + cw), y - (cy + ch / 2)) <= hitRadius) return 'e';
     if (Math.hypot(x - (cx + cw / 2), y - (cy + ch)) <= hitRadius) return 's';
     if (Math.hypot(x - cx, y - (cy + ch / 2)) <= hitRadius) return 'w';
 
-    // Check inside box
     if (x >= cx && x <= cx + cw && y >= cy && y <= cy + ch) return 'move';
 
     return null;
@@ -431,7 +401,7 @@ const PDFCrop = (() => {
     const coords = getCanvasCoords(e);
 
     if (!isDragging) {
-      // Dynamic Cursor styling
+
       const mode = getHitMode(coords.x, coords.y);
       switch (mode) {
         case 'nw': case 'se': dom.previewCanvas.style.cursor = 'nwse-resize'; break;
@@ -549,7 +519,6 @@ const PDFCrop = (() => {
       const pages = srcDoc.getPages();
       const total = pages.length;
 
-      // Validate dimensions across all pages before modifying
       for (let i = 0; i < total; i++) {
         const page = pages[i];
         const { width, height } = page.getSize();
@@ -564,7 +533,6 @@ const PDFCrop = (() => {
         }
       }
 
-      // Apply crop box calculations with rotation mapping
       for (let i = 0; i < total; i++) {
         showProgress(35 + Math.round((i / total) * 50), `Cropping page ${i + 1} of ${total}...`);
         await yieldToUI();
@@ -576,25 +544,25 @@ const PDFCrop = (() => {
         let newX, newY, newW, newH;
 
         if (rot === 90) {
-          // 90 deg clockwise: visual Top is PDF Right, visual Bottom is PDF Left, visual Left is PDF Top, visual Right is PDF Bottom
+
           newX = bottom;
           newY = right;
           newW = width - bottom - top;
           newH = height - left - right;
         } else if (rot === 180) {
-          // 180 deg: visual Top is PDF Bottom, visual Bottom is PDF Top, visual Left is PDF Right, visual Right is PDF Left
+
           newX = right;
           newY = top;
           newW = width - left - right;
           newH = height - top - bottom;
         } else if (rot === 270) {
-          // 270 deg clockwise: visual Top is PDF Left, visual Bottom is PDF Right, visual Left is PDF Bottom, visual Right is PDF Top
+
           newX = top;
           newY = left;
           newW = width - top - bottom;
           newH = height - right - left;
         } else {
-          // 0 deg default: visual Top is PDF Top, visual Bottom is PDF Bottom, visual Left is PDF Left, visual Right is PDF Right
+
           newX = left;
           newY = bottom;
           newW = width - left - right;
@@ -678,5 +646,4 @@ const PDFCrop = (() => {
   };
 })();
 
-// Export globally
 window.PDFCrop = PDFCrop;

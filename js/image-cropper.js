@@ -1,17 +1,12 @@
-/**
- * FileForge - Image Cropper Tool
- * Interactive visual canvas crop tool with preset aspect ratios, custom dimension locks & live preview.
- */
-
 const ImageCropper = (() => {
-  let currentFile = null; // { file, name, dataUrl, img, width, height }
+  let currentFile = null;
   let croppedBlob = null;
   let croppedDataUrl = null;
 
   let cropRect = { x: 50, y: 50, w: 200, h: 200 };
-  let activeRatio = 'free'; // 'free' | '1:1' | '16:9' | '4:3' | '9:16' | '3:2'
+  let activeRatio = 'free';
   let isDragging = false;
-  let dragMode = null; // 'move' | 'nw' | 'ne' | 'se' | 'sw'
+  let dragMode = null;
   let dragStart = { x: 0, y: 0, cropX: 0, cropY: 0, cropW: 0, cropH: 0 };
 
   let dom = {};
@@ -24,19 +19,16 @@ const ImageCropper = (() => {
       browseBtn: document.getElementById('icrop-browse-btn'),
       workspace: document.getElementById('icrop-workspace'),
       emptyState: document.getElementById('icrop-empty-state'),
-      
-      // Canvas & Overlay
+
       cropCanvas: document.getElementById('icrop-canvas'),
-      
-      // Aspect Ratio Presets
+
       ratioBtns: document.querySelectorAll('.icrop-ratio-btn'),
       widthInput: document.getElementById('icrop-width'),
       heightInput: document.getElementById('icrop-height'),
       formatSelect: document.getElementById('icrop-format'),
       qualitySlider: document.getElementById('icrop-quality'),
       qualityVal: document.getElementById('icrop-quality-val'),
-      
-      // Actions
+
       cropBtn: document.getElementById('icrop-crop-btn'),
       downloadBtn: document.getElementById('icrop-download-btn'),
       resetBtn: document.getElementById('icrop-reset-btn'),
@@ -78,7 +70,6 @@ const ImageCropper = (() => {
       });
     }
 
-    // Canvas Pointer Events for Drag & Resize
     if (dom.cropCanvas) {
       dom.cropCanvas.addEventListener('mousedown', onPointerDown);
       window.addEventListener('mousemove', onPointerMove);
@@ -170,7 +161,6 @@ const ImageCropper = (() => {
     dom.cropCanvas.width = displayW;
     dom.cropCanvas.height = displayH;
 
-    // Default crop box: centered 75%
     const marginW = displayW * 0.12;
     const marginH = displayH * 0.12;
     cropRect = {
@@ -245,22 +235,18 @@ const ImageCropper = (() => {
     const ch = canvas.height;
     const r = cropRect;
 
-    // Draw base image
     ctx.drawImage(currentFile.img, 0, 0, cw, ch);
 
-    // Darkened overlay outside crop rectangle
     ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
-    ctx.fillRect(0, 0, cw, r.y); // Top
-    ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h)); // Bottom
-    ctx.fillRect(0, r.y, r.x, r.h); // Left
-    ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h); // Right
+    ctx.fillRect(0, 0, cw, r.y);
+    ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h));
+    ctx.fillRect(0, r.y, r.x, r.h);
+    ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h);
 
-    // Solid bright blue crop border (matching reference image)
     ctx.strokeStyle = '#0284c7';
     ctx.lineWidth = 2.5;
     ctx.strokeRect(r.x, r.y, r.w, r.h);
 
-    // Rule of thirds grid lines
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
@@ -281,7 +267,6 @@ const ImageCropper = (() => {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Helper for rounded pill handles (North, South, West, East)
     function drawPill(x, y, w, h, radius) {
       ctx.save();
       ctx.beginPath();
@@ -298,20 +283,19 @@ const ImageCropper = (() => {
       ctx.restore();
     }
 
-    // Helper for circular corner handles (NW, NE, SE, SW)
     function drawCorner(x, y) {
       ctx.save();
-      // Outer Blue Circle
+
       ctx.beginPath();
       ctx.arc(x, y, 9, 0, Math.PI * 2);
       ctx.fillStyle = '#0284c7';
       ctx.fill();
-      // Inner White Ring
+
       ctx.beginPath();
       ctx.arc(x, y, 6.5, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
-      // Center Blue Dot
+
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, Math.PI * 2);
       ctx.fillStyle = '#0284c7';
@@ -319,17 +303,15 @@ const ImageCropper = (() => {
       ctx.restore();
     }
 
-    // 4 Edge / Middle Pill Handles (North, South, West, East)
-    drawPill(r.x + r.w / 2, r.y, 30, 10, 5); // Top (N)
-    drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5); // Bottom (S)
-    drawPill(r.x, r.y + r.h / 2, 10, 30, 5); // Left (W)
-    drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5); // Right (E)
+    drawPill(r.x + r.w / 2, r.y, 30, 10, 5);
+    drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5);
+    drawPill(r.x, r.y + r.h / 2, 10, 30, 5);
+    drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5);
 
-    // 4 Circular Corner Handles
-    drawCorner(r.x, r.y); // NW
-    drawCorner(r.x + r.w, r.y); // NE
-    drawCorner(r.x + r.w, r.y + r.h); // SE
-    drawCorner(r.x, r.y + r.h); // SW
+    drawCorner(r.x, r.y);
+    drawCorner(r.x + r.w, r.y);
+    drawCorner(r.x + r.w, r.y + r.h);
+    drawCorner(r.x, r.y + r.h);
   }
 
   function getCanvasCoords(e) {
@@ -347,19 +329,16 @@ const ImageCropper = (() => {
     const cornerPad = 32;
     const edgePad = 26;
 
-    // 1. Check 4 corners first
     if (Math.hypot(coords.x - r.x, coords.y - r.y) < cornerPad) return 'nw';
     if (Math.hypot(coords.x - (r.x + r.w), coords.y - r.y) < cornerPad) return 'ne';
     if (Math.hypot(coords.x - (r.x + r.w), coords.y - (r.y + r.h)) < cornerPad) return 'se';
     if (Math.hypot(coords.x - r.x, coords.y - (r.y + r.h)) < cornerPad) return 'sw';
 
-    // 2. Check 4 edge pills
     if (Math.abs(coords.y - r.y) < edgePad && Math.abs(coords.x - (r.x + r.w / 2)) < 28) return 'n';
     if (Math.abs(coords.y - (r.y + r.h)) < edgePad && Math.abs(coords.x - (r.x + r.w / 2)) < 28) return 's';
     if (Math.abs(coords.x - r.x) < edgePad && Math.abs(coords.y - (r.y + r.h / 2)) < 28) return 'w';
     if (Math.abs(coords.x - (r.x + r.w)) < edgePad && Math.abs(coords.y - (r.y + r.h / 2)) < 28) return 'e';
 
-    // 3. Inside box
     if (coords.x > r.x && coords.x < r.x + r.w && coords.y > r.y && coords.y < r.y + r.h) return 'move';
     return null;
   }
@@ -472,7 +451,7 @@ const ImageCropper = (() => {
     showProgress(35, 'Cropping image at full original resolution...');
 
     try {
-      // Calculate true source pixel bounding box
+
       const realX = Math.round(cropRect.x / canvasScale);
       const realY = Math.round(cropRect.y / canvasScale);
       const realW = Math.round(cropRect.w / canvasScale);
@@ -486,7 +465,6 @@ const ImageCropper = (() => {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      // Draw cropped slice from original full resolution image
       ctx.drawImage(currentFile.img, realX, realY, realW, realH, 0, 0, realW, realH);
 
       const format = dom.formatSelect ? dom.formatSelect.value : 'jpeg';
@@ -497,20 +475,17 @@ const ImageCropper = (() => {
       croppedBlob = await Utils.canvasToBlob(outCanvas, mime, quality);
       croppedDataUrl = URL.createObjectURL(croppedBlob);
 
-      // Store original image if not stored yet
       if (!currentFile.originalImg) {
         currentFile.originalImg = currentFile.img;
         currentFile.originalWidth = currentFile.width;
         currentFile.originalHeight = currentFile.height;
       }
 
-      // Update active image object to display cropped result on canvas
       const newImg = await Utils.loadImage(croppedDataUrl);
       currentFile.img = newImg;
       currentFile.width = newImg.naturalWidth;
       currentFile.height = newImg.naturalHeight;
 
-      // Re-init crop rectangle to match new cropped dimensions
       initCropRect();
       drawCropCanvas();
 

@@ -1,16 +1,9 @@
-/**
- * FileForge - PDF Protect Tool
- * Password protect and encrypt PDF files directly in browser with zero server uploads.
- * Standard PDF 1.7 Security Handler (Revision 3 / 128-bit encryption).
- */
-
 const PDFProtect = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount }
+  let currentFile = null;
   let protectedPdfBlob = null;
 
   let dom = {};
 
-  // Standard PDF 32-byte Padding String (ISO 32000-1)
   const PADDING = new Uint8Array([
     0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41,
     0x64, 0x00, 0x4e, 0x56, 0xff, 0xfa, 0x01, 0x08,
@@ -18,7 +11,6 @@ const PDFProtect = (() => {
     0x2f, 0x0c, 0xa9, 0xfe, 0x64, 0x53, 0x69, 0x7a
   ]);
 
-  // Fast Pure JS MD5 Implementation
   function md5(input) {
     let bytes;
     if (typeof input === 'string') {
@@ -110,7 +102,6 @@ const PDFProtect = (() => {
     return out;
   }
 
-  // Pure JS RC4 Stream Cipher
   function rc4(key, data) {
     const s = new Uint8Array(256);
     for (let i = 0; i < 256; i++) s[i] = i;
@@ -439,24 +430,20 @@ const PDFProtect = (() => {
       browseBtn: document.getElementById('pp-browse-btn'),
       workspace: document.getElementById('pp-workspace'),
       emptyState: document.getElementById('pp-empty-state'),
-      
-      // File Details
+
       fileNameText: document.getElementById('pp-file-name'),
       fileSizeText: document.getElementById('pp-file-size'),
       pageCountText: document.getElementById('pp-page-count'),
-      
-      // Password Inputs
+
       passwordInput: document.getElementById('pp-password-input'),
       confirmPasswordInput: document.getElementById('pp-confirm-input'),
       passwordFeedback: document.getElementById('pp-password-feedback'),
       togglePasswordBtn: document.getElementById('pp-toggle-pwd-btn'),
-      
-      // Advanced Permissions
+
       restrictPrinting: document.getElementById('pp-restrict-printing'),
       restrictCopying: document.getElementById('pp-restrict-copying'),
       restrictModifying: document.getElementById('pp-restrict-modifying'),
-      
-      // Actions
+
       protectBtn: document.getElementById('pp-protect-btn'),
       downloadBtn: document.getElementById('pp-download-btn'),
       resetBtn: document.getElementById('pp-reset-btn'),
@@ -633,26 +620,23 @@ const PDFProtect = (() => {
     showProgress(35, 'Preparing PDF structures for encryption...');
 
     try {
-      // 1. Normalize and clean PDF into uncompressed object format with PDFLib
+
       const srcDoc = await PDFLib.PDFDocument.load(currentFile.buffer, { ignoreEncryption: true });
       const rawPdfBytes = await srcDoc.save({ useObjectStreams: false, addDefaultPage: false });
 
       showProgress(65, 'Applying PDF Standard 128-bit encryption cipher...');
 
-      // Calculate permissions bitmask (-64 is default unrestricted permissions with bit 3-6 flags)
-      // Bit 3: print, Bit 4: modify, Bit 5: copy, Bit 6: annot
       let permissions = -64;
       if (dom.restrictPrinting && dom.restrictPrinting.checked) {
-        permissions &= ~(1 << 2); // Disallow printing
+        permissions &= ~(1 << 2);
       }
       if (dom.restrictCopying && dom.restrictCopying.checked) {
-        permissions &= ~(1 << 4); // Disallow copying text/graphics
+        permissions &= ~(1 << 4);
       }
       if (dom.restrictModifying && dom.restrictModifying.checked) {
-        permissions &= ~(1 << 3); // Disallow modifying document
+        permissions &= ~(1 << 3);
       }
 
-      // 2. Encrypt with pure JS standard PDF Security Handler
       const ownerPassword = password + '_owner_' + Date.now();
       const encryptedBytes = encryptPDFBytes(rawPdfBytes, password, ownerPassword, permissions);
 
@@ -660,7 +644,6 @@ const PDFProtect = (() => {
 
       protectedPdfBlob = new Blob([encryptedBytes], { type: 'application/pdf' });
 
-      // Wipe passwords from UI and memory
       dom.passwordInput.value = '';
       dom.confirmPasswordInput.value = '';
 

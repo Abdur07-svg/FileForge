@@ -1,16 +1,5 @@
-/**
- * FileForge - PDF Grayscale Tool (Structure-Preserving Engine)
- * 
- * High-fidelity client-side PDF grayscale & B/W conversion engine:
- * 1. Preserves exact page dimensions, aspect ratio, orientation (portrait/landscape), and rotation.
- * 2. High-resolution canvas rendering (1.8x-2.0x scale) with sub-pixel text smoothing to ensure crisp typography.
- * 3. Non-destructive brightness, contrast, and black & white threshold tuning.
- * 4. Per-page canvas and buffer cleanup to prevent memory exhaustion on large documents (100+ pages).
- * 5. 100% client-side, zero server uploads, no external APIs.
- */
-
 const PDFGrayscale = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount, pdf }
+  let currentFile = null;
   let generatedPdfBlob = null;
   let page1CanvasCache = null;
 
@@ -24,19 +13,16 @@ const PDFGrayscale = (() => {
       browseBtn: document.getElementById('pgs-browse-btn'),
       workspace: document.getElementById('pgs-workspace'),
       emptyState: document.getElementById('pgs-empty-state'),
-      
-      // Mode Presets
+
       modeSelect: document.getElementById('pgs-mode'),
       contrastSlider: document.getElementById('pgs-contrast'),
       contrastVal: document.getElementById('pgs-contrast-val'),
       brightnessSlider: document.getElementById('pgs-brightness'),
       brightnessVal: document.getElementById('pgs-brightness-val'),
-      
-      // Live Preview
+
       previewBeforeCanvas: document.getElementById('pgs-preview-before'),
       previewAfterCanvas: document.getElementById('pgs-preview-after'),
-      
-      // Actions
+
       convertBtn: document.getElementById('pgs-convert-btn'),
       downloadBtn: document.getElementById('pgs-download-btn'),
       resetBtn: document.getElementById('pgs-reset-btn'),
@@ -189,7 +175,6 @@ const PDFGrayscale = (() => {
     const contrast = parseInt(dom.contrastSlider ? dom.contrastSlider.value : 100, 10) || 100;
     const brightness = parseInt(dom.brightnessSlider ? dom.brightnessSlider.value : 100, 10) || 100;
 
-    // Apply CSS grayscale filter
     ctx.filter = `grayscale(100%) contrast(${contrast}%) brightness(${brightness}%)`;
     ctx.drawImage(page1CanvasCache, 0, 0);
     ctx.filter = 'none';
@@ -210,7 +195,6 @@ const PDFGrayscale = (() => {
       const contrast = parseInt(dom.contrastSlider ? dom.contrastSlider.value : 100, 10) || 100;
       const brightness = parseInt(dom.brightnessSlider ? dom.brightnessSlider.value : 100, 10) || 100;
 
-      // Determine optimal render scale (1.8x on desktop, 1.4x on mobile devices)
       const isMobile = window.innerWidth <= 768;
       const renderScale = isMobile ? 1.4 : 1.85;
 
@@ -231,10 +215,8 @@ const PDFGrayscale = (() => {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        // Render source page
         await page.render({ canvasContext: ctx, viewport }).promise;
 
-        // Apply Grayscale transformation onto target canvas
         const grayCanvas = document.createElement('canvas');
         grayCanvas.width = canvas.width;
         grayCanvas.height = canvas.height;
@@ -248,21 +230,17 @@ const PDFGrayscale = (() => {
         gCtx.drawImage(canvas, 0, 0);
         gCtx.filter = 'none';
 
-        // Clean up source canvas memory immediately
         canvas.width = 1;
         canvas.height = 1;
 
-        // High quality JPEG for maximum crispness
         const pageBlob = await Utils.canvasToBlob(grayCanvas, 'image/jpeg', 0.90);
-        
-        // Clean up grayscale canvas memory
+
         grayCanvas.width = 1;
         grayCanvas.height = 1;
 
         const pageBytes = await pageBlob.arrayBuffer();
         const embeddedImage = await newDoc.embedJpg(pageBytes);
 
-        // Preserve exact original page dimensions and orientation
         const origViewport = page.getViewport({ scale: 1.0 });
         const newPage = newDoc.addPage([origViewport.width, origViewport.height]);
         newPage.drawImage(embeddedImage, {
@@ -338,5 +316,4 @@ const PDFGrayscale = (() => {
   };
 })();
 
-// Export globally
 window.PDFGrayscale = PDFGrayscale;

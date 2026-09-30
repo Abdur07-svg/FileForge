@@ -1,11 +1,6 @@
-/**
- * FileForge - PDF Reorder Pages Tool
- * Interactive drag-and-drop page sorting and reorganization for PDF documents.
- */
-
 const PDFReorderPages = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount, pdf }
-  let pageList = []; // Array of { originalIndex, currentPos, dataUrl }
+  let currentFile = null;
+  let pageList = [];
   let generatedPdfBlob = null;
 
   let dom = {};
@@ -19,12 +14,10 @@ const PDFReorderPages = (() => {
       workspace: document.getElementById('preord-workspace'),
       emptyState: document.getElementById('preord-empty-state'),
       pagesGrid: document.getElementById('preord-pages-grid'),
-      
-      // Quick tools
+
       reverseBtn: document.getElementById('preord-reverse-btn'),
       resetOrderBtn: document.getElementById('preord-reset-order-btn'),
-      
-      // Actions
+
       saveBtn: document.getElementById('preord-save-btn'),
       downloadBtn: document.getElementById('preord-download-btn'),
       resetBtn: document.getElementById('preord-reset-btn'),
@@ -181,7 +174,6 @@ const PDFReorderPages = (() => {
         </div>
       `;
 
-      // Drag and drop
       card.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('text/plain', index);
         card.classList.add('dragging');
@@ -204,7 +196,6 @@ const PDFReorderPages = (() => {
         }
       });
 
-      // Button controls
       card.querySelector('.preord-left-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         if (index > 0) {

@@ -1,14 +1,3 @@
-/**
- * FileForge - Universal File Previewer Tool (Security & XSS Hardened)
- * 
- * Production-grade client-side preview engine:
- * 1. Untrusted Data Handling: Treats all uploaded files as hostile input. Zero eval, zero script execution.
- * 2. Source Code & Text Safety: Text, JSON, JS, CSS, Python, Markdown, and logs are rendered exclusively via textContent.
- * 3. Sandboxed HTML Previews: HTML files are displayed as sanitized source code and optionally rendered in an isolated sandbox iframe (sandbox="").
- * 4. Safe SVG & Image Rendering: Images and SVGs are loaded via safe Blob Object URLs and revoked immediately on reset.
- * 5. Memory Management: Automatically revokes active Object URLs to prevent client RAM leaks.
- */
-
 const FilePreviewer = (() => {
   let currentFile = null;
   let activeObjectUrl = null;
@@ -25,26 +14,23 @@ const FilePreviewer = (() => {
       browseBtn: document.getElementById('fprv-browse-btn'),
       workspace: document.getElementById('fprv-workspace'),
       emptyState: document.getElementById('fprv-empty-state'),
-      
-      // Header info
+
       fileNameText: document.getElementById('fprv-name'),
       fileSizeBadge: document.getElementById('fprv-size'),
       fileTypeBadge: document.getElementById('fprv-type'),
-      
-      // Preview Areas
+
       imageContainer: document.getElementById('fprv-image-area'),
       previewImg: document.getElementById('fprv-preview-img'),
-      
+
       pdfContainer: document.getElementById('fprv-pdf-area'),
       pdfCanvas: document.getElementById('fprv-pdf-canvas'),
       pdfPrevBtn: document.getElementById('fprv-pdf-prev'),
       pdfNextBtn: document.getElementById('fprv-pdf-next'),
       pdfPageNumText: document.getElementById('fprv-pdf-page-num'),
-      
+
       textContainer: document.getElementById('fprv-text-area'),
       textContent: document.getElementById('fprv-text-content'),
-      
-      // Actions
+
       downloadBtn: document.getElementById('fprv-download-btn'),
       resetBtn: document.getElementById('fprv-reset-btn')
     };
@@ -95,8 +81,7 @@ const FilePreviewer = (() => {
   async function handleFiles(files) {
     if (!files || files.length === 0) return;
     const file = files[0];
-    
-    // Revoke previous object URL if any
+
     cleanupObjectUrl();
 
     currentFile = file;
@@ -105,7 +90,7 @@ const FilePreviewer = (() => {
 
     const isImage = file.type.startsWith('image/') || /^(jpg|jpeg|png|webp|gif|bmp|svg|ico)$/i.test(ext);
     const isPdf = file.type === 'application/pdf' || ext === 'pdf';
-    const isCodeOrText = file.type.startsWith('text/') || 
+    const isCodeOrText = file.type.startsWith('text/') ||
                          /^(txt|json|js|mjs|cjs|ts|jsx|tsx|html|htm|css|scss|less|md|markdown|xml|csv|log|yaml|yml|py|java|c|cpp|h|hpp|cs|go|rs|php|rb|sql|sh|bat|ini|env|conf|toml)$/i.test(ext);
 
     hideAllPreviewPanels();
@@ -134,7 +119,7 @@ const FilePreviewer = (() => {
         }
       } else if (isImage) {
         if (ext === 'svg' || file.type === 'image/svg+xml') {
-          // Safe SVG preview: sanitize XML content, then load via Blob URL into <img> tag (browsers disable scripts in <img>)
+
           const rawSvgText = await Utils.readFileAsText(file);
           const sanitizedSvg = sanitizeSvgXml(rawSvgText);
           const svgBlob = new Blob([sanitizedSvg], { type: 'image/svg+xml' });
@@ -147,11 +132,11 @@ const FilePreviewer = (() => {
         dom.imageContainer.classList.remove('hidden');
       } else if (isCodeOrText) {
         const text = await Utils.readFileAsText(file);
-        // Strict XSS Defense: rendered strictly via textContent
+
         dom.textContent.textContent = text;
         dom.textContainer.classList.remove('hidden');
       } else {
-        // Fallback for unknown / binary formats: inspect first chunk safely as text
+
         const text = await Utils.readFileAsText(file).catch(() => 'Binary file preview not available.');
         dom.textContent.textContent = text.slice(0, 5000) + (text.length > 5000 ? '\n\n...[Preview truncated for large file]' : '');
         dom.textContainer.classList.remove('hidden');
@@ -165,9 +150,6 @@ const FilePreviewer = (() => {
     }
   }
 
-  /**
-   * Sanitize SVG XML to strip script tags and dangerous event handlers
-   */
   function sanitizeSvgXml(svgText) {
     if (!svgText) return '';
     return svgText
@@ -236,5 +218,4 @@ const FilePreviewer = (() => {
   };
 })();
 
-// Export globally
 window.FilePreviewer = FilePreviewer;

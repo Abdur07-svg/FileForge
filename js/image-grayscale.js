@@ -1,8 +1,3 @@
-/**
- * FileForge - Image Grayscale Tool
- * Convert color photos into clean black & white / monochrome images directly in browser.
- */
-
 const ImageGrayscale = (() => {
   let currentFile = null;
   let originalImage = null;
@@ -18,24 +13,20 @@ const ImageGrayscale = (() => {
       browseBtn: document.getElementById('ig-browse-btn'),
       workspace: document.getElementById('ig-workspace'),
       emptyState: document.getElementById('ig-empty-state'),
-      
-      // File Details
+
       fileNameText: document.getElementById('ig-file-name'),
       fileSizeText: document.getElementById('ig-file-size'),
       fileDimsText: document.getElementById('ig-file-dims'),
-      
-      // Controls
+
       modeSelect: document.getElementById('ig-mode'),
       contrastSlider: document.getElementById('ig-contrast-slider'),
       contrastVal: document.getElementById('ig-contrast-val'),
       brightnessSlider: document.getElementById('ig-brightness-slider'),
       brightnessVal: document.getElementById('ig-brightness-val'),
       formatSelect: document.getElementById('ig-format'),
-      
-      // Canvas & Preview
+
       previewCanvas: document.getElementById('ig-preview-canvas'),
-      
-      // Actions
+
       applyBtn: document.getElementById('ig-apply-btn'),
       downloadBtn: document.getElementById('ig-download-btn'),
       resetBtn: document.getElementById('ig-reset-btn'),
@@ -146,7 +137,6 @@ const ImageGrayscale = (() => {
     canvas.width = width;
     canvas.height = height;
 
-    // Draw base image
     ctx.drawImage(originalImage, 0, 0, width, height);
 
     const imgData = ctx.getImageData(0, 0, width, height);
@@ -156,7 +146,6 @@ const ImageGrayscale = (() => {
     const contrast = dom.contrastSlider ? parseFloat(dom.contrastSlider.value) / 100 : 1.0;
     const brightness = dom.brightnessSlider ? parseFloat(dom.brightnessSlider.value) / 100 : 1.0;
 
-    // Contrast factor
     const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
 
     for (let i = 0; i < data.length; i += 4) {
@@ -166,31 +155,28 @@ const ImageGrayscale = (() => {
 
       let gray;
       if (mode === 'high-contrast') {
-        // High contrast weights
+
         gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
       } else if (mode === 'sepia') {
-        // Subtle vintage B&W / warm tone
+
         gray = (0.299 * r + 0.587 * g + 0.114 * b);
       } else {
-        // Standard ITU-R BT.601 luma
+
         gray = 0.299 * r + 0.587 * g + 0.114 * b;
       }
 
-      // Apply brightness
       gray = gray * brightness;
 
-      // Apply contrast
       if (contrast !== 1.0) {
         gray = factor * (gray - 128) + 128;
       }
 
-      // Clamp 0-255
       gray = Math.max(0, Math.min(255, gray));
 
       if (mode === 'sepia') {
-        data[i] = Math.min(255, gray * 1.05);     // Red
-        data[i + 1] = Math.min(255, gray * 0.95); // Green
-        data[i + 2] = Math.min(255, gray * 0.82); // Blue
+        data[i] = Math.min(255, gray * 1.05);
+        data[i + 1] = Math.min(255, gray * 0.95);
+        data[i + 2] = Math.min(255, gray * 0.82);
       } else {
         data[i] = gray;
         data[i + 1] = gray;
@@ -200,7 +186,6 @@ const ImageGrayscale = (() => {
 
     ctx.putImageData(imgData, 0, 0);
 
-    // Generate output blob
     const format = dom.formatSelect ? dom.formatSelect.value : 'image/png';
     canvas.toBlob((blob) => {
       processedBlob = blob;

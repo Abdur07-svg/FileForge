@@ -1,10 +1,5 @@
-/**
- * FileForge - ZIP File Creator Tool
- * Combines multiple files into a clean ZIP archive with custom compression level and folder naming.
- */
-
 const ZipCreator = (() => {
-  let filesList = []; // { file, name, size, type, data }
+  let filesList = [];
   let dom = {};
 
   function init() {
@@ -15,18 +10,15 @@ const ZipCreator = (() => {
       browseBtn: document.getElementById('zipc-browse-btn'),
       workspace: document.getElementById('zipc-workspace'),
       emptyState: document.getElementById('zipc-empty-state'),
-      
-      // File Table / List
+
       fileList: document.getElementById('zipc-file-list'),
       fileCountBadge: document.getElementById('zipc-file-count'),
       totalSizeBadge: document.getElementById('zipc-total-size'),
       addMoreBtn: document.getElementById('zipc-add-more-btn'),
-      
-      // Settings
+
       archiveNameInput: document.getElementById('zipc-archive-name'),
       compressLevelSelect: document.getElementById('zipc-compress-level'),
-      
-      // Actions
+
       createBtn: document.getElementById('zipc-create-btn'),
       resetBtn: document.getElementById('zipc-reset-btn'),
       progressBar: document.getElementById('zipc-progress-bar'),
@@ -43,7 +35,7 @@ const ZipCreator = (() => {
     Utils.setupDropZone(dom.dropzone, handleFiles);
     dom.browseBtn.addEventListener('click', () => dom.fileInput.click());
     if (dom.addMoreBtn) dom.addMoreBtn.addEventListener('click', () => dom.fileInput.click());
-    
+
     dom.fileInput.addEventListener('change', (e) => {
       handleFiles(Array.from(e.target.files));
       dom.fileInput.value = '';
@@ -57,7 +49,7 @@ const ZipCreator = (() => {
     if (!newFiles || newFiles.length === 0) return;
 
     for (const file of newFiles) {
-      // Avoid duplicate names by appending index if needed
+
       let name = file.name;
       let counter = 1;
       while (filesList.some(f => f.name === name)) {
@@ -92,7 +84,7 @@ const ZipCreator = (() => {
       totalBytes += item.size;
       const row = document.createElement('div');
       row.className = 'reorder-item';
-      
+
       const ext = (Utils.getExtension(item.name) || 'FILE').toUpperCase();
 
       row.innerHTML = `

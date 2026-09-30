@@ -1,25 +1,14 @@
-/**
- * FileForge - ZIP File Extractor Tool (Security & ZIP-Bomb Hardened)
- * 
- * Production-grade client-side archive decompression engine:
- * 1. Path Traversal Defense: Strips `../`, `..\`, absolute paths, null bytes, and reserved system filenames.
- * 2. ZIP Bomb Protection: Pre-flight inspection enforcing max file count, max total uncompressed size,
- *    max individual file size, and compression expansion ratio thresholds.
- * 3. 100% In-Memory: Files remain strictly local and are delivered as sanitized Blobs.
- * 4. XSS Hardening: All archive table of contents entries are escaped using Utils.escapeHtml().
- */
-
 const ZipExtractor = (() => {
-  // Configurable Security & ZIP Bomb Limits
+
   const LIMITS = {
     MAX_FILES: 1000,
-    MAX_TOTAL_UNCOMPRESSED_BYTES: 500 * 1024 * 1024, // 500 MB
-    MAX_INDIVIDUAL_FILE_BYTES: 150 * 1024 * 1024,    // 150 MB
-    MAX_EXPANSION_RATIO: 100                        // 100:1 ratio limit
+    MAX_TOTAL_UNCOMPRESSED_BYTES: 500 * 1024 * 1024,
+    MAX_INDIVIDUAL_FILE_BYTES: 150 * 1024 * 1024,
+    MAX_EXPANSION_RATIO: 100
   };
 
   let loadedZip = null;
-  let zipEntries = []; // { rawName, safeName, size, isDir, date, zipEntry }
+  let zipEntries = [];
   let currentZipFile = null;
   let dom = {};
 
@@ -31,14 +20,12 @@ const ZipExtractor = (() => {
       browseBtn: document.getElementById('zipe-browse-btn'),
       workspace: document.getElementById('zipe-workspace'),
       emptyState: document.getElementById('zipe-empty-state'),
-      
-      // Details & Stats
+
       zipNameText: document.getElementById('zipe-name'),
       zipSizeText: document.getElementById('zipe-size'),
       entryCountText: document.getElementById('zipe-count'),
       entriesList: document.getElementById('zipe-entries-list'),
-      
-      // Actions
+
       extractAllBtn: document.getElementById('zipe-extract-all-btn'),
       resetBtn: document.getElementById('zipe-reset-btn'),
       progressBar: document.getElementById('zipe-progress-bar'),
@@ -67,8 +54,8 @@ const ZipExtractor = (() => {
     if (!files || files.length === 0) return;
     const file = files[0];
 
-    const isZip = file.name.toLowerCase().endsWith('.zip') || 
-                  file.type === 'application/zip' || 
+    const isZip = file.name.toLowerCase().endsWith('.zip') ||
+                  file.type === 'application/zip' ||
                   file.type === 'application/x-zip-compressed';
 
     if (!isZip) {
@@ -94,7 +81,6 @@ const ZipExtractor = (() => {
       let totalUncompressed = 0;
       let fileCount = 0;
 
-      // Pre-flight security scan across all archive entries
       zip.forEach((relativePath, zipEntry) => {
         if (!zipEntry.dir) {
           fileCount++;
@@ -126,7 +112,6 @@ const ZipExtractor = (() => {
         }
       });
 
-      // Expansion ratio check
       if (file.size > 0 && totalUncompressed > 0) {
         const ratio = totalUncompressed / file.size;
         if (ratio > LIMITS.MAX_EXPANSION_RATIO && totalUncompressed > 50 * 1024 * 1024) {
@@ -221,11 +206,10 @@ const ZipExtractor = (() => {
         const item = zipEntries[i];
         const pct = Math.round(((i + 1) / total) * 95);
         showProgress(pct, `Extracting (${i + 1}/${total}): ${item.safeName}`);
-        
+
         const blob = await item.zipEntry.async('blob');
         Utils.downloadBlob(blob, item.safeName);
 
-        // Small delay between downloads to prevent browser throttle
         if (i < total - 1) {
           await new Promise(r => setTimeout(r, 220));
         }
@@ -272,5 +256,4 @@ const ZipExtractor = (() => {
   };
 })();
 
-// Export globally
 window.ZipExtractor = ZipExtractor;

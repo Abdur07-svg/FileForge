@@ -1,11 +1,6 @@
-/**
- * FileForge - PDF Watermark Tool
- * Apply customizable text or logo watermarks to PDF pages with position, opacity, angle, and live preview.
- */
-
 const PDFWatermark = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount }
-  let watermarkType = 'text'; // 'text' | 'image'
+  let currentFile = null;
+  let watermarkType = 'text';
   let watermarkImageBlob = null;
   let watermarkImageDataUrl = null;
   let generatedPdfBlob = null;
@@ -20,14 +15,12 @@ const PDFWatermark = (() => {
       browseBtn: document.getElementById('pwm-browse-btn'),
       workspace: document.getElementById('pwm-workspace'),
       emptyState: document.getElementById('pwm-empty-state'),
-      
-      // Mode tabs
+
       typeTextBtn: document.getElementById('pwm-type-text'),
       typeImageBtn: document.getElementById('pwm-type-image'),
       textOptionsPanel: document.getElementById('pwm-text-options'),
       imageOptionsPanel: document.getElementById('pwm-image-options'),
-      
-      // Text options
+
       textInput: document.getElementById('pwm-text-input'),
       fontSizeSlider: document.getElementById('pwm-font-size'),
       fontSizeVal: document.getElementById('pwm-font-size-val'),
@@ -36,25 +29,21 @@ const PDFWatermark = (() => {
       rotationSlider: document.getElementById('pwm-rotation'),
       rotationVal: document.getElementById('pwm-rotation-val'),
       rotationPresets: document.querySelectorAll('.pwm-rotation-preset'),
-      
-      // Image options
+
       imageInput: document.getElementById('pwm-image-input'),
       imageBrowseBtn: document.getElementById('pwm-image-browse-btn'),
       imageScaleSlider: document.getElementById('pwm-image-scale'),
       imageScaleVal: document.getElementById('pwm-image-scale-val'),
-      
-      // Shared options
+
       opacitySlider: document.getElementById('pwm-opacity'),
       opacityVal: document.getElementById('pwm-opacity-val'),
       positionSelect: document.getElementById('pwm-position'),
       pageScopeSelect: document.getElementById('pwm-page-scope'),
       customRangeInput: document.getElementById('pwm-custom-range'),
       customRangeRow: document.getElementById('pwm-custom-range-row'),
-      
-      // Live Preview Canvas
+
       previewCanvas: document.getElementById('pwm-preview-canvas'),
-      
-      // Actions
+
       applyBtn: document.getElementById('pwm-apply-btn'),
       downloadBtn: document.getElementById('pwm-download-btn'),
       resetBtn: document.getElementById('pwm-reset-btn'),
@@ -76,13 +65,11 @@ const PDFWatermark = (() => {
       dom.fileInput.value = '';
     });
 
-    // Watermark type toggle
     if (dom.typeTextBtn && dom.typeImageBtn) {
       dom.typeTextBtn.addEventListener('click', () => setWatermarkType('text'));
       dom.typeImageBtn.addEventListener('click', () => setWatermarkType('image'));
     }
 
-    // Text controls live update
     if (dom.textInput) dom.textInput.addEventListener('input', updatePreview);
     if (dom.fontSizeSlider) {
       dom.fontSizeSlider.addEventListener('input', (e) => {
@@ -116,7 +103,6 @@ const PDFWatermark = (() => {
       });
     }
 
-    // Image watermark upload & controls
     if (dom.imageBrowseBtn && dom.imageInput) {
       dom.imageBrowseBtn.addEventListener('click', () => dom.imageInput.click());
       dom.imageInput.addEventListener('change', handleWatermarkImage);
@@ -128,7 +114,6 @@ const PDFWatermark = (() => {
       });
     }
 
-    // Shared controls
     if (dom.opacitySlider) {
       dom.opacitySlider.addEventListener('input', (e) => {
         dom.opacityVal.textContent = e.target.value + '%';
@@ -244,7 +229,6 @@ const PDFWatermark = (() => {
     canvas.height = page1CanvasCache.height;
     const ctx = canvas.getContext('2d');
 
-    // Draw base page
     ctx.drawImage(page1CanvasCache, 0, 0);
 
     const opacity = (parseInt(dom.opacitySlider ? dom.opacitySlider.value : 30, 10) || 30) / 100;
@@ -353,7 +337,6 @@ const PDFWatermark = (() => {
       const pos = dom.positionSelect ? dom.positionSelect.value : 'center';
       const scope = dom.pageScopeSelect ? dom.pageScopeSelect.value : 'all';
 
-      // Parse target pages
       const targetIndices = new Set();
       if (scope === 'all') {
         for (let i = 0; i < total; i++) targetIndices.add(i);

@@ -1,8 +1,3 @@
-/**
- * FileForge - Base64 to Image Tool
- * Paste any Base64 string or Data URI, inspect image details, and download as PNG/JPG/WebP.
- */
-
 const Base64ToImage = (() => {
   let currentDataUrl = '';
   let loadedImage = null;
@@ -15,15 +10,13 @@ const Base64ToImage = (() => {
       inputArea: document.getElementById('b2i-input'),
       renderBtn: document.getElementById('b2i-render-btn'),
       clearBtn: document.getElementById('b2i-clear-btn'),
-      
-      // Output / Result panel
+
       resultCard: document.getElementById('b2i-result-card'),
       previewImg: document.getElementById('b2i-preview-img'),
       detectedFormatText: document.getElementById('b2i-format'),
       dimensionsText: document.getElementById('b2i-dims'),
       estimatedSizeText: document.getElementById('b2i-est-size'),
-      
-      // Download options
+
       outputFormatSelect: document.getElementById('b2i-output-format'),
       downloadBtn: document.getElementById('b2i-download-btn'),
       sampleBtn: document.getElementById('b2i-sample-btn')
@@ -50,7 +43,7 @@ const Base64ToImage = (() => {
   }
 
   function loadSample() {
-    // 1x1 gradient / icon sample data URI
+
     const sample = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNk+M9Qz0AEYBxVSF+FAP5FDvcfRYWgAAAAAElFTkSuQmCC';
     if (dom.inputArea) {
       dom.inputArea.value = sample;
@@ -65,15 +58,13 @@ const Base64ToImage = (() => {
       return;
     }
 
-    // Clean wrapped HTML or CSS if pasted by mistake
     const htmlMatch = text.match(/src=["'](data:image\/[^"']+)["']/i);
     if (htmlMatch) text = htmlMatch[1];
     const cssMatch = text.match(/url\(["']?(data:image\/[^"')]+)["']?\)/i);
     if (cssMatch) text = cssMatch[1];
 
-    // If it's pure raw base64 without data: prefix, detect or default to png
     if (!text.startsWith('data:image/')) {
-      // Check first chars for common headers
+
       if (text.startsWith('/9j/')) text = 'data:image/jpeg;base64,' + text;
       else if (text.startsWith('iVBORw0KGgo')) text = 'data:image/png;base64,' + text;
       else if (text.startsWith('UklGR')) text = 'data:image/webp;base64,' + text;
@@ -87,7 +78,6 @@ const Base64ToImage = (() => {
       loadedImage = img;
       currentDataUrl = text;
 
-      // Detect format
       let format = 'PNG Image';
       if (text.includes('image/jpeg')) format = 'JPEG / JPG';
       else if (text.includes('image/png')) format = 'PNG Lossless';
@@ -97,7 +87,7 @@ const Base64ToImage = (() => {
 
       if (dom.detectedFormatText) dom.detectedFormatText.textContent = format;
       if (dom.dimensionsText) dom.dimensionsText.textContent = `${img.naturalWidth} × ${img.naturalHeight} px`;
-      
+
       const approxBytes = Math.round((text.length * 3) / 4);
       if (dom.estimatedSizeText) dom.estimatedSizeText.textContent = Utils.formatBytes(approxBytes);
       if (dom.previewImg) dom.previewImg.src = text;
@@ -123,7 +113,6 @@ const Base64ToImage = (() => {
     canvas.height = loadedImage.naturalHeight;
     const ctx = canvas.getContext('2d');
 
-    // White background for JPEG if transparency
     if (targetFormat === 'image/jpeg') {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);

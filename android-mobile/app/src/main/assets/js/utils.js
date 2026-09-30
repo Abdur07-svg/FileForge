@@ -1,9 +1,5 @@
-/**
- * FileForge Mobile - Utils, Memory & Native Feature Helper
- * Lightweight, 100% Client-Side with Haptics and Native Web Share
- */
 const MobileUtils = (() => {
-  // Track active blob URLs to clean up immediately upon navigation or reset
+
   const activeObjectUrls = new Set();
 
   function trackUrl(url) {
@@ -73,12 +69,8 @@ const MobileUtils = (() => {
     } catch (e) {}
   }
 
-  /**
-   * Single Authoritative FileForge Mobile Download & Save Manager
-   * ANDROID APK: Download Click -> "Save Your File" Modal -> Save File Click -> Native SAF Picker -> Saving... -> Native SUCCESS -> "Download Complete"
-   */
   const FileForgeDownloadManager = (() => {
-    let pendingDownload = null; // { blob, filename, mimeType, baseName, extension, size }
+    let pendingDownload = null;
     let lastSavedUri = null;
     let isSaving = false;
     let initialized = false;
@@ -130,7 +122,6 @@ const MobileUtils = (() => {
         if (e.target === modal) closeModalFn();
       });
 
-      // User presses "Save File" in "Save Your File" modal
       if (downloadBtn) {
         downloadBtn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -138,7 +129,6 @@ const MobileUtils = (() => {
         });
       }
 
-      // User taps "Choose Folder" in Save Location box
       if (pickerBtn) {
         pickerBtn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -253,9 +243,6 @@ const MobileUtils = (() => {
       if (stepError) stepError.classList.toggle('hidden', stepName !== 'error');
     }
 
-    /**
-     * Triggered ONLY when the user clicks "Save File" or "Choose Folder" inside the Save Your File modal
-     */
     async function startNativeSaveProcess() {
       if (isSaving || !pendingDownload || !pendingDownload.blob) return;
       if (pendingDownload.blob.size <= 0) {
@@ -275,7 +262,6 @@ const MobileUtils = (() => {
       if (cancelBtn) cancelBtn.disabled = true;
       if (retryBtn) retryBtn.disabled = true;
 
-      // Show Saving... state
       showStep('saving');
       triggerHaptic('light');
 
@@ -286,7 +272,6 @@ const MobileUtils = (() => {
             return;
           }
 
-          // Native Android APK Storage Access Framework (SAF)
           const reader = new FileReader();
           reader.onloadend = () => {
             try {
@@ -301,11 +286,10 @@ const MobileUtils = (() => {
           };
           reader.onerror = () => onNativeSaveError('Failed to read file data buffer');
           reader.readAsDataURL(pendingDownload.blob);
-          // Return immediately - awaiting native callback
+
           return;
         }
 
-        // Web Browser fallback ONLY for browsers (never in APK)
         directBrowserDownload(pendingDownload.blob, finalFilename);
         onNativeSaveSuccess(finalFilename, pendingDownload.blob.type || pendingDownload.mimeType, null, pendingDownload.blob.size);
       } catch (err) {
@@ -314,9 +298,6 @@ const MobileUtils = (() => {
       }
     }
 
-    /**
-     * Native Android SAF confirmed success callback
-     */
     function onNativeSaveSuccess(filename, mimeType, uriString, fileSize) {
       isSaving = false;
       lastSavedUri = uriString;
@@ -361,10 +342,6 @@ const MobileUtils = (() => {
       showStep('complete');
     }
 
-    /**
-     * Mobile Browser Download Complete Popup
-     * Shown after normal browser download completes in web browser mode
-     */
     function showBrowserDownloadComplete(blob, filename, mimeType) {
       initModal();
 
@@ -417,9 +394,6 @@ const MobileUtils = (() => {
       showStep('complete');
     }
 
-    /**
-     * Native Android SAF user cancel callback
-     */
     function onNativeSaveCancelled() {
       isSaving = false;
       const downloadBtn = document.getElementById('save-modal-download-btn');
@@ -435,9 +409,6 @@ const MobileUtils = (() => {
       showToast('Save cancelled.', 'info');
     }
 
-    /**
-     * Native Android SAF error callback
-     */
     function onNativeSaveError(errorMsg) {
       isSaving = false;
       const downloadBtn = document.getElementById('save-modal-download-btn');
@@ -451,7 +422,7 @@ const MobileUtils = (() => {
 
       const errorTextEl = document.getElementById('save-modal-error-text');
       if (errorTextEl) {
-        errorTextEl.textContent = errorMsg 
+        errorTextEl.textContent = errorMsg
           ? `Unable to save the file: ${errorMsg}. Please try again or choose another location.`
           : 'Unable to save the file. Please try again or choose another location.';
       }
@@ -460,11 +431,6 @@ const MobileUtils = (() => {
       showStep('error');
     }
 
-    /**
-     * Download button click handler
-     * MANDATORY: Always opens "Save Your File" form modal first!
-     * NEVER triggers automatic save or Download Complete directly.
-     */
     function openSaveDialog({ blob, filename, mimeType = 'application/octet-stream' }) {
       if (!blob || !(blob instanceof Blob) || blob.size <= 0) {
         showToast('Unable to create the file (0 bytes).', 'error');
@@ -477,7 +443,6 @@ const MobileUtils = (() => {
       const safeBase = sanitizeBase(parsed.base);
       const ext = parsed.ext || (mimeType.includes('pdf') ? '.pdf' : (mimeType.includes('png') ? '.png' : '.jpg'));
 
-      // Create pristine fresh pending download object
       pendingDownload = {
         blob: blob,
         filename: safeBase + ext,
@@ -510,7 +475,6 @@ const MobileUtils = (() => {
         locationText.textContent = "Tap 'Choose Folder' or 'Save File' to select any folder on your device or SD card.";
       }
 
-      // Mandatory Gate: Show Step 1 (Form) only!
       showStep('form');
       modal.classList.remove('hidden');
 
@@ -539,7 +503,6 @@ const MobileUtils = (() => {
       }, 1500);
     }
 
-    // Auto-init on DOM ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initModal);
     } else {
@@ -569,18 +532,16 @@ const MobileUtils = (() => {
     }
 
     if (FileForgeDownloadManager.isAndroidApp()) {
-      // ANDROID APK FLOW:
-      // ALWAYS open "Save Your File" modal first!
+
       FileForgeDownloadManager.save({
         blob: blob,
         filename: filename,
         mimeType: mimeType || (blob ? blob.type : 'application/octet-stream')
       });
     } else {
-      // DESKTOP & MOBILE BROWSER FLOW:
-      // 1. Direct browser download
+
       FileForgeDownloadManager.directBrowserDownload(blob, filename);
-      // 2. Open Download Complete modal
+
       FileForgeDownloadManager.showBrowserDownloadComplete(
         blob,
         filename,
@@ -612,7 +573,6 @@ const MobileUtils = (() => {
       }
     }
 
-    // Fallback if sharing is unavailable or fails
     downloadBlob(blob, filename);
     return false;
   }

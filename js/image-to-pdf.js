@@ -1,47 +1,33 @@
-/**
- * FileForge - Tool 51: Image to PDF
- * Features:
- * - Non-Destructive Visual Filter Preset Cards (Original, Vibrant, Soft Tone, Color, Sharp Black, Grayscale, High Contrast, Clean Document)
- * - Intelligent Client-Side Signature Background Removal & Transparent Overlay
- * - Interactive Signature Placement (Move, Resize, Rotate, Position Presets, Multi-Page)
- * - Complete PDF Layout Engine & Client-Side PDF Generation via pdf-lib
- * - 100% Private, Zero Server Uploads, Clean State Reset Lifecycle
- */
-
 const ImageToPDF = (() => {
-  // Main State
+
   let imageList = [];
-  // Each item: { id, file, name, originalDataUrl, previewDataUrl, width, height, originalWidth, originalHeight, editState }
-  // editState: { crop: {x,y,w,h} | null, rotate: 0, flipH: false, flipV: false, filter: 'original' }
 
   let currentEditingIndex = -1;
   let previewPageIndex = 0;
   let generatedPdfBlob = null;
-  let currentPreset = 'general'; // 'general' | 'jpg-to-pdf' | 'png-to-pdf'
+  let currentPreset = 'general';
 
-  // Signature State
-  let signatureRawImage = null; // Image object
-  let signatureDataUrl = null; // Transparent PNG data URL
+  let signatureRawImage = null;
+  let signatureDataUrl = null;
   let signatureSettings = {
-    sensitivity: 45, // 0 - 100
-    inkColor: 'original', // 'original' | 'black' | 'blue'
+    sensitivity: 45,
+    inkColor: 'original',
     autoCrop: true,
     smooth: true
   };
   let signaturePlacement = {
     active: false,
     applyToAll: true,
-    // Relative to page (0.0 to 1.0)
-    relX: 0.65, // top-left X ratio
-    relY: 0.75, // top-left Y ratio
-    relW: 0.25, // width ratio relative to usable page width
-    aspectRatio: 1, // width / height
-    rotation: 0 // degrees
+
+    relX: 0.65,
+    relY: 0.75,
+    relW: 0.25,
+    aspectRatio: 1,
+    rotation: 0
   };
 
-  // Editor State
   let editorCropActive = false;
-  let editorCropRatio = 'free'; // 'free' | '1:1' | '4:3' | '16:9' | 'a4'
+  let editorCropRatio = 'free';
   let editorCropRect = { x: 0, y: 0, w: 100, h: 100 };
   let editorTempState = {};
   let isDraggingCrop = false;
@@ -49,12 +35,10 @@ const ImageToPDF = (() => {
   let cropDragStart = { x: 0, y: 0, rectX: 0, rectY: 0, rectW: 0, rectH: 0 };
   let editorImgObj = null;
 
-  // Signature Drag / Transform on Preview State
   let isDraggingSig = false;
   let isResizingSig = false;
   let sigDragStart = { mouseX: 0, mouseY: 0, origX: 0, origY: 0, origW: 0 };
 
-  // DOM Elements
   let dom = {};
 
   const FILTER_PRESETS = [
@@ -81,7 +65,6 @@ const ImageToPDF = (() => {
       imageListContainer: document.getElementById('i2p-image-list'),
       imageCountBadge: document.getElementById('i2p-image-count-badge'),
 
-      // PDF Settings
       pageSizeSelect: document.getElementById('i2p-page-size'),
       customSizeRow: document.getElementById('i2p-custom-size-row'),
       customWidthInput: document.getElementById('i2p-custom-width'),
@@ -92,7 +75,6 @@ const ImageToPDF = (() => {
       customMarginInput: document.getElementById('i2p-custom-margin'),
       imagePlacementSelect: document.getElementById('i2p-image-placement'),
 
-      // Action Buttons
       generateBtn: document.getElementById('i2p-generate-btn'),
       downloadBtn: document.getElementById('i2p-download-btn'),
       resetBtn: document.getElementById('i2p-reset-btn'),
@@ -104,7 +86,6 @@ const ImageToPDF = (() => {
       progressContainer: document.getElementById('i2p-progress-container'),
       progressText: document.getElementById('i2p-progress-text'),
 
-      // PDF Live Preview & Signature Overlay
       previewStage: document.getElementById('i2p-preview-stage'),
       previewCanvas: document.getElementById('i2p-preview-canvas'),
       previewPageNum: document.getElementById('i2p-preview-page-num'),
@@ -120,7 +101,6 @@ const ImageToPDF = (() => {
       sigApplyScopeSelect: document.getElementById('i2p-sig-scope-select'),
       sigPosBtns: document.querySelectorAll('.i2p-sig-pos-btn'),
 
-      // Image Editor Modal
       editorModal: document.getElementById('i2p-editor-modal'),
       editorCloseBtn: document.getElementById('i2p-editor-close-btn'),
       editorSaveBtn: document.getElementById('i2p-editor-save-btn'),
@@ -145,7 +125,6 @@ const ImageToPDF = (() => {
       flipVBtn: document.getElementById('i2p-flip-v'),
       filterCardsRow: document.getElementById('i2p-filter-cards-row'),
 
-      // Signature Studio Modal
       signatureModal: document.getElementById('i2p-signature-modal'),
       sigCloseBtn: document.getElementById('i2p-sig-close-btn'),
       sigCancelBtn: document.getElementById('i2p-sig-cancel-btn'),
@@ -181,7 +160,7 @@ const ImageToPDF = (() => {
   }
 
   function bindEvents() {
-    // Dropzone & File Pickers
+
     Utils.setupDropZone(dom.dropzone, handleFiles, ['image/', '.jpg', '.jpeg', '.png', '.webp']);
 
     if (dom.browseBtn) dom.browseBtn.addEventListener('click', () => dom.fileInput.click());
@@ -200,7 +179,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    // PDF Layout Settings update Preview
     if (dom.pageSizeSelect) {
       dom.pageSizeSelect.addEventListener('change', () => {
         if (dom.customSizeRow) dom.customSizeRow.classList.toggle('hidden', dom.pageSizeSelect.value !== 'custom');
@@ -228,7 +206,6 @@ const ImageToPDF = (() => {
     if (dom.customMarginInput) dom.customMarginInput.addEventListener('input', updatePDFPreview);
     if (dom.imagePlacementSelect) dom.imagePlacementSelect.addEventListener('change', updatePDFPreview);
 
-    // Main Actions
     if (dom.generateBtn) dom.generateBtn.addEventListener('click', generatePDF);
     if (dom.downloadBtn) dom.downloadBtn.addEventListener('click', downloadPDF);
     if (dom.resetBtn) dom.resetBtn.addEventListener('click', resetTool);
@@ -240,7 +217,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    // PDF Preview Page Navigation
     if (dom.previewPrevBtn) {
       dom.previewPrevBtn.addEventListener('click', () => {
         if (previewPageIndex > 0) {
@@ -258,19 +234,12 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Editor Events
     bindEditorEvents();
 
-    // Signature Studio Events
     bindSignatureEvents();
 
-    // Signature Placement Overlay Events
     bindSignatureOverlayEvents();
   }
-
-  // =========================================================================
-  // FILE LOADING & LIST MANAGEMENT
-  // =========================================================================
 
   async function handleFiles(newFiles, isAppend = false) {
     if (!newFiles || newFiles.length === 0) return;
@@ -420,7 +389,6 @@ const ImageToPDF = (() => {
         </div>
       `;
 
-      // Drag and Drop
       card.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('text/plain', index);
         card.classList.add('dragging');
@@ -444,7 +412,6 @@ const ImageToPDF = (() => {
         }
       });
 
-      // Per-Page Orientation Buttons
       card.querySelectorAll('.i2p-orient-pill').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -455,7 +422,6 @@ const ImageToPDF = (() => {
         });
       });
 
-      // Actions
       card.querySelector('.i2p-edit-btn').addEventListener('click', () => openEditor(index));
 
       card.querySelector('.i2p-move-up').addEventListener('click', () => {
@@ -498,14 +464,6 @@ const ImageToPDF = (() => {
     return f ? f.name : filterId;
   }
 
-  // =========================================================================
-  // NON-DESTRUCTIVE RENDERING PIPELINE & 8 FILTER PRESETS
-  // =========================================================================
-
-  // =========================================================================
-  // NON-DESTRUCTIVE RENDERING PIPELINE & 8 FILTER PRESETS
-  // =========================================================================
-
   function renderEditedImageToCanvas(canvas, imgObj, editState = {}, targetWidth = null, targetHeight = null) {
     const rot = ((editState.rotate % 360) + 360) % 360;
     const isRotated90 = (rot === 90 || rot === 270);
@@ -534,7 +492,6 @@ const ImageToPDF = (() => {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // CSS Filter string based on Preset
     let filterCSS = 'none';
     const f = editState.filter || 'original';
 
@@ -594,7 +551,6 @@ const ImageToPDF = (() => {
       rotCanvas.height = 1;
     }
 
-    // Secondary pixel pass for Clean Document / Sharp Black if needed
     if (f === 'clean-document') {
       applyCleanDocumentPixelFilter(ctx, canvas.width, canvas.height);
     }
@@ -610,7 +566,6 @@ const ImageToPDF = (() => {
         const b = d[i + 2];
         const lum = 0.299 * r + 0.587 * g + 0.114 * b;
 
-        // Whiten light gray background (shadows/faded paper) while keeping dark text crisp
         if (lum > 205) {
           d[i] = Math.min(255, r + (255 - r) * 0.75);
           d[i + 1] = Math.min(255, g + (255 - g) * 0.75);
@@ -623,13 +578,9 @@ const ImageToPDF = (() => {
       }
       ctx.putImageData(imgData, 0, 0);
     } catch (e) {
-      // Fallback silently if canvas is tainted
+
     }
   }
-
-  // =========================================================================
-  // IMAGE EDITOR MODAL WITH LIVE FILTER CARDS, 8-HANDLE CROP & LIVE MAGNIFIER
-  // =========================================================================
 
   let initialSavedStateJson = '';
   let hasCropRectChanged = false;
@@ -664,12 +615,10 @@ const ImageToPDF = (() => {
   async function switchEditorPage(targetIndex) {
     if (targetIndex < 0 || targetIndex >= imageList.length || targetIndex === currentEditingIndex) return;
 
-    // 1. If actively cropping, commit crop box into editorTempState before switching
     if (editorCropActive) {
       commitActiveCropRect();
     }
 
-    // 2. Save current page's temporary edits to its independent state
     if (currentEditingIndex >= 0 && currentEditingIndex < imageList.length) {
       const curItem = imageList[currentEditingIndex];
       curItem.editState = JSON.parse(JSON.stringify(editorTempState));
@@ -681,7 +630,6 @@ const ImageToPDF = (() => {
       curItem.height = offscreen.height;
     }
 
-    // 3. Open new page
     await openEditor(targetIndex);
     renderList();
     updatePDFPreview();
@@ -709,10 +657,9 @@ const ImageToPDF = (() => {
       card.className = `i2p-filter-card ${preset.id === activeFilter ? 'active' : ''}`;
       card.dataset.filter = preset.id;
 
-      // Small thumbnail canvas
       const thumbCanvas = document.createElement('canvas');
       thumbCanvas.className = 'i2p-filter-card-thumb';
-      
+
       const thumbState = {
         crop: editorTempState.crop,
         rotate: editorTempState.rotate,
@@ -754,7 +701,7 @@ const ImageToPDF = (() => {
     const fullRotatedH = isRotated90 ? natW : natH;
 
     if (editorCropActive) {
-      // When actively cropping, render full uncropped transformed image so user can position crop rect
+
       const scale = Math.min(maxDisplayW / fullRotatedW, maxDisplayH / fullRotatedH, 1);
       const canvasW = Math.max(80, Math.round(fullRotatedW * scale));
       const canvasH = Math.max(80, Math.round(fullRotatedH * scale));
@@ -805,13 +752,11 @@ const ImageToPDF = (() => {
     if (dom.editorCancelBtn) dom.editorCancelBtn.addEventListener('click', handleCancelClick);
     if (dom.editorSaveBtn) dom.editorSaveBtn.addEventListener('click', saveEditorChanges);
 
-    // Discard Confirmation Modal buttons
     const keepBtn = document.getElementById('i2p-discard-keep-btn');
     const discardBtn = document.getElementById('i2p-discard-confirm-btn');
     if (keepBtn) keepBtn.addEventListener('click', keepEditing);
     if (discardBtn) discardBtn.addEventListener('click', confirmDiscard);
 
-    // Page-by-Page navigation buttons
     if (dom.editorPrevBtn) {
       dom.editorPrevBtn.addEventListener('click', () => {
         if (currentEditingIndex > 0) switchEditorPage(currentEditingIndex - 1);
@@ -824,7 +769,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Crop Toggle & Presets
     if (dom.cropToggleBtn) {
       dom.cropToggleBtn.addEventListener('click', () => {
         editorCropActive = !editorCropActive;
@@ -875,7 +819,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Rotate & Flip
     if (dom.rotateCwBtn) {
       dom.rotateCwBtn.addEventListener('click', () => {
         rotateCW();
@@ -897,7 +840,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Crop Pointer Events
     if (dom.editorCanvas) {
       dom.editorCanvas.addEventListener('mousedown', onCropPointerDown);
       window.addEventListener('mousemove', onCropPointerMove);
@@ -1048,32 +990,22 @@ const ImageToPDF = (() => {
     }
   }
 
-  /**
-   * 8-Handle Crop Overlay Matching Reference UI:
-   * - Darkened outside mask
-   * - Solid bright blue crop border
-   * - 4 Circular corner handles (blue outer ring + white ring + center dot)
-   * - 4 Side middle pill handles (white rounded pill with blue border)
-   */
   function drawCropOverlay(canvas) {
     const ctx = canvas.getContext('2d');
     const cw = canvas.width;
     const ch = canvas.height;
     const r = editorCropRect;
 
-    // Darkened overlay outside the crop rect
     ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
     ctx.fillRect(0, 0, cw, r.y);
     ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h));
     ctx.fillRect(0, r.y, r.x, r.h);
     ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h);
 
-    // Solid blue crop boundary
     ctx.strokeStyle = '#0284c7';
     ctx.lineWidth = 2.5;
     ctx.strokeRect(r.x, r.y, r.w, r.h);
 
-    // Rule of thirds subtle grid
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
@@ -1089,7 +1021,6 @@ const ImageToPDF = (() => {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Helper for rounded pill handles
     function drawPill(x, y, w, h, radius) {
       ctx.save();
       ctx.beginPath();
@@ -1106,20 +1037,19 @@ const ImageToPDF = (() => {
       ctx.restore();
     }
 
-    // Helper for circular corner handles
     function drawCorner(x, y) {
       ctx.save();
-      // Outer Blue Circle
+
       ctx.beginPath();
       ctx.arc(x, y, 9, 0, Math.PI * 2);
       ctx.fillStyle = '#0284c7';
       ctx.fill();
-      // Inner White Ring
+
       ctx.beginPath();
       ctx.arc(x, y, 6.5, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
-      // Center Blue Dot
+
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, Math.PI * 2);
       ctx.fillStyle = '#0284c7';
@@ -1127,44 +1057,36 @@ const ImageToPDF = (() => {
       ctx.restore();
     }
 
-    // 4 Edge / Middle Pill Handles (North, South, West, East)
-    drawPill(r.x + r.w / 2, r.y, 30, 10, 5); // Top (N)
-    drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5); // Bottom (S)
-    drawPill(r.x, r.y + r.h / 2, 10, 30, 5); // Left (W)
-    drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5); // Right (E)
+    drawPill(r.x + r.w / 2, r.y, 30, 10, 5);
+    drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5);
+    drawPill(r.x, r.y + r.h / 2, 10, 30, 5);
+    drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5);
 
-    // 4 Circular Corner Handles
-    drawCorner(r.x, r.y); // NW
-    drawCorner(r.x + r.w, r.y); // NE
-    drawCorner(r.x + r.w, r.y + r.h); // SE
-    drawCorner(r.x, r.y + r.h); // SW
+    drawCorner(r.x, r.y);
+    drawCorner(r.x + r.w, r.y);
+    drawCorner(r.x + r.w, r.y + r.h);
+    drawCorner(r.x, r.y + r.h);
   }
 
   function getCropHandleAt(x, y) {
     const r = editorCropRect;
-    const cornerPad = 32; // Generous touch hit area for corners
-    const edgePad = 26;   // Generous touch hit area for edges
+    const cornerPad = 32;
+    const edgePad = 26;
 
-    // 1. Check 4 corners first
     if (Math.hypot(x - r.x, y - r.y) < cornerPad) return 'nw';
     if (Math.hypot(x - (r.x + r.w), y - r.y) < cornerPad) return 'ne';
     if (Math.hypot(x - (r.x + r.w), y - (r.y + r.h)) < cornerPad) return 'se';
     if (Math.hypot(x - r.x, y - (r.y + r.h)) < cornerPad) return 'sw';
 
-    // 2. Check 4 edge pills
     if (Math.abs(y - r.y) < edgePad && Math.abs(x - (r.x + r.w / 2)) < 28) return 'n';
     if (Math.abs(y - (r.y + r.h)) < edgePad && Math.abs(x - (r.x + r.w / 2)) < 28) return 's';
     if (Math.abs(x - r.x) < edgePad && Math.abs(y - (r.y + r.h / 2)) < 28) return 'w';
     if (Math.abs(x - (r.x + r.w)) < edgePad && Math.abs(y - (r.y + r.h / 2)) < 28) return 'e';
 
-    // 3. Inside box
     if (x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h) return 'move';
     return null;
   }
 
-  /**
-   * Renders Live Magnifier at Top Area showing zoomed area under handle with crosshairs
-   */
   function renderMagnifier(focusCanvasX, focusCanvasY) {
     if (!dom.editorMagnifier || !dom.editorMagnifierCanvas || !editorImgObj || !dom.editorCanvas) return;
     dom.editorMagnifier.classList.remove('hidden');
@@ -1174,7 +1096,6 @@ const ImageToPDF = (() => {
     const magW = magCanvas.width;
     const magH = magCanvas.height;
 
-    // Smart positioning: place in opposite quadrant so cursor/finger never blocks it
     const cw = dom.editorCanvas.width;
     if (focusCanvasX < cw / 2) {
       dom.editorMagnifier.style.left = 'auto';
@@ -1188,7 +1109,6 @@ const ImageToPDF = (() => {
 
     magCtx.clearRect(0, 0, magW, magH);
 
-    // Render full uncropped transformed image to offscreen canvas
     const rot = ((editorTempState.rotate % 360) + 360) % 360;
     const isRotated90 = (rot === 90 || rot === 270);
     const natW = editorImgObj.naturalWidth || editorImgObj.width || 100;
@@ -1206,7 +1126,6 @@ const ImageToPDF = (() => {
     };
     renderEditedImageToCanvas(offscreen, editorImgObj, tempStateNoCrop, baseW, baseH);
 
-    // Map canvas display coords to full offscreen coords
     const scaleX = baseW / (dom.editorCanvas.width || 1);
     const scaleY = baseH / (dom.editorCanvas.height || 1);
     const imgCenterX = focusCanvasX * scaleX;
@@ -1324,7 +1243,6 @@ const ImageToPDF = (() => {
     adjustCropRectToRatio();
     drawEditorCanvas();
 
-    // Active point for live magnifier
     let focusCanvasX = newX + newW / 2;
     let focusCanvasY = newY + newH / 2;
     if (cropDragMode === 'nw') { focusCanvasX = newX; focusCanvasY = newY; }
@@ -1439,17 +1357,12 @@ const ImageToPDF = (() => {
     handleCancelClick();
   }
 
-  // =========================================================================
-  // CLIENT-SIDE SIGNATURE EXTRACTION STUDIO (BACKGROUND REMOVAL)
-  // =========================================================================
-
   function bindSignatureEvents() {
     if (dom.addSignatureBtn) dom.addSignatureBtn.addEventListener('click', openSignatureModal);
     if (dom.sigCloseBtn) dom.sigCloseBtn.addEventListener('click', closeSignatureModal);
     if (dom.sigCancelBtn) dom.sigCancelBtn.addEventListener('click', closeSignatureModal);
     if (dom.sigUseBtn) dom.sigUseBtn.addEventListener('click', applySignatureToPDF);
 
-    // Signature Dropzone & Picker
     Utils.setupDropZone(dom.sigDropzone, handleSignatureFile, ['image/', '.jpg', '.jpeg', '.png', '.webp']);
     if (dom.sigBrowseBtn) dom.sigBrowseBtn.addEventListener('click', () => dom.sigFileInput.click());
     if (dom.sigChangeBtn) dom.sigChangeBtn.addEventListener('click', () => dom.sigFileInput.click());
@@ -1460,7 +1373,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Sensitivity Slider
     if (dom.sigSensitivitySlider) {
       dom.sigSensitivitySlider.addEventListener('input', (e) => {
         signatureSettings.sensitivity = parseInt(e.target.value, 10);
@@ -1469,7 +1381,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Ink Color Chips
     if (dom.sigColorChips) {
       dom.sigColorChips.forEach(chip => {
         chip.addEventListener('click', () => {
@@ -1480,7 +1391,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Auto Crop Checkbox
     if (dom.sigAutoCropCheckbox) {
       dom.sigAutoCropCheckbox.addEventListener('change', (e) => {
         signatureSettings.autoCrop = e.target.checked;
@@ -1542,7 +1452,6 @@ const ImageToPDF = (() => {
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const d = imgData.data;
 
-    // Threshold calculation from sensitivity (30 - 240)
     const threshold = 120 + (signatureSettings.sensitivity / 100) * 125;
     const inkMode = signatureSettings.inkColor;
 
@@ -1554,15 +1463,13 @@ const ImageToPDF = (() => {
       const g = d[i + 1];
       const b = d[i + 2];
 
-      // Luminance
       const lum = 0.299 * r + 0.587 * g + 0.114 * b;
 
-      // Detect white/light paper background
       if (lum >= threshold) {
-        // Transparent
+
         d[i + 3] = 0;
       } else {
-        // Fade alpha smoothly near threshold
+
         const alphaFactor = Math.min(1, Math.max(0, (threshold - lum) / (threshold * 0.45)));
         const alpha = Math.round(alphaFactor * 255);
         d[i + 3] = alpha;
@@ -1577,7 +1484,6 @@ const ImageToPDF = (() => {
           if (py > maxY) maxY = py;
           hasInk = true;
 
-          // Color Recoloring
           if (inkMode === 'black') {
             d[i] = 20;
             d[i + 1] = 20;
@@ -1593,7 +1499,6 @@ const ImageToPDF = (() => {
 
     ctx.putImageData(imgData, 0, 0);
 
-    // Auto Crop to Ink Bounding Box if enabled
     let finalCanvas = canvas;
     if (signatureSettings.autoCrop && hasInk && minX < maxX && minY < maxY) {
       const pad = 8;
@@ -1610,7 +1515,6 @@ const ImageToPDF = (() => {
       finalCanvas = cropped;
     }
 
-    // Render onto Checkerboard preview canvas in modal
     const prevCanvas = dom.sigPreviewCanvas;
     const maxPrevW = 280;
     const maxPrevH = 140;
@@ -1622,7 +1526,6 @@ const ImageToPDF = (() => {
     pCtx.clearRect(0, 0, prevCanvas.width, prevCanvas.height);
     pCtx.drawImage(finalCanvas, 0, 0, prevCanvas.width, prevCanvas.height);
 
-    // Cache transparent PNG data URL
     signatureDataUrl = finalCanvas.toDataURL('image/png');
     signaturePlacement.aspectRatio = finalCanvas.width / finalCanvas.height;
   }
@@ -1645,10 +1548,6 @@ const ImageToPDF = (() => {
     updatePDFPreview();
     Utils.showToast('Signature added! Drag or use position presets to place on page.', 'success');
   }
-
-  // =========================================================================
-  // SIGNATURE OVERLAY INTERACTION ON PDF PREVIEW
-  // =========================================================================
 
   function bindSignatureOverlayEvents() {
     if (dom.sigDeleteBtn) {
@@ -1680,7 +1579,6 @@ const ImageToPDF = (() => {
       });
     }
 
-    // Drag to Move on Preview
     if (dom.sigOverlayBox) {
       dom.sigOverlayBox.addEventListener('mousedown', onSigPointerDown);
       dom.sigOverlayBox.addEventListener('touchstart', onSigTouchStart, { passive: false });
@@ -1852,10 +1750,6 @@ const ImageToPDF = (() => {
     dom.sigOverlayBox.style.height = `${pxH}px`;
   }
 
-  // =========================================================================
-  // PER-IMAGE ORIENTATION & DIMENSIONS HELPERS
-  // =========================================================================
-
   function getItemEffectiveDimensions(item) {
     if (!item) return { width: 100, height: 100 };
     if (item.editState && item.editState.crop && item.editState.crop.w > 0 && item.editState.crop.h > 0) {
@@ -1880,14 +1774,9 @@ const ImageToPDF = (() => {
     if (orient === 'portrait') return 'portrait';
     if (orient === 'landscape') return 'landscape';
 
-    // Auto orientation based on current effective aspect ratio
     const dims = getItemEffectiveDimensions(item);
     return dims.width > dims.height ? 'landscape' : 'portrait';
   }
-
-  // =========================================================================
-  // PDF PAGE PREVIEW ENGINE
-  // =========================================================================
 
   function getPageDimensions(pageIndex = previewPageIndex) {
     const size = dom.pageSizeSelect ? dom.pageSizeSelect.value : 'a4';
@@ -1920,7 +1809,6 @@ const ImageToPDF = (() => {
       }
     }
 
-    // Determine per-page orientation
     const isLandscape = getEffectiveOrientation(item) === 'landscape';
 
     if (size !== 'original') {
@@ -2029,13 +1917,8 @@ const ImageToPDF = (() => {
     offscreen.width = 1;
     offscreen.height = 1;
 
-    // Reposition Signature Overlay Box
     renderSignatureOverlayBox();
   }
-
-  // =========================================================================
-  // CREATE PDF VIA PDF-LIB (Pure Client-Side)
-  // =========================================================================
 
   async function generatePDF() {
     if (imageList.length === 0) {
@@ -2052,7 +1935,6 @@ const ImageToPDF = (() => {
     try {
       const pdfDoc = await PDFLib.PDFDocument.create();
 
-      // Embed signature image if active
       let embeddedSig = null;
       if (signaturePlacement.active && signatureDataUrl) {
         const sigImgObj = await Utils.loadImage(signatureDataUrl);
@@ -2078,7 +1960,6 @@ const ImageToPDF = (() => {
         const renderCanvas = document.createElement('canvas');
         renderEditedImageToCanvas(renderCanvas, imgObj, item.editState);
 
-        // Safe Downscaling for ultra-large images (> 4000px)
         if (renderCanvas.width > 4096 || renderCanvas.height > 4096) {
           const maxDim = 3840;
           const scale = Math.min(maxDim / renderCanvas.width, maxDim / renderCanvas.height);
@@ -2108,7 +1989,6 @@ const ImageToPDF = (() => {
           embeddedImage = await pdfDoc.embedJpg(jpgBytes);
         }
 
-        // Per-Page Dimensions & Orientation
         const pageDim = getPageDimensions(i);
         const pageWidth = pageDim.width;
         const pageHeight = pageDim.height;
@@ -2149,13 +2029,12 @@ const ImageToPDF = (() => {
           height: drawHeight
         });
 
-        // Draw Signature Overlay if applicable on this page
         const shouldDrawSig = embeddedSig && (signaturePlacement.applyToAll || i === previewPageIndex);
         if (shouldDrawSig) {
           const sigPdfW = pageWidth * signaturePlacement.relW;
           const sigPdfH = sigPdfW / signaturePlacement.aspectRatio;
           const sigPdfX = pageWidth * signaturePlacement.relX;
-          // In PDF coordinate system, Y=0 is bottom
+
           const sigPdfY = pageHeight - (pageHeight * signaturePlacement.relY) - sigPdfH;
 
           page.drawImage(embeddedSig, {
@@ -2204,10 +2083,6 @@ const ImageToPDF = (() => {
     const filename = `FileForge-Image-to-PDF-${Date.now().toString().slice(-4)}.pdf`;
     Utils.downloadBlob(generatedPdfBlob, filename);
   }
-
-  // =========================================================================
-  // CLEAN STATE RESET LIFECYCLE
-  // =========================================================================
 
   function resetTool() {
     imageList = [];
@@ -2281,5 +2156,4 @@ const ImageToPDF = (() => {
   };
 })();
 
-// Export globally
 window.ImageToPDF = ImageToPDF;

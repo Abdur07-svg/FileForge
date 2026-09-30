@@ -1,11 +1,6 @@
-/**
- * FileForge - Image Converter Tool
- * Converts JPG <-> PNG <-> WebP with transparency handling and background color picker.
- */
-
 const ImageConverter = (() => {
-  let files = []; // { file, name, dataUrl, convertedBlob, convertedUrl, outputExt }
-  let currentPreset = 'general'; // 'general', 'jpg-to-png', 'png-to-jpg'
+  let files = [];
+  let currentPreset = 'general';
 
   let dom = {};
 
@@ -18,8 +13,7 @@ const ImageConverter = (() => {
       workspace: document.getElementById('iconv-workspace'),
       emptyState: document.getElementById('iconv-empty-state'),
       fileGrid: document.getElementById('iconv-file-grid'),
-      
-      // Settings
+
       targetFormatSelect: document.getElementById('iconv-target-format'),
       qualitySlider: document.getElementById('iconv-quality'),
       qualityVal: document.getElementById('iconv-quality-val'),
@@ -27,8 +21,7 @@ const ImageConverter = (() => {
       bgColorRow: document.getElementById('iconv-bg-row'),
       bgColorPicker: document.getElementById('iconv-bg-color'),
       bgColorPresets: document.querySelectorAll('.iconv-bg-preset'),
-      
-      // Actions
+
       convertBtn: document.getElementById('iconv-convert-btn'),
       downloadAllBtn: document.getElementById('iconv-download-all-btn'),
       resetBtn: document.getElementById('iconv-reset-btn'),
@@ -99,14 +92,13 @@ const ImageConverter = (() => {
 
   function updateSettingsVisibility() {
     const format = dom.targetFormatSelect.value;
-    // Quality slider only relevant for lossy formats (JPEG, WebP)
+
     if (format === 'png') {
       dom.qualityRow.classList.add('hidden');
     } else {
       dom.qualityRow.classList.remove('hidden');
     }
 
-    // Background color only relevant when converting to format without transparency support (JPEG)
     if (format === 'jpeg') {
       dom.bgColorRow.classList.remove('hidden');
     } else {
@@ -246,7 +238,7 @@ const ImageConverter = (() => {
   async function convertAll() {
     if (files.length === 0) return;
 
-    const targetFormat = dom.targetFormatSelect.value; // 'jpeg', 'png', 'webp'
+    const targetFormat = dom.targetFormatSelect.value;
     const quality = parseInt(dom.qualitySlider.value, 10) / 100;
     const bgColor = dom.bgColorPicker.value || '#FFFFFF';
 
@@ -268,7 +260,6 @@ const ImageConverter = (() => {
         canvas.height = img.naturalHeight;
         const ctx = canvas.getContext('2d');
 
-        // Transparency fill for JPEG
         if (targetFormat === 'jpeg') {
           ctx.fillStyle = bgColor;
           ctx.fillRect(0, 0, canvas.width, canvas.height);

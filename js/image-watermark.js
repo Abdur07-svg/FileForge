@@ -1,11 +1,6 @@
-/**
- * FileForge - Image Watermark Tool
- * Stamp text or logo watermarks onto photos with custom opacity, position, scale, angle, and tile effects.
- */
-
 const ImageWatermark = (() => {
-  let currentFile = null; // { file, name, dataUrl, img, width, height }
-  let watermarkType = 'text'; // 'text' | 'image'
+  let currentFile = null;
+  let watermarkType = 'text';
   let watermarkImageElement = null;
   let watermarkedBlob = null;
 
@@ -19,14 +14,12 @@ const ImageWatermark = (() => {
       browseBtn: document.getElementById('iwm-browse-btn'),
       workspace: document.getElementById('iwm-workspace'),
       emptyState: document.getElementById('iwm-empty-state'),
-      
-      // Type Toggle
+
       typeTextBtn: document.getElementById('iwm-type-text'),
       typeImageBtn: document.getElementById('iwm-type-image'),
       textOptionsPanel: document.getElementById('iwm-text-options'),
       imageOptionsPanel: document.getElementById('iwm-image-options'),
-      
-      // Text options
+
       textInput: document.getElementById('iwm-text-input'),
       fontSizeSlider: document.getElementById('iwm-font-size'),
       fontSizeVal: document.getElementById('iwm-font-size-val'),
@@ -34,27 +27,22 @@ const ImageWatermark = (() => {
       colorPresets: document.querySelectorAll('.iwm-color-preset'),
       rotationSlider: document.getElementById('iwm-rotation'),
       rotationVal: document.getElementById('iwm-rotation-val'),
-      
-      // Image options
+
       imageInput: document.getElementById('iwm-logo-input'),
       imageBrowseBtn: document.getElementById('iwm-logo-browse-btn'),
       imageScaleSlider: document.getElementById('iwm-logo-scale'),
       imageScaleVal: document.getElementById('iwm-logo-scale-val'),
-      
-      // Shared options
+
       opacitySlider: document.getElementById('iwm-opacity'),
       opacityVal: document.getElementById('iwm-opacity-val'),
       positionSelect: document.getElementById('iwm-position'),
-      
-      // Output
+
       formatSelect: document.getElementById('iwm-format'),
       qualitySlider: document.getElementById('iwm-quality'),
       qualityVal: document.getElementById('iwm-quality-val'),
-      
-      // Preview
+
       previewCanvas: document.getElementById('iwm-preview-canvas'),
-      
-      // Actions
+
       applyBtn: document.getElementById('iwm-apply-btn'),
       downloadBtn: document.getElementById('iwm-download-btn'),
       resetBtn: document.getElementById('iwm-reset-btn'),
@@ -318,7 +306,6 @@ const ImageWatermark = (() => {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      // Draw original full-res photo
       ctx.drawImage(currentFile.img, 0, 0);
 
       const opacity = (parseInt(dom.opacitySlider ? dom.opacitySlider.value : 50, 10) || 50) / 100;

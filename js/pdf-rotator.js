@@ -1,11 +1,6 @@
-/**
- * FileForge - PDF Rotate Tool
- * Rotate individual pages or all pages (90° CW, 90° CCW, 180°) with live thumbnail preview.
- */
-
 const PDFRotator = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount }
-  let pageRotations = []; // Array of { pageNum, currentAngle, appliedAngle, canvas, dataUrl }
+  let currentFile = null;
+  let pageRotations = [];
   let generatedPdfBlob = null;
 
   let dom = {};
@@ -19,14 +14,12 @@ const PDFRotator = (() => {
       workspace: document.getElementById('pr-workspace'),
       emptyState: document.getElementById('pr-empty-state'),
       pagesGrid: document.getElementById('pr-pages-grid'),
-      
-      // Bulk Controls
+
       rotateAllCwBtn: document.getElementById('pr-rotate-all-cw'),
       rotateAllCcwBtn: document.getElementById('pr-rotate-all-ccw'),
       rotateAll180Btn: document.getElementById('pr-rotate-all-180'),
       resetAllBtn: document.getElementById('pr-reset-all'),
-      
-      // Actions
+
       applyBtn: document.getElementById('pr-apply-btn'),
       downloadBtn: document.getElementById('pr-download-btn'),
       resetBtn: document.getElementById('pr-reset-btn'),

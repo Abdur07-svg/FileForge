@@ -1,17 +1,5 @@
-/**
- * FileForge - Batch File Processor & Bundler
- * 
- * Production-grade batch execution engine:
- * 1. Controlled concurrency (limited to 2 concurrent tasks) to prevent mobile browser memory crashes.
- * 2. Per-item status tracking: Pending, Processing, Completed, Failed.
- * 3. Fault-tolerant: One failed/corrupted file does not abort the batch; remaining items continue processing.
- * 4. Filename sanitization & deduplication to prevent path traversal and collision.
- * 5. Memory safety: Immediate canvas and object cleanup after each item.
- * 6. ZIP packaging of successfully processed files only with comprehensive summary metrics.
- */
-
 const BatchProcessor = (() => {
-  let batchQueue = []; // { id, file, name, size, type, status, errorMsg, resultBlob, resultName }
+  let batchQueue = [];
   let dom = {};
 
   function init() {
@@ -22,19 +10,16 @@ const BatchProcessor = (() => {
       browseBtn: document.getElementById('bprc-browse-btn'),
       workspace: document.getElementById('bprc-workspace'),
       emptyState: document.getElementById('bprc-empty-state'),
-      
-      // Controls
+
       actionSelect: document.getElementById('bprc-action'),
       qualityRow: document.getElementById('bprc-quality-row'),
       qualitySlider: document.getElementById('bprc-quality'),
       qualityVal: document.getElementById('bprc-quality-val'),
-      
-      // Queue & Summary
+
       queueList: document.getElementById('bprc-queue-list'),
       queueCountBadge: document.getElementById('bprc-count'),
       totalSizeBadge: document.getElementById('bprc-size'),
-      
-      // Actions
+
       processBtn: document.getElementById('bprc-process-btn'),
       downloadZipBtn: document.getElementById('bprc-download-zip-btn'),
       resetBtn: document.getElementById('bprc-reset-btn'),
@@ -165,9 +150,6 @@ const BatchProcessor = (() => {
     if (dom.totalSizeBadge) dom.totalSizeBadge.textContent = Utils.formatBytes(totalBytes);
   }
 
-  /**
-   * Process batch with concurrency = 2 to balance speed and mobile memory constraints
-   */
   async function processBatch() {
     if (batchQueue.length === 0) return;
 
@@ -182,7 +164,6 @@ const BatchProcessor = (() => {
     let failedCount = 0;
     const total = batchQueue.length;
 
-    // Concurrency limit
     const CONCURRENCY = 2;
     let nextIdx = 0;
 
@@ -313,8 +294,7 @@ const BatchProcessor = (() => {
 
       successfulItems.forEach((item, index) => {
         let name = Utils.sanitizeFilename(item.resultName || item.name);
-        
-        // Handle name collision
+
         if (usedNames.has(name.toLowerCase())) {
           const base = Utils.getBaseName(name);
           const ext = Utils.getExtension(name);
@@ -376,5 +356,4 @@ const BatchProcessor = (() => {
   };
 })();
 
-// Export globally
 window.BatchProcessor = BatchProcessor;

@@ -1,12 +1,5 @@
-/**
- * FileForge Mobile - ZIP Archive Engine
- * Creates and extracts ZIP archives with relative folder structure preservation
- */
 const MobileZipEngine = (() => {
 
-  /**
-   * Create a ZIP file from an array of File objects or relative path definitions
-   */
   async function createZip(fileItems, zipFilename = 'archive.zip', onProgress = null) {
     if (!window.JSZip) throw new Error('JSZip library is not loaded');
     if (!fileItems || fileItems.length === 0) throw new Error('Please add at least one file');
@@ -18,7 +11,7 @@ const MobileZipEngine = (() => {
 
       const item = fileItems[i];
       const file = item.file || item;
-      // Preserve webkitRelativePath if available from folder upload
+
       const path = item.path || file.webkitRelativePath || file.name;
 
       const buffer = await MobileUtils.readFileAsArrayBuffer(file);
@@ -42,9 +35,6 @@ const MobileZipEngine = (() => {
     };
   }
 
-  /**
-   * Inspect and extract files from a ZIP archive
-   */
   async function readZip(file, onProgress = null) {
     if (!window.JSZip) throw new Error('JSZip library is not loaded');
 
@@ -75,9 +65,6 @@ const MobileZipEngine = (() => {
     };
   }
 
-  /**
-   * Extract a single file entry from a loaded zip instance
-   */
   async function extractSingleFile(zipEntry) {
     if (zipEntry.dir) return null;
     const blob = await zipEntry.async('blob');
@@ -85,9 +72,6 @@ const MobileZipEngine = (() => {
     return { blob, filename, size: blob.size };
   }
 
-  /**
-   * Bundle a collection of Blobs into a single download ZIP
-   */
   async function bundleBlobsAsZip(blobItems, zipFilename = 'download_all.zip', onProgress = null) {
     if (!window.JSZip) throw new Error('JSZip library is not loaded');
 

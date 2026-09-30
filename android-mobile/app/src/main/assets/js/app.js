@@ -1,14 +1,7 @@
-/**
- * FileForge Mobile - Main Application Controller
- * Handles Navigation, Settings, Theme & Haptic Toggles, Exit Confirmation,
- * Interactive Touch Image Resizer, Multi-File Selectors, and Web Share API.
- */
 const MobileApp = (() => {
 
-  // Active state for currently opened tool
   let currentToolId = null;
 
-  // Tool metadata definition (15 essential mobile tools)
   const TOOLS = [
     {
       id: 'image-compressor',
@@ -117,9 +110,6 @@ const MobileApp = (() => {
     }
   ];
 
-  /**
-   * Helper to attach safe, reliable file picker triggers on mobile / Android
-   */
   function bindFileTrigger(triggerEl, inputEl) {
     if (!triggerEl || !inputEl) return;
     triggerEl.addEventListener('click', (e) => {
@@ -131,9 +121,6 @@ const MobileApp = (() => {
     });
   }
 
-  /**
-   * Initialize App Shell, Settings, Event Listeners and Routing
-   */
   function init() {
     initPreferences();
     renderToolCards();
@@ -142,25 +129,9 @@ const MobileApp = (() => {
     initToolControllers();
     initExitModal();
 
-    // Check initial hash route
     handleHashChange();
   }
 
-  /**
-  // Centralized Application Constants
-  const APP_CONFIG = {
-    APP_NAME: 'FileForge',
-    MOBILE_APP_NAME: 'FileForge Mobile',
-    APP_VERSION: '1.0.0',
-    DEVELOPER: 'Abdur',
-    COPYRIGHT_YEAR: '2026',
-    LAST_UPDATED: 'September 18, 2026',
-    CONTACT_EMAIL: 'support@fileforge.app'
-  };
-
-  /**
-   * User UI Preferences (Theme, Haptic, Exit Confirmation)
-   */
   function initPreferences() {
     const savedTheme = localStorage.getItem('fileforge_mobile_theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -204,9 +175,6 @@ const MobileApp = (() => {
     }
   }
 
-  /**
-   * Exit Modal Sheet Handlers
-   */
   function initExitModal() {
     const modal = document.getElementById('mobile-exit-modal');
     const cancelBtn = document.getElementById('btn-cancel-exit');
@@ -253,9 +221,6 @@ const MobileApp = (() => {
     return modal && !modal.classList.contains('hidden');
   }
 
-  /**
-   * Render Home Screen Tool Cards
-   */
   function renderToolCards() {
     const grid = document.getElementById('mobile-tool-grid');
     if (!grid) return;
@@ -278,9 +243,6 @@ const MobileApp = (() => {
     });
   }
 
-  /**
-   * Setup Hash-based Routing & Android Back Support
-   */
   function initNavigation() {
     window.addEventListener('hashchange', handleHashChange);
     window.addEventListener('popstate', handleHashChange);
@@ -409,9 +371,6 @@ const MobileApp = (() => {
     window.scrollTo(0, 0);
   }
 
-  /**
-   * Reset State and Free All Allocated Memory / Object URLs
-   */
   function resetState() {
     MobileUtils.resetAllUrls();
 
@@ -419,19 +378,14 @@ const MobileApp = (() => {
       input.value = '';
     });
 
-    // Reset single-file upload boxes and selected boxes
     document.querySelectorAll('.mobile-upload-box').forEach(box => box.classList.remove('hidden'));
     document.querySelectorAll('.mobile-file-selected').forEach(sec => sec.classList.add('hidden'));
     document.querySelectorAll('.mobile-result-box').forEach(box => box.classList.add('hidden'));
     document.querySelectorAll('.mobile-progress-wrap').forEach(p => p.classList.add('hidden'));
 
-    // Close any open overlays/modals
     document.querySelectorAll('.mobile-modal-overlay').forEach(m => m.classList.add('hidden'));
   }
 
-  /**
-   * Search & Category Chip Filter
-   */
   function initSearchAndFilter() {
     const searchInput = document.getElementById('mobile-search-input');
     const chips = document.querySelectorAll('.mobile-filter-chip');
@@ -479,9 +433,6 @@ const MobileApp = (() => {
     });
   }
 
-  /**
-   * Setup All 15 Mobile Tool Controllers
-   */
   function initToolControllers() {
     initImageCompressor();
     initPdfCompressor();
@@ -508,7 +459,6 @@ const MobileApp = (() => {
     });
   }
 
-  // --- 1. Image Compressor Controller ---
   function initImageCompressor() {
     const input = document.getElementById('input-image-compressor');
     const box = document.getElementById('upload-image-compressor');
@@ -611,8 +561,8 @@ const MobileApp = (() => {
       downloadBtn.addEventListener('click', () => {
         if (compressedResult && compressedResult.blob) {
           const ext = compressedResult.ext || 'jpg';
-          const outName = compressedResult.retainedOriginal 
-            ? currentFile.name 
+          const outName = compressedResult.retainedOriginal
+            ? currentFile.name
             : `${MobileUtils.getBaseName(currentFile.name)}_compressed.${ext}`;
           MobileUtils.downloadBlob(compressedResult.blob, outName);
         }
@@ -629,7 +579,6 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 2. PDF Compressor Controller ---
   function initPdfCompressor() {
     const input = document.getElementById('input-pdf-compressor');
     const box = document.getElementById('upload-pdf-compressor');
@@ -718,7 +667,6 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 3. Image to PDF Controller (Transform & Crop, Filter Presets, Signature Studio) ---
   function initImageToPdf() {
     const input = document.getElementById('input-image-to-pdf');
     const triggerBtn = document.getElementById('btn-trigger-image-to-pdf');
@@ -732,7 +680,6 @@ const MobileApp = (() => {
     const downloadBtn = document.getElementById('dl-image-to-pdf');
     const shareBtn = document.getElementById('share-image-to-pdf');
 
-    // Live Preview & Signature Overlay DOM
     const livePreviewBox = document.getElementById('i2p-live-preview-box');
     const previewCanvas = document.getElementById('mobile-i2p-preview-canvas');
     const previewInfo = document.getElementById('i2p-preview-info');
@@ -745,7 +692,6 @@ const MobileApp = (() => {
     const btnOpenSig = document.getElementById('btn-open-signature-modal');
     const labelSigBtn = document.getElementById('label-signature-btn');
 
-    // Editor Modal DOM
     const editorModal = document.getElementById('mobile-i2p-editor-modal');
     const editorCloseBtn = document.getElementById('btn-close-i2p-editor');
     const editorDiscardBtn = document.getElementById('btn-i2p-discard-editor');
@@ -763,7 +709,6 @@ const MobileApp = (() => {
     const editorCancelCropBtn = document.getElementById('btn-i2p-cancel-crop');
     const editorFilterCardsRow = document.getElementById('row-i2p-filter-cards');
 
-    // Signature Studio Modal DOM
     const sigModal = document.getElementById('mobile-i2p-signature-modal');
     const sigCloseBtn = document.getElementById('btn-close-i2p-sig');
     const sigCancelBtn = document.getElementById('btn-cancel-i2p-sig');
@@ -783,7 +728,6 @@ const MobileApp = (() => {
     let activePreviewPage = 0;
     let generatedPdf = null;
 
-    // Editor Modal Temp State
     let editingIndex = -1;
     let editingImgObj = null;
     let editorTempState = { crop: null, rotate: 0, flipH: false, flipV: false, filter: 'original' };
@@ -794,9 +738,8 @@ const MobileApp = (() => {
     let cropDragMode = null;
     let cropDragStart = { x: 0, y: 0, rectX: 0, rectY: 0, rectW: 0, rectH: 0 };
 
-    // Signature State
     let signatureRawImg = null;
-    let signatureExtracted = null; // { dataUrl, width, height, aspectRatio }
+    let signatureExtracted = null;
     let signatureData = {
       active: false,
       dataUrl: null,
@@ -853,7 +796,6 @@ const MobileApp = (() => {
         </div>
       `).join('');
 
-      // Edit Button
       imageListEl.querySelectorAll('.btn-edit-page').forEach(b => {
         b.addEventListener('click', () => {
           MobileUtils.triggerHaptic('light');
@@ -862,7 +804,6 @@ const MobileApp = (() => {
         });
       });
 
-      // Move Up
       imageListEl.querySelectorAll('.btn-move-up').forEach(b => {
         b.addEventListener('click', () => {
           MobileUtils.triggerHaptic('light');
@@ -877,7 +818,6 @@ const MobileApp = (() => {
         });
       });
 
-      // Move Down
       imageListEl.querySelectorAll('.btn-move-down').forEach(b => {
         b.addEventListener('click', () => {
           MobileUtils.triggerHaptic('light');
@@ -892,7 +832,6 @@ const MobileApp = (() => {
         });
       });
 
-      // Remove
       imageListEl.querySelectorAll('.btn-remove').forEach(b => {
         b.addEventListener('click', () => {
           MobileUtils.triggerHaptic('light');
@@ -905,7 +844,6 @@ const MobileApp = (() => {
         });
       });
 
-      // Per-image orientation select
       imageListEl.querySelectorAll('.item-orient-select').forEach(sel => {
         sel.addEventListener('change', () => {
           const idx = parseInt(sel.dataset.idx, 10);
@@ -948,9 +886,6 @@ const MobileApp = (() => {
       });
     }
 
-    // =========================================================================
-    // LIVE PDF PAGE PREVIEW & INTERACTIVE SIGNATURE OVERLAY
-    // =========================================================================
     async function updateLivePreview() {
       if (!previewCanvas || imageItems.length === 0) return;
       if (activePreviewPage >= imageItems.length) activePreviewPage = Math.max(0, imageItems.length - 1);
@@ -964,7 +899,6 @@ const MobileApp = (() => {
 
       const imgObj = await MobileUtils.loadImageFromSrc(curItem.dataUrl);
 
-      // Render onto an offscreen canvas
       const offscreen = document.createElement('canvas');
       MobileImageToPdf.renderEditedImageToCanvas(offscreen, imgObj, curItem.editState);
 
@@ -1003,7 +937,6 @@ const MobileApp = (() => {
       sigOverlay.style.height = `${pxH}px`;
     }
 
-    // Prev / Next Page Preview Navigation
     if (prevPageBtn) {
       prevPageBtn.addEventListener('click', () => {
         if (activePreviewPage > 0) {
@@ -1022,7 +955,6 @@ const MobileApp = (() => {
       });
     }
 
-    // Signature Drag on Live Preview
     if (sigOverlay) {
       sigOverlay.addEventListener('mousedown', onSigPointerDown);
       sigOverlay.addEventListener('touchstart', onSigTouchStart, { passive: false });
@@ -1135,20 +1067,15 @@ const MobileApp = (() => {
       isSigResizing = false;
     });
 
-    // Page Navigation in Editor Modal
     const editorPrevBtn = document.getElementById('btn-i2p-editor-prev-page');
     const editorNextBtn = document.getElementById('btn-i2p-editor-next-page');
     const editorPageInfo = document.getElementById('mobile-i2p-editor-page-info');
     const editorMagnifier = document.getElementById('mobile-i2p-magnifier');
     const editorMagnifierCanvas = document.getElementById('mobile-i2p-magnifier-canvas');
 
-    // =========================================================================
-    // IMAGE EDITOR MODAL (TRANSFORM, CROP & FILTER PRESETS)
-    // =========================================================================
     let mobileInitialSavedState = '';
     let mobileCropRectChanged = false;
 
-    // Discard Confirmation Modal DOM
     const discardModal = document.getElementById('mobile-i2p-discard-modal');
     const btnDiscardKeep = document.getElementById('btn-mobile-i2p-keep');
     const btnDiscardConfirm = document.getElementById('btn-mobile-i2p-discard');
@@ -1169,9 +1096,6 @@ const MobileApp = (() => {
       });
     }
 
-    // =========================================================================
-    // IMAGE EDITOR MODAL (TRANSFORM, CROP & FILTER PRESETS)
-    // =========================================================================
     async function openEditorModal(index) {
       if (index < 0 || index >= imageItems.length) return;
       editingIndex = index;
@@ -1209,12 +1133,10 @@ const MobileApp = (() => {
     async function switchEditorPage(targetIndex) {
       if (targetIndex < 0 || targetIndex >= imageItems.length || targetIndex === editingIndex) return;
 
-      // 1. If actively cropping, commit crop box into editorTempState before switching
       if (editorCropActive) {
         commitMobileActiveCropRect();
       }
 
-      // 2. Save current page's temporary edits to its independent state
       if (editingIndex >= 0 && editingIndex < imageItems.length) {
         const curItem = imageItems[editingIndex];
         curItem.editState = JSON.parse(JSON.stringify(editorTempState));
@@ -1226,7 +1148,6 @@ const MobileApp = (() => {
         curItem.height = offscreen.height;
       }
 
-      // 3. Open new page
       await openEditorModal(targetIndex);
       renderImageList();
       updateLivePreview();
@@ -1313,7 +1234,6 @@ const MobileApp = (() => {
 
         item.editState = JSON.parse(JSON.stringify(editorTempState));
 
-        // Create updated thumbnail preview
         const offscreen = document.createElement('canvas');
         MobileImageToPdf.renderEditedImageToCanvas(offscreen, editingImgObj, item.editState);
         item.previewUrl = offscreen.toDataURL('image/jpeg', 0.88);
@@ -1327,7 +1247,6 @@ const MobileApp = (() => {
       });
     }
 
-    // Transform buttons
     if (editorRotateCw) {
       editorRotateCw.addEventListener('click', () => {
         mobileCropRectChanged = true;
@@ -1430,7 +1349,6 @@ const MobileApp = (() => {
       });
     }
 
-    // Crop Toggle & Ratios
     if (editorToggleCropBtn) {
       editorToggleCropBtn.addEventListener('click', () => {
         editorCropActive = !editorCropActive;
@@ -1567,32 +1485,22 @@ const MobileApp = (() => {
       }
     }
 
-    /**
-     * 8-Handle Crop Overlay Matching Reference UI:
-     * - Darkened outside mask
-     * - Solid bright blue crop border
-     * - 4 Circular corner handles (blue outer ring + white ring + center dot)
-     * - 4 Side middle pill handles (white rounded pill with blue border)
-     */
     function drawCropOverlay(canvas) {
       const ctx = canvas.getContext('2d');
       const cw = canvas.width;
       const ch = canvas.height;
       const r = editorCropRect;
 
-      // Darkened overlay outside the crop rect
       ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
       ctx.fillRect(0, 0, cw, r.y);
       ctx.fillRect(0, r.y + r.h, cw, ch - (r.y + r.h));
       ctx.fillRect(0, r.y, r.x, r.h);
       ctx.fillRect(r.x + r.w, r.y, cw - (r.x + r.w), r.h);
 
-      // Solid blue crop boundary
       ctx.strokeStyle = '#0284c7';
       ctx.lineWidth = 2.5;
       ctx.strokeRect(r.x, r.y, r.w, r.h);
 
-      // Rule of thirds subtle grid
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
@@ -1608,7 +1516,6 @@ const MobileApp = (() => {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Draw rounded pill handles on edges
       function drawPill(x, y, w, h, radius) {
         ctx.save();
         ctx.beginPath();
@@ -1626,20 +1533,19 @@ const MobileApp = (() => {
         ctx.restore();
       }
 
-      // Draw circular corner handles
       function drawCorner(x, y) {
         ctx.save();
-        // Outer Blue Circle
+
         ctx.beginPath();
         ctx.arc(x, y, 9, 0, Math.PI * 2);
         ctx.fillStyle = '#0284c7';
         ctx.fill();
-        // Inner White Ring
+
         ctx.beginPath();
         ctx.arc(x, y, 6.5, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
-        // Center Blue Dot
+
         ctx.beginPath();
         ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fillStyle = '#0284c7';
@@ -1647,20 +1553,17 @@ const MobileApp = (() => {
         ctx.restore();
       }
 
-      // 4 Edge / Middle Pill Handles (North, South, West, East)
-      drawPill(r.x + r.w / 2, r.y, 30, 10, 5); // Top (N)
-      drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5); // Bottom (S)
-      drawPill(r.x, r.y + r.h / 2, 10, 30, 5); // Left (W)
-      drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5); // Right (E)
+      drawPill(r.x + r.w / 2, r.y, 30, 10, 5);
+      drawPill(r.x + r.w / 2, r.y + r.h, 30, 10, 5);
+      drawPill(r.x, r.y + r.h / 2, 10, 30, 5);
+      drawPill(r.x + r.w, r.y + r.h / 2, 10, 30, 5);
 
-      // 4 Circular Corner Handles
-      drawCorner(r.x, r.y); // NW
-      drawCorner(r.x + r.w, r.y); // NE
-      drawCorner(r.x + r.w, r.y + r.h); // SE
-      drawCorner(r.x, r.y + r.h); // SW
+      drawCorner(r.x, r.y);
+      drawCorner(r.x + r.w, r.y);
+      drawCorner(r.x + r.w, r.y + r.h);
+      drawCorner(r.x, r.y + r.h);
     }
 
-    // Touch & Cursor Crop Pointer Events
     function getCanvasCoords(clientX, clientY) {
       if (!editorCanvas) return { x: 0, y: 0 };
       const rect = editorCanvas.getBoundingClientRect();
@@ -1674,29 +1577,23 @@ const MobileApp = (() => {
 
     function getCropHandleAt(x, y) {
       const r = editorCropRect;
-      const cornerPad = 32; // Generous touch hit area for corners
-      const edgePad = 26;   // Generous touch hit area for edges
+      const cornerPad = 32;
+      const edgePad = 26;
 
-      // 1. Check 4 corners first
       if (Math.hypot(x - r.x, y - r.y) < cornerPad) return 'nw';
       if (Math.hypot(x - (r.x + r.w), y - r.y) < cornerPad) return 'ne';
       if (Math.hypot(x - (r.x + r.w), y - (r.y + r.h)) < cornerPad) return 'se';
       if (Math.hypot(x - r.x, y - (r.y + r.h)) < cornerPad) return 'sw';
 
-      // 2. Check 4 edge pills
       if (Math.abs(y - r.y) < edgePad && Math.abs(x - (r.x + r.w / 2)) < 28) return 'n';
       if (Math.abs(y - (r.y + r.h)) < edgePad && Math.abs(x - (r.x + r.w / 2)) < 28) return 's';
       if (Math.abs(x - r.x) < edgePad && Math.abs(y - (r.y + r.h / 2)) < 28) return 'w';
       if (Math.abs(x - (r.x + r.w)) < edgePad && Math.abs(y - (r.y + r.h / 2)) < 28) return 'e';
 
-      // 3. Inside box
       if (x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h) return 'move';
       return null;
     }
 
-    /**
-     * Renders Live Magnifier at Top Area showing zoomed area under handle with crosshairs
-     */
     function renderMagnifier(focusCanvasX, focusCanvasY) {
       if (!editorMagnifier || !editorMagnifierCanvas || !editingImgObj || !editorCanvas) return;
       editorMagnifier.classList.remove('hidden');
@@ -1706,7 +1603,6 @@ const MobileApp = (() => {
       const magW = magCanvas.width;
       const magH = magCanvas.height;
 
-      // Smart positioning: place in opposite quadrant so finger never blocks it
       const cw = editorCanvas.width;
       if (focusCanvasX < cw / 2) {
         editorMagnifier.style.left = 'auto';
@@ -1720,7 +1616,6 @@ const MobileApp = (() => {
 
       magCtx.clearRect(0, 0, magW, magH);
 
-      // Render full uncropped transformed image to offscreen canvas
       const isRotated90 = (editorTempState.rotate === 90 || editorTempState.rotate === 270);
       const baseW = isRotated90 ? (editingImgObj.naturalHeight || editingImgObj.height) : (editingImgObj.naturalWidth || editingImgObj.width);
       const baseH = isRotated90 ? (editingImgObj.naturalWidth || editingImgObj.width) : (editingImgObj.naturalHeight || editingImgObj.height);
@@ -1735,7 +1630,6 @@ const MobileApp = (() => {
       };
       MobileImageToPdf.renderEditedImageToCanvas(offscreen, editingImgObj, tempStateNoCrop, baseW, baseH);
 
-      // Map canvas display coords to full offscreen coords
       const scaleX = baseW / (editorCanvas.width || 1);
       const scaleY = baseH / (editorCanvas.height || 1);
       const imgCenterX = focusCanvasX * scaleX;
@@ -1840,7 +1734,6 @@ const MobileApp = (() => {
       adjustCropRectToRatio();
       drawEditorCanvas();
 
-      // Find center point of the active drag handle for live magnifier
       let focusCanvasX = newX + newW / 2;
       let focusCanvasY = newY + newH / 2;
       if (cropDragMode === 'nw') { focusCanvasX = newX; focusCanvasY = newY; }
@@ -1867,7 +1760,6 @@ const MobileApp = (() => {
     window.addEventListener('touchend', stopCropDrag);
     window.addEventListener('touchcancel', stopCropDrag);
 
-    // Render Filter Preset Cards
     function renderFilterCards() {
       if (!editorFilterCardsRow || !editingImgObj) return;
       editorFilterCardsRow.innerHTML = '';
@@ -1905,9 +1797,6 @@ const MobileApp = (() => {
       });
     }
 
-    // =========================================================================
-    // SIGNATURE STUDIO MODAL
-    // =========================================================================
     if (btnOpenSig) {
       btnOpenSig.addEventListener('click', () => {
         if (sigModal) sigModal.classList.remove('hidden');
@@ -2000,9 +1889,6 @@ const MobileApp = (() => {
       });
     }
 
-    // =========================================================================
-    // GENERATE PDF
-    // =========================================================================
     if (actionBtn) {
       actionBtn.addEventListener('click', async () => {
         if (imageItems.length === 0) return;
@@ -2055,8 +1941,6 @@ const MobileApp = (() => {
     }
   }
 
-
-  // --- 4 & 5. PDF to JPG / PDF to PNG Controller ---
   function initPdfToImagesTool(toolId, format) {
     const input = document.getElementById(`input-${toolId}`);
     const box = document.getElementById(`upload-${toolId}`);
@@ -2176,7 +2060,6 @@ const MobileApp = (() => {
     initPdfToImagesTool('pdf-to-png', 'image/png');
   }
 
-  // --- 6 & 7. JPG to PNG / PNG to JPG ---
   function initSimpleImageConverter(toolId, targetFormat, targetExt) {
     const input = document.getElementById(`input-${toolId}`);
     const box = document.getElementById(`upload-${toolId}`);
@@ -2257,7 +2140,6 @@ const MobileApp = (() => {
     initSimpleImageConverter('png-to-jpg', 'image/jpeg', 'JPG');
   }
 
-  // --- 8. Image Resizer Controller (Interactive Touch / Finger Scaling) ---
   function initImageResizer() {
     const input = document.getElementById('input-image-resizer');
     const box = document.getElementById('upload-image-resizer');
@@ -2357,7 +2239,6 @@ const MobileApp = (() => {
         btn.classList.toggle('active', parseInt(btn.dataset.scale, 10) === currentScalePct);
       });
 
-      // Visual scaling in touch canvas preview
       if (imageWrapper) {
         const visualScale = Math.min(1.5, Math.max(0.3, currentScalePct / 100));
         imageWrapper.style.transform = `scale(${visualScale})`;
@@ -2365,7 +2246,6 @@ const MobileApp = (() => {
       }
     }
 
-    // Touch / Mouse Drag Resizing on Corner Handle
     let isDragging = false;
     let startX = 0;
     let startY = 0;
@@ -2385,7 +2265,7 @@ const MobileApp = (() => {
       const deltaX = clientX - startX;
       const deltaY = clientY - startY;
       const delta = (deltaX + deltaY) / 2;
-      const sensitivity = 0.6; // Adjust speed of finger drag
+      const sensitivity = 0.6;
       const newScale = Math.round(startScale + delta * sensitivity);
       updateDimensionsFromScale(newScale);
       renderResizerMagnifier(clientX, clientY);
@@ -2426,14 +2306,12 @@ const MobileApp = (() => {
     window.addEventListener('touchend', onDragEnd);
     window.addEventListener('mouseup', onDragEnd);
 
-    // Finger slider input
     if (slider) {
       slider.addEventListener('input', () => {
         updateDimensionsFromScale(parseInt(slider.value, 10));
       });
     }
 
-    // Preset buttons
     presetBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         MobileUtils.triggerHaptic('selection');
@@ -2442,7 +2320,6 @@ const MobileApp = (() => {
       });
     });
 
-    // Ratio lock checkbox toggle
     if (lockRatioCheck) {
       lockRatioCheck.addEventListener('change', () => {
         if (lockRatioCheck.checked && originalWidth && originalHeight && widthInput && heightInput) {
@@ -2452,7 +2329,6 @@ const MobileApp = (() => {
       });
     }
 
-    // Width input manual change
     if (widthInput) {
       widthInput.addEventListener('input', () => {
         const w = parseInt(widthInput.value, 10) || 1;
@@ -2469,7 +2345,6 @@ const MobileApp = (() => {
       });
     }
 
-    // Height input manual change
     if (heightInput) {
       heightInput.addEventListener('input', () => {
         const h = parseInt(heightInput.value, 10) || 1;
@@ -2557,7 +2432,6 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 9. Image Converter Controller ---
   function initImageConverter() {
     const input = document.getElementById('input-image-converter');
     const box = document.getElementById('upload-image-converter');
@@ -2632,7 +2506,6 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 10. PDF Merger Controller ---
   function initPdfMerger() {
     const input = document.getElementById('input-pdf-merger');
     const triggerBtn = document.getElementById('btn-trigger-pdf-merger');
@@ -2759,7 +2632,6 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 11. PDF Splitter Controller ---
   function initPdfSplitter() {
     const input = document.getElementById('input-pdf-splitter');
     const box = document.getElementById('upload-pdf-splitter');
@@ -2832,7 +2704,6 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 12. PDF Page Extractor Controller ---
   function initPdfPageExtractor() {
     const input = document.getElementById('input-pdf-page-extractor');
     const box = document.getElementById('upload-pdf-page-extractor');
@@ -2957,7 +2828,6 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 13. ZIP File Creator Controller ---
   function initZipCreator() {
     const input = document.getElementById('input-zip-creator');
     const folderInput = document.getElementById('input-folder-zip-creator');
@@ -3074,7 +2944,6 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 14. ZIP File Extractor Controller ---
   function initZipExtractor() {
     const input = document.getElementById('input-zip-extractor');
     const box = document.getElementById('upload-zip-extractor');
@@ -3136,7 +3005,6 @@ const MobileApp = (() => {
     }
   }
 
-  // --- 15. Download All as ZIP Controller ---
   function initDownloadAllZip() {
     const input = document.getElementById('input-download-all-zip');
     const triggerBtn = document.getElementById('btn-trigger-download-all-zip');
@@ -3235,22 +3103,19 @@ const MobileApp = (() => {
     }
   }
 
-  // Handle native Android back event called from Android MainActivity
   function handleAndroidBack() {
-    // Priority 1: Close open modal / dialog overlays
+
     const openModals = document.querySelectorAll('.mobile-modal-overlay:not(.hidden)');
     if (openModals.length > 0) {
       openModals.forEach(m => m.classList.add('hidden'));
       return true;
     }
 
-    // Priority 1b: Close exit modal if open
     if (isExitModalOpen()) {
       hideExitModal();
       return true;
     }
 
-    // Priority 2: Close open advanced editor / crop panel
     const cropPanel = document.getElementById('panel-i2p-crop');
     if (cropPanel && !cropPanel.classList.contains('hidden')) {
       cropPanel.classList.add('hidden');
@@ -3259,7 +3124,6 @@ const MobileApp = (() => {
 
     const hash = (window.location.hash || '').replace('#', '').trim();
 
-    // Priority 3: Result screen -> Tool screen (if in a tool and a result box is visible)
     if (hash && hash !== 'home' && hash !== 'settings' && !['about', 'privacy', 'terms'].includes(hash)) {
       const activeToolView = document.getElementById(`tool-view-${hash}`);
       if (activeToolView) {
@@ -3271,7 +3135,6 @@ const MobileApp = (() => {
       }
     }
 
-    // Priority 5: Settings / About / Privacy / Terms -> previous screen
     if (['about', 'privacy', 'terms'].includes(hash)) {
       window.location.hash = '#settings';
       return true;
@@ -3282,13 +3145,11 @@ const MobileApp = (() => {
       return true;
     }
 
-    // Priority 4: Tool screen -> Home
     if (hash && hash !== 'home') {
       window.location.hash = '';
       return true;
     }
 
-    // Priority 6: Home -> Exit FileForge according to Confirm Before Exit
     if (!hash || hash === 'home') {
       const confirmExit = localStorage.getItem('fileforge_mobile_confirm_exit') !== 'false';
       if (confirmExit) {

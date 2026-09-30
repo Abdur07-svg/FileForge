@@ -1,10 +1,5 @@
-/**
- * FileForge - Image Metadata Remover Tool (EXIF & Privacy Stripper)
- * Strip EXIF, GPS location tags, camera details, timestamps, and hidden metadata from photos for 100% privacy.
- */
-
 const ImageMetadataRemover = (() => {
-  let fileItems = []; // Array of { file, name, size, dataUrl, cleanBlob, cleanSize }
+  let fileItems = [];
 
   let dom = {};
 
@@ -17,12 +12,10 @@ const ImageMetadataRemover = (() => {
       workspace: document.getElementById('imr-workspace'),
       emptyState: document.getElementById('imr-empty-state'),
       fileListContainer: document.getElementById('imr-file-list'),
-      
-      // Settings
+
       qualitySlider: document.getElementById('imr-quality'),
       qualityVal: document.getElementById('imr-quality-val'),
-      
-      // Actions
+
       stripBtn: document.getElementById('imr-strip-btn'),
       downloadAllBtn: document.getElementById('imr-download-all-btn'),
       resetBtn: document.getElementById('imr-reset-btn'),
@@ -120,8 +113,8 @@ const ImageMetadataRemover = (() => {
           </div>
         </div>
         <div>
-          ${item.cleanBlob 
-            ? `<button type="button" class="btn btn-sm btn-success imr-dl-single" data-index="${index}">Download</button>` 
+          ${item.cleanBlob
+            ? `<button type="button" class="btn btn-sm btn-success imr-dl-single" data-index="${index}">Download</button>`
             : `<button type="button" class="btn-icon imr-remove-single" data-index="${index}" title="Remove">&times;</button>`
           }
         </div>
@@ -177,7 +170,6 @@ const ImageMetadataRemover = (() => {
         if (ext === 'png') mime = 'image/png';
         else if (ext === 'webp') mime = 'image/webp';
 
-        // Re-encoding directly removes all EXIF/GPS APP segments
         const blob = await Utils.canvasToBlob(canvas, mime, quality);
         item.cleanBlob = blob;
         item.cleanSize = blob.size;

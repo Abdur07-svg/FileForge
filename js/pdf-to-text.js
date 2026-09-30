@@ -1,10 +1,5 @@
-/**
- * FileForge - PDF to Text Tool
- * Extract clean, searchable text from PDF documents with instant copy & .txt download.
- */
-
 const PDFToText = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount }
+  let currentFile = null;
   let extractedFullText = '';
 
   let dom = {};
@@ -17,17 +12,14 @@ const PDFToText = (() => {
       browseBtn: document.getElementById('ptt-browse-btn'),
       workspace: document.getElementById('ptt-workspace'),
       emptyState: document.getElementById('ptt-empty-state'),
-      
-      // Text Output & Stats
+
       textArea: document.getElementById('ptt-text-area'),
       charCountText: document.getElementById('ptt-char-count'),
       wordCountText: document.getElementById('ptt-word-count'),
       pageCountText: document.getElementById('ptt-page-count'),
-      
-      // Options
+
       includePageHeaders: document.getElementById('ptt-page-headers'),
-      
-      // Actions
+
       copyBtn: document.getElementById('ptt-copy-btn'),
       downloadBtn: document.getElementById('ptt-download-btn'),
       resetBtn: document.getElementById('ptt-reset-btn'),
@@ -120,7 +112,7 @@ const PDFToText = (() => {
 
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      
+
       let lastY = null;
       let pageText = '';
 
@@ -145,7 +137,6 @@ const PDFToText = (() => {
     extractedFullText = textChunks.join('\n\n').trim();
     dom.textArea.value = extractedFullText;
 
-    // Calculate stats
     const charCount = extractedFullText.length;
     const wordCount = extractedFullText ? (extractedFullText.match(/\S+/g) || []).length : 0;
 

@@ -1,8 +1,3 @@
-/* ==========================================================================
-   FileForge Mobile — Clean Touch-First Mobile Stylesheet
-   Designed for Android WebView, Mobile Browsers & Portrait Viewports
-   ========================================================================== */
-
 :root, :root[data-theme="light"] {
   --bg-primary: #f8fafc;
   --bg-surface: #ffffff;
@@ -10,26 +5,26 @@
   --bg-input: #ffffff;
   --border-color: rgba(0, 0, 0, 0.08);
   --border-focus: #4f46e5;
-  
+
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
-  
+
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
   --color-accent: #7c3aed;
   --color-success: #10b981;
   --color-danger: #ef4444;
   --color-warning: #f59e0b;
-  
+
   --grad-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
   --grad-surface: linear-gradient(180deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0) 100%);
-  
+
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-full: 9999px;
-  
+
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
   --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
@@ -45,27 +40,26 @@
   --bg-input: #0e1422;
   --border-color: rgba(255, 255, 255, 0.08);
   --border-focus: #6366f1;
-  
+
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  
+
   --color-primary: #6366f1;
   --color-primary-hover: #4f46e5;
   --color-accent: #8b5cf6;
   --color-success: #10b981;
   --color-danger: #ef4444;
   --color-warning: #f59e0b;
-  
+
   --grad-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
   --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%);
-  
+
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.35);
 }
 
-/* --- Base & Reset --- */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -100,7 +94,6 @@ button, input, select, textarea {
   display: none !important;
 }
 
-/* --- Mobile App Container --- */
 .mobile-app-wrap {
   width: 100%;
   max-width: 600px;
@@ -114,7 +107,6 @@ button, input, select, textarea {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* --- Mobile Header --- */
 .mobile-header {
   position: sticky;
   top: 0;
@@ -226,7 +218,6 @@ button, input, select, textarea {
   height: 20px;
 }
 
-/* --- Mobile Main Content --- */
 .mobile-main {
   flex: 1;
   padding: 16px;
@@ -235,7 +226,6 @@ button, input, select, textarea {
   gap: 18px;
 }
 
-/* Screen Transitions */
 .mobile-view-enter {
   animation: mobileFadeSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -249,7 +239,6 @@ button, input, select, textarea {
   .mobile-view-enter { animation: none; }
 }
 
-/* --- Home Screen --- */
 .mobile-hero-tagline {
   text-align: center;
   padding: 6px 0 10px;
@@ -268,7 +257,6 @@ button, input, select, textarea {
   margin-top: 2px;
 }
 
-/* Search Box */
 .mobile-search-wrap {
   position: relative;
   width: 100%;
@@ -303,7 +291,6 @@ button, input, select, textarea {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
-/* Category Filter Chips */
 .mobile-filter-chips {
   display: flex;
   gap: 8px;
@@ -335,7 +322,6 @@ button, input, select, textarea {
   box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
 }
 
-/* Tool Grid Cards */
 .mobile-tool-grid {
   display: flex;
   flex-direction: column;
@@ -404,7 +390,6 @@ button, input, select, textarea {
   flex-shrink: 0;
 }
 
-/* --- Tool Screen Layout --- */
 .mobile-tool-nav {
   display: flex;
   align-items: center;
@@ -460,7 +445,6 @@ button, input, select, textarea {
   margin: 0;
 }
 
-/* Touch & Finger Interactive Resizer */
 .touch-resize-container {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -581,7 +565,6 @@ button, input, select, textarea {
   color: #ffffff;
 }
 
-/* Upload Drop Box */
 .mobile-upload-box {
   background: var(--bg-surface);
   border: 2px dashed rgba(99, 102, 241, 0.35);
@@ -628,7 +611,6 @@ button, input, select, textarea {
   color: var(--text-muted);
 }
 
-/* Selected File Box */
 .mobile-file-selected {
   display: flex;
   flex-direction: column;
@@ -668,7 +650,6 @@ button, input, select, textarea {
   color: var(--text-secondary);
 }
 
-/* Form Controls & Inputs */
 .mobile-control-group {
   display: flex;
   flex-direction: column;
@@ -725,7 +706,6 @@ button, input, select, textarea {
   accent-color: var(--color-primary);
 }
 
-/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -799,7 +779,6 @@ button, input, select, textarea {
   cursor: not-allowed;
 }
 
-/* Progress Bar */
 .mobile-progress-wrap {
   display: flex;
   flex-direction: column;
@@ -828,7 +807,6 @@ button, input, select, textarea {
   text-align: center;
 }
 
-/* Result Box */
 .mobile-result-box {
   background: var(--bg-surface);
   border: 1px solid rgba(16, 185, 129, 0.3);
@@ -888,7 +866,6 @@ button, input, select, textarea {
   flex: 1;
 }
 
-/* Reorder Item List */
 .mobile-dynamic-list {
   display: flex;
   flex-direction: column;
@@ -975,7 +952,6 @@ button, input, select, textarea {
   gap: 4px;
 }
 
-/* Gallery Grid */
 .mobile-gallery-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1043,7 +1019,6 @@ button, input, select, textarea {
   border-radius: var(--radius-sm);
 }
 
-/* Accordion */
 .mobile-accordion {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -1093,7 +1068,6 @@ button, input, select, textarea {
   gap: 6px;
 }
 
-/* --- Settings & Information Pages --- */
 .settings-section-title {
   font-size: 0.75rem;
   font-weight: 800;
@@ -1154,7 +1128,6 @@ button, input, select, textarea {
   color: var(--text-muted);
 }
 
-/* Native Toggle Switch */
 .mobile-switch {
   position: relative;
   display: inline-block;
@@ -1201,7 +1174,6 @@ button, input, select, textarea {
   transform: translateX(20px);
 }
 
-/* Info Documents (About, Privacy, Terms, Licenses) */
 .info-doc-body {
   display: flex;
   flex-direction: column;
@@ -1228,7 +1200,6 @@ button, input, select, textarea {
   color: var(--text-primary);
 }
 
-/* --- Responsive Breakpoints --- */
 @media (min-width: 601px) {
   .mobile-app-wrap {
     border-left: 1px solid var(--border-color);
@@ -1236,11 +1207,6 @@ button, input, select, textarea {
   }
 }
 
-/* ==========================================================================
-   IMAGE TO PDF — ADVANCED EDITOR, FILTER PRESETS & SIGNATURE STUDIO
-   ========================================================================== */
-
-/* Full-Screen & Bottom-Sheet Mobile Modals */
 .mobile-modal-overlay,
 .mobile-modal-backdrop {
   position: fixed;
@@ -1337,7 +1303,6 @@ button, input, select, textarea {
   gap: 10px;
 }
 
-/* Canvas Stage in Modal */
 .mobile-canvas-stage {
   width: 100%;
   min-height: 220px;
@@ -1360,7 +1325,6 @@ button, input, select, textarea {
   display: block;
 }
 
-/* Page-by-Page Editor Navigation */
 .mobile-editor-page-nav {
   display: flex;
   align-items: center;
@@ -1380,7 +1344,6 @@ button, input, select, textarea {
   letter-spacing: 0.02em;
 }
 
-/* Crop Live Magnifier */
 .crop-live-magnifier {
   position: absolute;
   width: 124px;
@@ -1452,7 +1415,6 @@ button, input, select, textarea {
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
 }
 
-/* Editor Action Bar (Rotate, Flip, Crop) */
 .mobile-editor-toolbar {
   display: flex;
   gap: 6px;
@@ -1481,7 +1443,6 @@ button, input, select, textarea {
   color: #ffffff;
 }
 
-/* Crop Controls Panel */
 .mobile-crop-panel {
   background: var(--bg-input);
   border: 1px solid var(--border-color);
@@ -1517,7 +1478,6 @@ button, input, select, textarea {
   color: #ffffff;
 }
 
-/* Filter Preset Cards Scroll Row */
 .mobile-filter-cards-scroll {
   display: flex;
   gap: 10px;
@@ -1578,7 +1538,6 @@ button, input, select, textarea {
   color: var(--color-primary);
 }
 
-/* Checkerboard Background for Transparency */
 .checkerboard-bg {
   background-color: #1e293b;
   background-image:
@@ -1590,7 +1549,6 @@ button, input, select, textarea {
   background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
 }
 
-/* Signature Studio Stage & Controls */
 .mobile-sig-preview-wrap {
   width: 100%;
   height: 160px;
@@ -1642,7 +1600,6 @@ button, input, select, textarea {
   flex-shrink: 0;
 }
 
-/* Live PDF Page Preview Stage with Signature Overlay */
 .mobile-pdf-preview-stage {
   width: 100%;
   background: var(--bg-surface-elevated);
@@ -1669,7 +1626,6 @@ button, input, select, textarea {
   background: #ffffff;
 }
 
-/* Signature Draggable/Resizable Overlay Box on Preview */
 .mobile-sig-overlay {
   position: absolute;
   border: 2px dashed #6366f1;
@@ -1742,7 +1698,6 @@ button, input, select, textarea {
   overflow-y: auto;
 }
 
-/* Exit Confirmation Modal */
 .mobile-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1781,7 +1736,6 @@ button, input, select, textarea {
   to { transform: translateY(0); }
 }
 
-/* Toast Notification Container */
 .mobile-toast-container {
   position: fixed;
   bottom: 20px;
@@ -1838,12 +1792,10 @@ button, input, select, textarea {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Helper Text Classes */
 .text-success { color: var(--color-success); }
 .text-primary { color: var(--color-primary); }
 .text-muted { color: var(--text-muted); }
 
-/* --- Footer --- */
 .mobile-footer {
   text-align: center;
   padding: 16px 0 24px;
@@ -1851,16 +1803,11 @@ button, input, select, textarea {
   color: var(--text-muted);
 }
 
-/* ==========================================================================
-   MOBILE UNIFIED SAVE & DOWNLOAD COMPLETE MODAL STYLES
-   ========================================================================== */
-
 .save-file-modal-sheet {
   max-width: 480px;
   margin: 0 auto;
 }
 
-/* Modal Close & Icon Button */
 .modal-close-btn,
 .mobile-icon-btn {
   width: 32px;
@@ -1983,7 +1930,6 @@ button, input, select, textarea {
   margin: 0;
 }
 
-/* Saving State Spinner */
 .save-saving-spinner {
   width: 44px;
   height: 44px;
@@ -1999,7 +1945,6 @@ button, input, select, textarea {
   100% { transform: rotate(360deg); }
 }
 
-/* Download Complete Card */
 .save-complete-card {
   display: flex;
   align-items: center;

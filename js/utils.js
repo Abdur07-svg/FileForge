@@ -1,10 +1,5 @@
-/**
- * FileForge - Shared Utility Functions
- * Pure Vanilla JavaScript Helper Module
- */
-
 const Utils = (() => {
-  // Guard for beforeunload event
+
   let activeProcessesCount = 0;
 
   window.addEventListener('beforeunload', (e) => {
@@ -15,9 +10,6 @@ const Utils = (() => {
     }
   });
 
-  /**
-   * Register processing start or finish to guard against accidental navigation
-   */
   function setProcessing(isProcessing) {
     if (isProcessing) {
       activeProcessesCount++;
@@ -26,9 +18,6 @@ const Utils = (() => {
     }
   }
 
-  /**
-   * Format bytes to readable human size
-   */
   function formatBytes(bytes, decimals = 1) {
     if (!bytes || bytes === 0) return '0 B';
     const k = 1024;
@@ -38,9 +27,6 @@ const Utils = (() => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
 
-  /**
-   * Calculate percentage reduction or difference
-   */
   function calculateReduction(originalSize, newSize) {
     if (!originalSize || originalSize <= 0) return 0;
     const diff = originalSize - newSize;
@@ -48,9 +34,6 @@ const Utils = (() => {
     return pct;
   }
 
-  /**
-   * Toast notification system
-   */
   function showToast(message, type = 'info', duration = 3500) {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -62,8 +45,7 @@ const Utils = (() => {
 
     const toast = document.createElement('div');
     toast.className = `toast-message toast-${type}`;
-    
-    // Icon based on type
+
     let iconSvg = '';
     if (type === 'success') {
       iconSvg = '<svg class="toast-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
@@ -88,7 +70,6 @@ const Utils = (() => {
 
     container.appendChild(toast);
 
-    // Auto remove
     setTimeout(() => {
       if (toast.parentElement) {
         toast.classList.add('toast-dismissing');
@@ -97,9 +78,6 @@ const Utils = (() => {
     }, duration);
   }
 
-  /**
-   * Escape HTML to prevent injection
-   */
   function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -110,10 +88,6 @@ const Utils = (() => {
       .replace(/'/g, '&#039;');
   }
 
-  /**
-   * Unified FileForge Download & Save Manager
-   * Desktop Browser: Direct browser download -> Download Complete modal
-   */
   const FileForgeDownloadManager = (() => {
     let activeBlob = null;
     let activeFilename = 'fileforge-output';
@@ -231,7 +205,6 @@ const Utils = (() => {
       activeFilename = sanitizeFilename(filename || 'fileforge-download', 'download');
       activeMimeType = mimeType || blob.type || 'application/octet-stream';
 
-      // Desktop browser download flow: normal browser download -> Download Complete modal
       triggerBrowserDownload(activeBlob, activeFilename);
       showDownloadComplete(activeBlob, activeFilename, activeMimeType);
     }
@@ -242,12 +215,8 @@ const Utils = (() => {
     };
   })();
 
-  // Expose Download Manager globally
   window.FileForgeDownloadManager = FileForgeDownloadManager;
 
-  /**
-   * Trigger file save via unified Download Manager
-   */
   function downloadBlob(blob, filename, mimeType = null) {
     FileForgeDownloadManager.save({
       blob: blob,
@@ -256,12 +225,6 @@ const Utils = (() => {
     });
   }
 
-  /**
-   * Download multiple files packaged as a ZIP
-   * @param {Array<{name: string, blob: Blob}>} files
-   * @param {string} zipFilename
-   * @param {function(number, string)} onProgress - Optional callback (0-100, statusText)
-   */
   async function downloadAsZip(files, zipFilename = 'fileforge-archive.zip', onProgress = null) {
     if (!window.JSZip) {
       showToast('JSZip library is not loaded', 'error');
@@ -295,9 +258,6 @@ const Utils = (() => {
     }
   }
 
-  /**
-   * Read file as ArrayBuffer
-   */
   function readFileAsArrayBuffer(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -307,9 +267,6 @@ const Utils = (() => {
     });
   }
 
-  /**
-   * Read file as Data URL
-   */
   function readFileAsDataURL(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -319,9 +276,6 @@ const Utils = (() => {
     });
   }
 
-  /**
-   * Load Image object from Data URL or Object URL
-   */
   function loadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -331,9 +285,6 @@ const Utils = (() => {
     });
   }
 
-  /**
-   * Canvas to Blob helper with fallback
-   */
   function canvasToBlob(canvas, mimeType = 'image/jpeg', quality = 0.85) {
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
@@ -342,9 +293,6 @@ const Utils = (() => {
     });
   }
 
-  /**
-   * Setup drag and drop events on an element
-   */
   function setupDropZone(zoneElement, onFilesSelected, acceptMimes = []) {
     if (!zoneElement) return;
 
@@ -382,23 +330,14 @@ const Utils = (() => {
     });
   }
 
-  /**
-   * Get clean base name without extension
-   */
   function getBaseName(filename) {
     return filename.substring(0, filename.lastIndexOf('.')) || filename;
   }
 
-  /**
-   * Get file extension in lowercase (without dot)
-   */
   function getExtension(filename) {
     return (filename.split('.').pop() || '').toLowerCase();
   }
 
-  /**
-   * Read file as Text string
-   */
   function readFileAsText(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -408,35 +347,25 @@ const Utils = (() => {
     });
   }
 
-  /**
-   * Sanitize a filename to prevent path traversal, reserved names, and dangerous characters
-   */
   function sanitizeFilename(filename, fallbackName = 'downloaded_file') {
     if (!filename || typeof filename !== 'string') return fallbackName;
-    
-    // Normalize unicode
+
     let safe = filename.normalize('NFC');
 
-    // Strip path traversal prefixes and directories (../, ..\, /, \)
     safe = safe.replace(/^.*[\\\/]/, '');
 
-    // Remove null bytes and control characters (0x00-0x1F, 0x7F)
     safe = safe.replace(/[\x00-\x1f\x7f]/g, '');
 
-    // Remove invalid filename characters (< > : " / \ | ? *)
     safe = safe.replace(/[<>:"/\\|?*]/g, '_');
 
-    // Strip leading/trailing dots and spaces
     safe = safe.trim().replace(/^\.+/, '').replace(/\.+$/, '');
 
-    // Check against Windows reserved device names (CON, PRN, AUX, NUL, COM1-9, LPT1-9)
     const baseNameWithoutExt = getBaseName(safe);
     const reservedNames = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
     if (reservedNames.test(baseNameWithoutExt)) {
       safe = `safe_${safe}`;
     }
 
-    // Limit maximum filename length
     if (safe.length > 200) {
       const ext = getExtension(safe);
       const extPart = ext ? `.${ext}` : '';
@@ -467,5 +396,4 @@ const Utils = (() => {
   };
 })();
 
-// Export globally
 window.Utils = Utils;

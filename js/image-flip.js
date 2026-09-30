@@ -1,10 +1,5 @@
-/**
- * FileForge - Image Flip Tool
- * Mirror images horizontally or flip vertically with instant live preview.
- */
-
 const ImageFlip = (() => {
-  let currentFile = null; // { file, name, dataUrl, img, width, height }
+  let currentFile = null;
   let flipH = false;
   let flipV = false;
   let flippedBlob = null;
@@ -19,21 +14,17 @@ const ImageFlip = (() => {
       browseBtn: document.getElementById('iflip-browse-btn'),
       workspace: document.getElementById('iflip-workspace'),
       emptyState: document.getElementById('iflip-empty-state'),
-      
-      // Flip Buttons
+
       flipHBtn: document.getElementById('iflip-h-btn'),
       flipVBtn: document.getElementById('iflip-v-btn'),
       resetFlipBtn: document.getElementById('iflip-reset-btn'),
-      
-      // Output settings
+
       formatSelect: document.getElementById('iflip-format'),
       qualitySlider: document.getElementById('iflip-quality'),
       qualityVal: document.getElementById('iflip-quality-val'),
-      
-      // Preview
+
       previewCanvas: document.getElementById('iflip-preview-canvas'),
-      
-      // Actions
+
       applyBtn: document.getElementById('iflip-apply-btn'),
       downloadBtn: document.getElementById('iflip-download-btn'),
       resetBtn: document.getElementById('iflip-tool-reset-btn'),

@@ -1,14 +1,7 @@
-/**
- * FileForge - PDF Splitter & Page Extractor Tools
- * Handles splitting PDF by custom page ranges, splitting into single-page PDFs,
- * and visual thumbnail-based page extraction.
- */
-
-// --- TOOL: PDF Splitter ---
 const PDFSplitter = (() => {
   let currentFile = null;
   let totalPages = 0;
-  let splitFiles = []; // { name, blob }
+  let splitFiles = [];
 
   let dom = {};
 
@@ -20,21 +13,17 @@ const PDFSplitter = (() => {
       browseBtn: document.getElementById('ps-browse-btn'),
       workspace: document.getElementById('ps-workspace'),
       emptyState: document.getElementById('ps-empty-state'),
-      
-      // Info
+
       fileNameText: document.getElementById('ps-file-name'),
       pageCountText: document.getElementById('ps-page-count'),
-      
-      // Mode & options
+
       modeRangesRadio: document.getElementById('ps-mode-ranges'),
       modeAllRadio: document.getElementById('ps-mode-all'),
       rangesPanel: document.getElementById('ps-ranges-panel'),
       rangeInput: document.getElementById('ps-range-input'),
-      
-      // Results
+
       resultsList: document.getElementById('ps-results-list'),
-      
-      // Actions
+
       splitBtn: document.getElementById('ps-split-btn'),
       downloadAllBtn: document.getElementById('ps-download-all-btn'),
       resetBtn: document.getElementById('ps-reset-btn'),
@@ -113,9 +102,6 @@ const PDFSplitter = (() => {
     }
   }
 
-  /**
-   * Parse range string like "1-3, 5, 7-9" into array of page groups
-   */
   function parseRanges(str, maxPages) {
     const groups = [];
     const parts = str.split(',').map(s => s.trim()).filter(Boolean);
@@ -162,7 +148,7 @@ const PDFSplitter = (() => {
         return;
       }
     } else {
-      // Split into single individual pages
+
       for (let p = 1; p <= totalPages; p++) {
         splitGroups.push({ label: `Page ${p}`, pages: [p] });
       }
@@ -178,7 +164,7 @@ const PDFSplitter = (() => {
         showProgress(pct, `Extracting ${group.label} (${i + 1}/${splitGroups.length})...`);
 
         const newDoc = await PDFLib.PDFDocument.create();
-        // 0-indexed page indices
+
         const indices = group.pages.map(p => p - 1);
         const copied = await newDoc.copyPages(srcDoc, indices);
         copied.forEach(p => newDoc.addPage(p));
@@ -273,12 +259,11 @@ const PDFSplitter = (() => {
   };
 })();
 
-// --- TOOL: PDF Page Extractor ---
 const PDFExtractor = (() => {
   let currentFile = null;
   let pdfDoc = null;
   let totalPages = 0;
-  let pageItems = []; // { pageNum, selected, thumbnailUrl }
+  let pageItems = [];
   let extractedPdfBlob = null;
 
   let dom = {};
@@ -291,16 +276,14 @@ const PDFExtractor = (() => {
       browseBtn: document.getElementById('pe-browse-btn'),
       workspace: document.getElementById('pe-workspace'),
       emptyState: document.getElementById('pe-empty-state'),
-      
-      // Page Grid & Selection
+
       pagesGrid: document.getElementById('pe-pages-grid'),
       selectAllBtn: document.getElementById('pe-select-all'),
       deselectAllBtn: document.getElementById('pe-deselect-all'),
       selectOddBtn: document.getElementById('pe-select-odd'),
       selectEvenBtn: document.getElementById('pe-select-even'),
       selectedCountText: document.getElementById('pe-selected-count'),
-      
-      // Actions
+
       extractBtn: document.getElementById('pe-extract-btn'),
       downloadBtn: document.getElementById('pe-download-btn'),
       resetBtn: document.getElementById('pe-reset-btn'),

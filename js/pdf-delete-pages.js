@@ -1,11 +1,6 @@
-/**
- * FileForge - PDF Delete Pages Tool
- * Visual page grid to select and remove unwanted pages from a PDF.
- */
-
 const PDFDeletePages = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount, pdf }
-  let pageItems = []; // Array of { pageNum, isDeleted, dataUrl }
+  let currentFile = null;
+  let pageItems = [];
   let generatedPdfBlob = null;
 
   let dom = {};
@@ -19,14 +14,12 @@ const PDFDeletePages = (() => {
       workspace: document.getElementById('pdp-workspace'),
       emptyState: document.getElementById('pdp-empty-state'),
       pagesGrid: document.getElementById('pdp-pages-grid'),
-      
-      // Controls
+
       rangeInput: document.getElementById('pdp-range-input'),
       applyRangeBtn: document.getElementById('pdp-apply-range-btn'),
       clearSelectionBtn: document.getElementById('pdp-clear-btn'),
       statusText: document.getElementById('pdp-status-text'),
-      
-      // Actions
+
       deleteBtn: document.getElementById('pdp-delete-btn'),
       downloadBtn: document.getElementById('pdp-download-btn'),
       resetBtn: document.getElementById('pdp-reset-btn'),
@@ -156,7 +149,7 @@ const PDFDeletePages = (() => {
       const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
       pageItems[i - 1].dataUrl = dataUrl;
     }
-    
+
     renderPageCards();
     hideProgress();
   }

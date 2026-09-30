@@ -1,8 +1,3 @@
-/**
- * FileForge - Image Preview & Inspector Tool
- * Multi-format viewer with smooth zoom, pan, rotation, aspect ratio analyzer, and image metadata inspector.
- */
-
 const ImagePreviewTool = (() => {
   let currentFile = null;
   let originalImage = null;
@@ -22,20 +17,17 @@ const ImagePreviewTool = (() => {
       browseBtn: document.getElementById('ipt-browse-btn'),
       workspace: document.getElementById('ipt-workspace'),
       emptyState: document.getElementById('ipt-empty-state'),
-      
-      // Stage & Viewport
+
       viewport: document.getElementById('ipt-viewport'),
       imgElement: document.getElementById('ipt-display-img'),
-      
-      // Metrics & Details
+
       fileNameText: document.getElementById('ipt-file-name'),
       fileSizeText: document.getElementById('ipt-file-size'),
       dimensionsText: document.getElementById('ipt-dims'),
       aspectRatioText: document.getElementById('ipt-aspect'),
       mimeTypeText: document.getElementById('ipt-mime'),
       zoomLevelText: document.getElementById('ipt-zoom-val'),
-      
-      // Control Buttons
+
       zoomInBtn: document.getElementById('ipt-zoom-in'),
       zoomOutBtn: document.getElementById('ipt-zoom-out'),
       zoomFitBtn: document.getElementById('ipt-zoom-fit'),
@@ -62,11 +54,10 @@ const ImagePreviewTool = (() => {
     if (dom.zoomOutBtn) dom.zoomOutBtn.addEventListener('click', () => setZoom(zoomLevel / 1.25));
     if (dom.zoomFitBtn) dom.zoomFitBtn.addEventListener('click', fitToScreen);
     if (dom.zoomActualBtn) dom.zoomActualBtn.addEventListener('click', () => setZoom(1.0));
-    
+
     if (dom.rotateCwBtn) dom.rotateCwBtn.addEventListener('click', () => rotateBy(90));
     if (dom.rotateCcwBtn) dom.rotateCcwBtn.addEventListener('click', () => rotateBy(-90));
 
-    // Interactive Drag & Pan inside viewport
     if (dom.viewport) {
       dom.viewport.addEventListener('mousedown', (e) => {
         isPanning = true;
@@ -89,7 +80,6 @@ const ImagePreviewTool = (() => {
         }
       });
 
-      // Mouse wheel zoom
       dom.viewport.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = e.deltaY > 0 ? 0.85 : 1.15;
@@ -123,12 +113,11 @@ const ImagePreviewTool = (() => {
       originalImage = img;
       currentFile = file;
 
-      // Populate file info metrics
       dom.fileNameText.textContent = file.name;
       dom.fileSizeText.textContent = Utils.formatBytes(file.size);
       dom.dimensionsText.textContent = `${img.naturalWidth} × ${img.naturalHeight} px`;
       dom.mimeTypeText.textContent = file.type || 'image/' + Utils.getExtension(file.name);
-      
+
       const gcdVal = gcd(img.naturalWidth, img.naturalHeight);
       const aspectW = Math.round(img.naturalWidth / gcdVal);
       const aspectH = Math.round(img.naturalHeight / gcdVal);

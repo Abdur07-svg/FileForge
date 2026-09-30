@@ -1,10 +1,5 @@
-/**
- * FileForge - PDF Page Numbering Tool
- * Add professional headers/footers with page numbers, custom formats, positions, and margins.
- */
-
 const PDFPageNumber = (() => {
-  let currentFile = null; // { file, name, size, buffer, pageCount, pdf }
+  let currentFile = null;
   let generatedPdfBlob = null;
   let page1CanvasCache = null;
 
@@ -18,8 +13,7 @@ const PDFPageNumber = (() => {
       browseBtn: document.getElementById('ppn-browse-btn'),
       workspace: document.getElementById('ppn-workspace'),
       emptyState: document.getElementById('ppn-empty-state'),
-      
-      // Settings
+
       formatSelect: document.getElementById('ppn-format'),
       positionSelect: document.getElementById('ppn-position'),
       startNumInput: document.getElementById('ppn-start-num'),
@@ -29,11 +23,9 @@ const PDFPageNumber = (() => {
       marginSlider: document.getElementById('ppn-margin'),
       marginVal: document.getElementById('ppn-margin-val'),
       colorPicker: document.getElementById('ppn-color'),
-      
-      // Preview
+
       previewCanvas: document.getElementById('ppn-preview-canvas'),
-      
-      // Actions
+
       applyBtn: document.getElementById('ppn-apply-btn'),
       downloadBtn: document.getElementById('ppn-download-btn'),
       resetBtn: document.getElementById('ppn-reset-btn'),
@@ -60,7 +52,7 @@ const PDFPageNumber = (() => {
     if (dom.startNumInput) dom.startNumInput.addEventListener('input', updatePreview);
     if (dom.firstPageInput) dom.firstPageInput.addEventListener('input', updatePreview);
     if (dom.colorPicker) dom.colorPicker.addEventListener('input', updatePreview);
-    
+
     if (dom.fontSizeSlider) {
       dom.fontSizeSlider.addEventListener('input', (e) => {
         dom.fontSizeVal.textContent = e.target.value + 'pt';
@@ -168,7 +160,6 @@ const PDFPageNumber = (() => {
     canvas.height = page1CanvasCache.height;
     const ctx = canvas.getContext('2d');
 
-    // Draw base page
     ctx.drawImage(page1CanvasCache, 0, 0);
 
     const format = dom.formatSelect ? dom.formatSelect.value : 'page-x-of-y';
@@ -189,7 +180,7 @@ const PDFPageNumber = (() => {
     let x = 0;
     let y = 0;
 
-    const scale = canvas.width / (currentFile.pageCount > 0 ? 595 : 595); // Approximate scale
+    const scale = canvas.width / (currentFile.pageCount > 0 ? 595 : 595);
     const m = margin * 0.65;
 
     switch (pos) {

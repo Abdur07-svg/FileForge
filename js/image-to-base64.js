@@ -1,8 +1,3 @@
-/**
- * FileForge - Image to Base64 Tool
- * Convert image files directly into clean Base64 data strings, HTML tags, and CSS snippets.
- */
-
 const ImageToBase64 = (() => {
   let currentFile = null;
   let base64String = '';
@@ -18,24 +13,22 @@ const ImageToBase64 = (() => {
       browseBtn: document.getElementById('i2b-browse-btn'),
       workspace: document.getElementById('i2b-workspace'),
       emptyState: document.getElementById('i2b-empty-state'),
-      
-      // Details
+
       fileNameText: document.getElementById('i2b-file-name'),
       fileSizeText: document.getElementById('i2b-file-size'),
       b64SizeText: document.getElementById('i2b-b64-size'),
       previewImg: document.getElementById('i2b-preview-img'),
-      
-      // Output Textareas & Copy Buttons
+
       dataUriOutput: document.getElementById('i2b-data-uri'),
       rawB64Output: document.getElementById('i2b-raw-b64'),
       htmlTagOutput: document.getElementById('i2b-html-tag'),
       cssBgOutput: document.getElementById('i2b-css-bg'),
-      
+
       copyDataUriBtn: document.getElementById('i2b-copy-data-uri'),
       copyRawBtn: document.getElementById('i2b-copy-raw'),
       copyHtmlBtn: document.getElementById('i2b-copy-html'),
       copyCssBtn: document.getElementById('i2b-copy-css'),
-      
+
       downloadTxtBtn: document.getElementById('i2b-download-txt'),
       resetBtn: document.getElementById('i2b-reset-btn')
     };
@@ -89,13 +82,11 @@ const ImageToBase64 = (() => {
 
       currentFile = file;
 
-      // Populate File Details
       dom.fileNameText.textContent = file.name;
       dom.fileSizeText.textContent = Utils.formatBytes(file.size);
       dom.b64SizeText.textContent = Utils.formatBytes(dataUriString.length);
       dom.previewImg.src = dataUrl;
 
-      // Populate Textareas
       dom.dataUriOutput.value = dataUriString;
       dom.rawB64Output.value = base64String;
       dom.htmlTagOutput.value = `<img src="${dataUriString}" alt="${file.name}">`;
@@ -119,7 +110,7 @@ const ImageToBase64 = (() => {
     navigator.clipboard.writeText(text).then(() => {
       Utils.showToast(successMsg, 'success');
     }).catch(() => {
-      // Fallback
+
       const ta = document.createElement('textarea');
       ta.value = text;
       document.body.appendChild(ta);

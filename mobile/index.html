@@ -8,16 +8,12 @@
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
 
-
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Core Mobile Stylesheet -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Offline Local Libraries (100% Bundled for APK & WebView) -->
   <script src="vendor/pdf-lib.min.js"></script>
   <script src="vendor/pdf.min.js"></script>
   <script src="vendor/jszip.min.js"></script>
@@ -25,8 +21,7 @@
 <body>
 
   <div class="mobile-app-wrap">
-    
-    <!-- Top Bar -->
+
     <header class="mobile-header">
       <a href="#" class="mobile-brand mobile-home-btn" aria-label="FileForge Mobile Home">
         <img src="assets/logo.svg" alt="FileForge Logo" class="mobile-brand-logo">
@@ -46,19 +41,14 @@
       </div>
     </header>
 
-    <!-- Main Content Area -->
     <main class="mobile-main">
-      
-      <!-- ==========================================
-           1. HOME SCREEN VIEW
-           ========================================== -->
+
       <div id="mobile-home-view" class="mobile-view-enter">
         <div class="mobile-hero-tagline">
           <h1 class="hero-tagline-title">Mobile File Tools</h1>
           <p class="hero-tagline-sub">Simple • Private • Processed on your device</p>
         </div>
 
-        <!-- Search Bar -->
         <div class="mobile-search-wrap">
           <svg class="mobile-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
@@ -68,7 +58,6 @@
           <button type="button" id="mobile-search-clear" class="mobile-search-clear hidden" aria-label="Clear search">✕</button>
         </div>
 
-        <!-- Category Filter Chips -->
         <div class="mobile-filter-chips" role="tablist" aria-label="Tool Categories">
           <button type="button" class="mobile-filter-chip active" data-category="all" role="tab" aria-selected="true">All Tools</button>
           <button type="button" class="mobile-filter-chip" data-category="pdf" role="tab" aria-selected="false">PDF Tools</button>
@@ -76,9 +65,8 @@
           <button type="button" class="mobile-filter-chip" data-category="archive" role="tab" aria-selected="false">Archive &amp; ZIP</button>
         </div>
 
-        <!-- Tool Grid List -->
         <div id="mobile-tool-grid" class="mobile-tool-grid">
-          <!-- Dynamically populated via JS -->
+
         </div>
 
         <div id="mobile-search-empty" class="mobile-search-empty hidden">
@@ -86,9 +74,6 @@
         </div>
       </div>
 
-      <!-- ==========================================
-           2. SETTINGS / MORE VIEW
-           ========================================== -->
       <div id="mobile-settings-view" class="mobile-view-enter hidden">
         <div class="mobile-tool-nav">
           <button type="button" class="mobile-back-btn" aria-label="Back to Home">
@@ -196,9 +181,6 @@
         </div>
       </div>
 
-      <!-- ==========================================
-           3. ABOUT VIEW
-           ========================================== -->
       <div id="mobile-about-view" class="mobile-view-enter hidden">
         <div class="mobile-tool-nav">
           <button type="button" class="mobile-back-btn" aria-label="Back to Settings">
@@ -265,9 +247,6 @@
         </div>
       </div>
 
-      <!-- ==========================================
-           4. PRIVACY POLICY VIEW (ANDROID APK ADAPTED)
-           ========================================== -->
       <div id="mobile-privacy-view" class="mobile-view-enter hidden">
         <div class="mobile-tool-nav">
           <button type="button" class="mobile-back-btn" aria-label="Back to Settings">
@@ -347,9 +326,6 @@
         </div>
       </div>
 
-      <!-- ==========================================
-           5. TERMS OF USE VIEW
-           ========================================== -->
       <div id="mobile-terms-view" class="mobile-view-enter hidden">
         <div class="mobile-tool-nav">
           <button type="button" class="mobile-back-btn" aria-label="Back to Settings">
@@ -404,14 +380,8 @@
         </div>
       </div>
 
-
-
-      <!-- ==========================================
-           7. TOOL VIEWS CONTAINER
-           ========================================== -->
       <div id="mobile-tool-container" class="hidden">
 
-        <!-- --- TOOL 1: Image Compressor --- -->
         <div id="tool-view-image-compressor" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -478,7 +448,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 2: PDF Compressor --- -->
         <div id="tool-view-pdf-compressor" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -550,7 +519,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 3: Image to PDF --- -->
         <div id="tool-view-image-to-pdf" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -581,7 +549,6 @@
               </button>
             </div>
 
-            <!-- Live PDF Page Preview Stage with Interactive Signature Placement -->
             <div id="i2p-live-preview-box" class="mobile-pdf-preview-stage hidden">
               <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <span style="color: var(--text-primary); font-weight: 700;">PDF Page Preview</span>
@@ -589,7 +556,7 @@
               </div>
               <div class="mobile-pdf-preview-sheet">
                 <canvas id="mobile-i2p-preview-canvas" class="mobile-pdf-preview-canvas"></canvas>
-                <!-- Draggable Signature Overlay on Preview -->
+
                 <div id="mobile-i2p-sig-overlay" class="mobile-sig-overlay hidden">
                   <img id="mobile-i2p-sig-img" alt="Signature" />
                   <button type="button" id="mobile-i2p-sig-del" class="mobile-sig-delete-btn" title="Remove Signature">✕</button>
@@ -666,7 +633,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 4: PDF to JPG --- -->
         <div id="tool-view-pdf-to-jpg" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -726,7 +692,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 5: PDF to PNG --- -->
         <div id="tool-view-pdf-to-png" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -786,7 +751,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 6: JPG to PNG --- -->
         <div id="tool-view-jpg-to-png" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -838,7 +802,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 7: PNG to JPG --- -->
         <div id="tool-view-png-to-jpg" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -890,7 +853,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 8: Image Resizer (Interactive Touch / Finger Scaling) --- -->
         <div id="tool-view-image-resizer" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -916,14 +878,12 @@
               <button type="button" id="change-image-resizer" class="btn btn-xs btn-secondary">Change</button>
             </div>
 
-            <!-- Touch / Finger Interactive Resizing Card -->
             <div class="touch-resize-container">
               <div class="touch-resize-header">
                 <span>Touch / Finger Live Resize</span>
                 <span id="badge-pct-image-resizer" class="touch-resize-badge">100%</span>
               </div>
 
-              <!-- Interactive Touch Canvas Preview with Corner Drag Handle -->
               <div id="box-touch-resizer" class="touch-preview-box" style="position: relative;">
                 <div id="wrapper-touch-image" class="touch-image-wrapper">
                   <img id="thumb-touch-resizer" class="touch-preview-image" alt="Resize Preview">
@@ -937,7 +897,6 @@
                 </div>
               </div>
 
-              <!-- Smooth Finger Slider -->
               <div class="mobile-control-group" style="margin-top: 14px;">
                 <div class="mobile-control-label">
                   <span>Scale with Finger:</span>
@@ -948,7 +907,6 @@
                 </div>
               </div>
 
-              <!-- Quick Presets -->
               <div class="touch-preset-chips">
                 <button type="button" class="touch-preset-btn" data-scale="25">25%</button>
                 <button type="button" class="touch-preset-btn" data-scale="50">50%</button>
@@ -958,7 +916,6 @@
                 <button type="button" class="touch-preset-btn" data-scale="200">200%</button>
               </div>
 
-              <!-- Aspect Ratio Lock & Exact Pixel Inputs -->
               <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; margin-bottom: 6px;">
                 <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); cursor: pointer;">
                   <input type="checkbox" id="lock-ratio-image-resizer" checked style="accent-color: var(--color-primary); width: 16px; height: 16px;">
@@ -1007,7 +964,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 9: Image Converter --- -->
         <div id="tool-view-image-converter" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -1070,7 +1026,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 10: PDF Merger --- -->
         <div id="tool-view-pdf-merger" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -1122,7 +1077,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 11: PDF Splitter --- -->
         <div id="tool-view-pdf-splitter" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -1179,7 +1133,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 12: PDF Page Extractor --- -->
         <div id="tool-view-pdf-page-extractor" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -1230,7 +1183,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 13: ZIP File Creator --- -->
         <div id="tool-view-zip-creator" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -1285,7 +1237,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 14: ZIP File Extractor --- -->
         <div id="tool-view-zip-extractor" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -1329,7 +1280,6 @@
           </div>
         </div>
 
-        <!-- --- TOOL 15: Download All as ZIP --- -->
         <div id="tool-view-download-all-zip" class="mobile-tool-view hidden">
           <div class="mobile-tool-nav">
             <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
@@ -1388,12 +1338,10 @@
 
     </main>
 
-    <!-- Footer -->
     <footer class="mobile-footer">
       <div>FileForge Mobile • 100% Client-Side Privacy</div>
     </footer>
 
-    <!-- Image Editor (Transform, Crop & Filter Presets) Modal -->
     <div id="mobile-i2p-editor-modal" class="mobile-modal-overlay hidden" role="dialog" aria-modal="true">
       <div class="mobile-modal-dialog">
         <div class="mobile-modal-header">
@@ -1405,14 +1353,13 @@
         </div>
 
         <div class="mobile-modal-body">
-          <!-- Page-by-Page Navigation -->
+
           <div class="mobile-editor-page-nav">
             <button type="button" id="btn-i2p-editor-prev-page" class="btn btn-xs btn-secondary" title="Previous Page">◀ Prev Page</button>
             <span class="mobile-editor-page-badge" id="mobile-i2p-editor-page-info">Page 1 of 1</span>
             <button type="button" id="btn-i2p-editor-next-page" class="btn btn-xs btn-secondary" title="Next Page">Next Page ▶</button>
           </div>
 
-          <!-- Live Interactive Canvas Stage with Touch Crop Overlay & Live Magnifier -->
           <div id="mobile-i2p-canvas-stage" class="mobile-canvas-stage">
             <canvas id="mobile-i2p-editor-canvas"></canvas>
             <div id="mobile-i2p-magnifier" class="crop-live-magnifier hidden">
@@ -1425,7 +1372,6 @@
             </div>
           </div>
 
-          <!-- Transform & Crop Toolbar -->
           <div>
             <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Transform &amp; Crop</div>
             <div class="mobile-editor-toolbar">
@@ -1448,7 +1394,6 @@
             </div>
           </div>
 
-          <!-- Crop Controls Panel -->
           <div id="panel-i2p-crop" class="mobile-crop-panel hidden">
             <div style="font-size: 0.76rem; font-weight: 700; color: var(--text-secondary);">Aspect Ratio:</div>
             <div class="mobile-crop-ratios">
@@ -1464,11 +1409,10 @@
             </div>
           </div>
 
-          <!-- Filter Presets (8 Visual Cards) -->
           <div>
             <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Filter Presets</div>
             <div id="row-i2p-filter-cards" class="mobile-filter-cards-scroll">
-              <!-- Dynamically populated with 8 thumbnail cards -->
+
             </div>
           </div>
         </div>
@@ -1480,7 +1424,6 @@
       </div>
     </div>
 
-    <!-- Mobile Discard Confirmation Modal -->
     <div id="mobile-i2p-discard-modal" class="mobile-modal-overlay hidden" role="dialog" aria-modal="true" style="z-index: 100000;">
       <div class="mobile-modal-sheet" style="text-align: center; padding: 24px 20px; max-width: 360px; margin: auto; border-radius: 16px;">
         <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
@@ -1495,7 +1438,6 @@
       </div>
     </div>
 
-    <!-- Signature Studio Modal -->
     <div id="mobile-i2p-signature-modal" class="mobile-modal-overlay hidden" role="dialog" aria-modal="true">
       <div class="mobile-modal-dialog">
         <div class="mobile-modal-header">
@@ -1507,7 +1449,7 @@
         </div>
 
         <div class="mobile-modal-body">
-          <!-- Upload Box / Change Button -->
+
           <div id="box-i2p-sig-upload" class="mobile-upload-box" tabindex="0" role="button" style="padding: 16px 12px;">
             <div class="upload-icon" style="font-size: 24px;">✍️</div>
             <div class="upload-title" style="font-size: 0.95rem;">+ Upload Signature Photo</div>
@@ -1515,18 +1457,15 @@
             <input type="file" id="input-i2p-sig" class="mobile-file-input hidden" accept="image/*">
           </div>
 
-          <!-- Transparent Preview Stage -->
           <div id="wrap-i2p-sig-preview" class="mobile-sig-preview-wrap checkerboard-bg hidden">
             <canvas id="mobile-i2p-sig-canvas"></canvas>
           </div>
 
-          <!-- Controls when loaded -->
           <div id="controls-i2p-sig" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
             <button type="button" id="btn-change-i2p-sig" class="btn btn-xs btn-secondary" style="align-self: center;">
               Upload Different Photo
             </button>
 
-            <!-- Sensitivity Slider -->
             <div class="mobile-control-group">
               <div class="mobile-control-label" style="display: flex; justify-content: space-between;">
                 <span>Background Removal Sensitivity</span>
@@ -1538,7 +1477,6 @@
               <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Slide right for faint paper shadows; slide left if ink fades.</div>
             </div>
 
-            <!-- Ink Color Options -->
             <div>
               <div class="mobile-control-label">Ink Color Option</div>
               <div class="mobile-ink-options">
@@ -1557,13 +1495,11 @@
               </div>
             </div>
 
-            <!-- Auto-Crop Paper Checkbox -->
             <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">
               <input type="checkbox" id="check-i2p-sig-autocrop" checked style="accent-color: var(--color-primary); width: 16px; height: 16px;">
               <span>Auto-trim empty paper borders</span>
             </label>
 
-            <!-- Signature Disclaimer -->
             <div style="padding: 10px 12px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-sm); font-size: 0.74rem; line-height: 1.45; color: var(--text-secondary);">
               <strong style="color: var(--color-warning);">Disclaimer:</strong> FileForge's Signature feature only places a user-provided signature image onto a document. It does not create, verify, authenticate, or certify a legally valid digital signature or electronic signature. Users are solely responsible for using signatures only with proper authorization and for complying with applicable laws and requirements.
               <div style="margin-top: 4px; color: var(--text-muted);">Use only your own signature or a signature you are authorized to use.</div>
@@ -1578,11 +1514,9 @@
       </div>
     </div>
 
-    <!-- Unified FileForge Mobile Save & Download Complete Modal Sheet -->
     <div id="save-file-modal" class="mobile-modal-overlay mobile-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
       <div class="mobile-modal-sheet save-file-modal-sheet">
-        
-        <!-- STEP 1: SAVE FILE FORM -->
+
         <div id="save-modal-step-form" class="save-modal-step">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
             <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px;" id="save-modal-title">
@@ -1601,7 +1535,6 @@
             </button>
           </div>
 
-          <!-- Filename Input -->
           <div style="margin-bottom: 14px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">
               <span>File Name</span>
@@ -1614,7 +1547,6 @@
             <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 5px;">Extension is preserved automatically.</div>
           </div>
 
-          <!-- Location Box with Folder Choose Action -->
           <div class="save-location-box" style="margin-bottom: 16px;">
             <div class="save-location-header-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
               <div class="save-location-header" style="margin-bottom: 0;">
@@ -1642,14 +1574,12 @@
           </div>
         </div>
 
-        <!-- STEP 2: SAVING IN PROGRESS -->
         <div id="save-modal-step-saving" class="save-modal-step hidden" style="text-align: center; padding: 24px 10px;">
           <div class="save-saving-spinner"></div>
           <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 14px 0 4px;">Saving...</div>
           <div style="font-size: 0.8rem; color: var(--text-secondary);" id="save-modal-saving-text">Please wait...</div>
         </div>
 
-        <!-- STEP 3: DOWNLOAD COMPLETE -->
         <div id="save-modal-step-complete" class="save-modal-step hidden">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
             <div style="font-size: 1.15rem; font-weight: 800; color: var(--color-success); display: flex; align-items: center; gap: 8px;">
@@ -1692,7 +1622,6 @@
           </div>
         </div>
 
-        <!-- STEP 4: ERROR STATE -->
         <div id="save-modal-step-error" class="save-modal-step hidden" style="text-align: center; padding: 20px 10px;">
           <div style="width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: var(--color-danger); display: flex; align-items: center; justify-content: center;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 22px; height: 22px;">
@@ -1714,7 +1643,6 @@
       </div>
     </div>
 
-    <!-- Exit Confirmation Bottom Modal Sheet -->
     <div id="mobile-exit-modal" class="mobile-modal-backdrop hidden">
       <div class="mobile-modal-sheet">
         <div style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">Exit FileForge?</div>
@@ -1726,12 +1654,10 @@
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="mobile-toast-container" class="mobile-toast-container" aria-live="polite"></div>
 
   </div>
 
-  <!-- Mobile JS Modules -->
   <script src="js/utils.js"></script>
   <script src="js/image-engine.js"></script>
   <script src="js/pdf-engine.js"></script>
