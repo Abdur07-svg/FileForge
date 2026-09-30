@@ -1,6 +1,29 @@
 const MobileApp = (() => {
 
   let currentToolId = null;
+  const toolResets = {};
+
+  function isAndroidApp() {
+    if (typeof window.AndroidBridge !== 'undefined' && window.AndroidBridge !== null) return true;
+    if (window.FileForgeAndroidApp === true || window.isAndroidAPK === true) return true;
+    if (window.location.href.indexOf('android_asset') !== -1) return true;
+    if (window.MobileUtils && window.MobileUtils.downloadManager && typeof window.MobileUtils.downloadManager.isAndroidApp === 'function') {
+      return window.MobileUtils.downloadManager.isAndroidApp();
+    }
+    return false;
+  }
+
+  function registerToolReset(toolId, resetFn) {
+    toolResets[toolId] = resetFn;
+  }
+
+  function resetToolState(toolId) {
+    if (toolId && typeof toolResets[toolId] === 'function') {
+      try {
+        toolResets[toolId]();
+      } catch (e) {}
+    }
+  }
 
   const TOOLS = [
     {
@@ -246,6 +269,11 @@ const MobileApp = (() => {
   function initNavigation() {
     window.addEventListener('hashchange', handleHashChange);
     window.addEventListener('popstate', handleHashChange);
+    window.addEventListener('pageshow', (e) => {
+      if (isAndroidApp() || e.persisted) {
+        handleHashChange();
+      }
+    });
 
     document.querySelectorAll('#mobile-settings-view .mobile-back-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -267,6 +295,9 @@ const MobileApp = (() => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         MobileUtils.triggerHaptic('light');
+        if (isAndroidApp() && currentToolId) {
+          resetState(currentToolId);
+        }
         window.location.hash = '';
       });
     });
@@ -275,6 +306,9 @@ const MobileApp = (() => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         MobileUtils.triggerHaptic('light');
+        if (isAndroidApp() && currentToolId) {
+          resetState(currentToolId);
+        }
         window.location.hash = '';
       });
     });
@@ -324,7 +358,9 @@ const MobileApp = (() => {
   }
 
   function showHomeView() {
-    resetState();
+    if (isAndroidApp() || currentToolId) {
+      resetState();
+    }
     currentToolId = null;
     hideAllScreens();
 
@@ -334,7 +370,9 @@ const MobileApp = (() => {
   }
 
   function showSettingsView() {
-    resetState();
+    if (isAndroidApp() || currentToolId) {
+      resetState();
+    }
     currentToolId = null;
     hideAllScreens();
 
@@ -344,7 +382,9 @@ const MobileApp = (() => {
   }
 
   function showDocView(viewId) {
-    resetState();
+    if (isAndroidApp() || currentToolId) {
+      resetState();
+    }
     currentToolId = null;
     hideAllScreens();
 
@@ -354,8 +394,8 @@ const MobileApp = (() => {
   }
 
   function showToolView(toolId) {
-    if (currentToolId !== toolId) {
-      resetState();
+    if (isAndroidApp() || currentToolId !== toolId) {
+      resetState(toolId);
     }
     currentToolId = toolId;
     hideAllScreens();
@@ -371,7 +411,15 @@ const MobileApp = (() => {
     window.scrollTo(0, 0);
   }
 
-  function resetState() {
+  function resetState(toolId) {
+    if (toolId) {
+      resetToolState(toolId);
+    } else {
+      Object.keys(toolResets).forEach(id => {
+        resetToolState(id);
+      });
+    }
+
     MobileUtils.resetAllUrls();
 
     document.querySelectorAll('.mobile-file-input').forEach(input => {
@@ -577,6 +625,30 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetImageCompressor() {
+      currentFile = null;
+      if (compressedResult && compressedResult.previewUrl) {
+        MobileUtils.revokeUrl(compressedResult.previewUrl);
+      }
+      compressedResult = null;
+      if (input) input.value = '';
+      if (box) box.classList.remove('hidden');
+      if (selectedSec) selectedSec.classList.add('hidden');
+      if (fileNameEl) fileNameEl.textContent = '';
+      if (fileSizeEl) fileSizeEl.textContent = '';
+      if (qualitySlider) qualitySlider.value = '0.75';
+      if (qualityVal) qualityVal.textContent = '75%';
+      if (actionBtn) {
+        actionBtn.disabled = false;
+        actionBtn.textContent = 'Compress Image';
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+      if (resultStats) resultStats.innerHTML = '';
+      if (previewImg) previewImg.removeAttribute('src');
+    }
+
+    registerToolReset('image-compressor', resetImageCompressor);
   }
 
   function initPdfCompressor() {
@@ -665,6 +737,28 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetPdfCompressor() {
+      currentFile = null;
+      compressedPdfResult = null;
+      if (input) input.value = '';
+      if (box) box.classList.remove('hidden');
+      if (selectedSec) selectedSec.classList.add('hidden');
+      if (fileNameEl) fileNameEl.textContent = '';
+      if (fileSizeEl) fileSizeEl.textContent = '';
+      if (levelSelect) levelSelect.value = 'medium';
+      if (actionBtn) {
+        actionBtn.disabled = false;
+        actionBtn.textContent = 'Compress PDF';
+      }
+      if (progressWrap) progressWrap.classList.add('hidden');
+      if (progressBar) progressBar.style.width = '0%';
+      if (progressText) progressText.textContent = 'Compressing...';
+      if (resultBox) resultBox.classList.add('hidden');
+      if (resultStats) resultStats.innerHTML = '';
+    }
+
+    registerToolReset('pdf-compressor', resetPdfCompressor);
   }
 
   function initImageToPdf() {
@@ -1939,6 +2033,73 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetImageToPdf() {
+      imageItems.forEach(item => {
+        if (item.previewUrl) MobileUtils.revokeUrl(item.previewUrl);
+        if (item.dataUrl && item.dataUrl.startsWith('blob:')) MobileUtils.revokeUrl(item.dataUrl);
+      });
+      imageItems = [];
+      activePreviewPage = 0;
+      generatedPdf = null;
+      editingIndex = -1;
+      editingImgObj = null;
+      editorTempState = { crop: null, rotate: 0, flipH: false, flipV: false, filter: 'original' };
+      editorCropActive = false;
+      editorCropRatio = 'free';
+      editorCropRect = { x: 20, y: 20, w: 200, h: 200 };
+      isCropDragging = false;
+      cropDragMode = null;
+      cropDragStart = { x: 0, y: 0, rectX: 0, rectY: 0, rectW: 0, rectH: 0 };
+      signatureRawImg = null;
+      signatureExtracted = null;
+      signatureData = { active: false, dataUrl: null, aspectRatio: 1, relX: 0.60, relY: 0.72, relW: 0.30 };
+      isSigDragging = false;
+      isSigResizing = false;
+      sigDragOrigin = { clientX: 0, clientY: 0, relX: 0, relY: 0, relW: 0 };
+      mobileInitialSavedState = '';
+      mobileCropRectChanged = false;
+
+      if (input) input.value = '';
+      if (sigInput) sigInput.value = '';
+      renderImageList();
+      if (pageSizeSelect) pageSizeSelect.value = 'a4';
+      if (orientationSelect) orientationSelect.value = 'auto';
+      if (marginSelect) marginSelect.value = 'none';
+      if (actionBtn) {
+        actionBtn.disabled = true;
+        actionBtn.textContent = 'Create PDF';
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+      if (metaEl) metaEl.innerHTML = '';
+      if (livePreviewBox) livePreviewBox.classList.add('hidden');
+      if (previewCanvas) {
+        const ctx = previewCanvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      }
+      if (previewInfo) previewInfo.textContent = '';
+      if (sigOverlay) sigOverlay.classList.add('hidden');
+      if (sigImgEl) sigImgEl.removeAttribute('src');
+      if (labelSigBtn) labelSigBtn.textContent = 'Signature Studio';
+      if (editorModal) editorModal.classList.add('hidden');
+      if (sigModal) sigModal.classList.add('hidden');
+      if (discardModal) discardModal.classList.add('hidden');
+      if (editorCropPanel) editorCropPanel.classList.add('hidden');
+      if (editorMagnifier) editorMagnifier.classList.add('hidden');
+      if (sigUploadBox) sigUploadBox.classList.remove('hidden');
+      if (sigPreviewWrap) sigPreviewWrap.classList.add('hidden');
+      if (sigControlsBox) sigControlsBox.classList.add('hidden');
+      if (sigCanvas) {
+        const ctx = sigCanvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      }
+      if (editorCanvas) {
+        const ctx = editorCanvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, editorCanvas.width, editorCanvas.height);
+      }
+    }
+
+    registerToolReset('image-to-pdf', resetImageToPdf);
   }
 
   function initPdfToImagesTool(toolId, format) {
@@ -2050,6 +2211,30 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetPdfToImages() {
+      currentFile = null;
+      convertedImages.forEach(img => {
+        if (img.previewUrl) MobileUtils.revokeUrl(img.previewUrl);
+      });
+      convertedImages = [];
+      if (input) input.value = '';
+      if (box) box.classList.remove('hidden');
+      if (selectedSec) selectedSec.classList.add('hidden');
+      if (fileNameEl) fileNameEl.textContent = '';
+      if (fileSizeEl) fileSizeEl.textContent = '';
+      if (actionBtn) {
+        actionBtn.disabled = false;
+        actionBtn.textContent = (format === 'image/jpeg' ? 'Convert to JPG' : 'Convert to PNG');
+      }
+      if (progressWrap) progressWrap.classList.add('hidden');
+      if (progressBar) progressBar.style.width = '0%';
+      if (progressText) progressText.textContent = 'Rendering...';
+      if (resultBox) resultBox.classList.add('hidden');
+      if (galleryEl) galleryEl.innerHTML = '';
+    }
+
+    registerToolReset(toolId, resetPdfToImages);
   }
 
   function initPdfToJpg() {
@@ -2130,6 +2315,27 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetSimpleImageConverter() {
+      currentFile = null;
+      if (convertedResult && convertedResult.previewUrl) {
+        MobileUtils.revokeUrl(convertedResult.previewUrl);
+      }
+      convertedResult = null;
+      if (input) input.value = '';
+      if (box) box.classList.remove('hidden');
+      if (selectedSec) selectedSec.classList.add('hidden');
+      if (fileNameEl) fileNameEl.textContent = '';
+      if (fileSizeEl) fileSizeEl.textContent = '';
+      if (actionBtn) {
+        actionBtn.disabled = false;
+        actionBtn.textContent = `Convert to ${targetExt.toUpperCase()}`;
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+      if (previewImg) previewImg.removeAttribute('src');
+    }
+
+    registerToolReset(toolId, resetSimpleImageConverter);
   }
 
   function initJpgToPng() {
@@ -2430,6 +2636,53 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetImageResizer() {
+      currentFile = null;
+      resizerImgObj = null;
+      originalWidth = 0;
+      originalHeight = 0;
+      currentScalePct = 100;
+      if (resizedResult && resizedResult.previewUrl) {
+        MobileUtils.revokeUrl(resizedResult.previewUrl);
+      }
+      resizedResult = null;
+      isDragging = false;
+
+      if (input) input.value = '';
+      if (box) box.classList.remove('hidden');
+      if (selectedSec) selectedSec.classList.add('hidden');
+      if (fileNameEl) fileNameEl.textContent = '';
+      if (originalDimsEl) originalDimsEl.textContent = '';
+      if (resultDimsEl) resultDimsEl.textContent = '';
+      if (previewImg) previewImg.removeAttribute('src');
+      if (touchThumb) touchThumb.removeAttribute('src');
+      if (widthInput) widthInput.value = '';
+      if (heightInput) heightInput.value = '';
+      if (slider) slider.value = '100';
+      if (valSlider) valSlider.textContent = '100%';
+      if (badgePct) badgePct.textContent = '100%';
+      if (lockRatioCheck) lockRatioCheck.checked = true;
+      if (imageWrapper) {
+        imageWrapper.style.transform = '';
+        imageWrapper.style.transformOrigin = '';
+      }
+      if (resizerMagnifier) resizerMagnifier.classList.add('hidden');
+      if (resizerMagCanvas) {
+        const ctx = resizerMagCanvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, resizerMagCanvas.width, resizerMagCanvas.height);
+      }
+      if (actionBtn) {
+        actionBtn.disabled = false;
+        actionBtn.textContent = 'Resize & Save Image';
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+      presetBtns.forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.scale, 10) === 100);
+      });
+    }
+
+    registerToolReset('image-resizer', resetImageResizer);
   }
 
   function initImageConverter() {
@@ -2504,6 +2757,28 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetImageConverter() {
+      currentFile = null;
+      if (convertedResult && convertedResult.previewUrl) {
+        MobileUtils.revokeUrl(convertedResult.previewUrl);
+      }
+      convertedResult = null;
+      if (input) input.value = '';
+      if (box) box.classList.remove('hidden');
+      if (selectedSec) selectedSec.classList.add('hidden');
+      if (fileNameEl) fileNameEl.textContent = '';
+      if (fileSizeEl) fileSizeEl.textContent = '';
+      if (formatSelect) formatSelect.value = 'image/png';
+      if (actionBtn) {
+        actionBtn.disabled = false;
+        actionBtn.textContent = 'Convert Image';
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+      if (previewImg) previewImg.removeAttribute('src');
+    }
+
+    registerToolReset('image-converter', resetImageConverter);
   }
 
   function initPdfMerger() {
@@ -2630,6 +2905,21 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetPdfMerger() {
+      pdfFiles = [];
+      mergedResult = null;
+      if (input) input.value = '';
+      renderList();
+      if (actionBtn) {
+        actionBtn.disabled = true;
+        actionBtn.textContent = 'Merge PDFs';
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+      if (resultInfo) resultInfo.textContent = '';
+    }
+
+    registerToolReset('pdf-merger', resetPdfMerger);
   }
 
   function initPdfSplitter() {
@@ -2702,6 +2992,24 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetPdfSplitter() {
+      currentFile = null;
+      splitResult = null;
+      if (input) input.value = '';
+      if (box) box.classList.remove('hidden');
+      if (selectedSec) selectedSec.classList.add('hidden');
+      if (fileNameEl) fileNameEl.textContent = '';
+      if (fileSizeEl) fileSizeEl.textContent = '';
+      if (rangeInput) rangeInput.value = '';
+      if (actionBtn) {
+        actionBtn.disabled = false;
+        actionBtn.textContent = 'Split PDF';
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+    }
+
+    registerToolReset('pdf-splitter', resetPdfSplitter);
   }
 
   function initPdfPageExtractor() {
@@ -2826,6 +3134,25 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetPdfPageExtractor() {
+      currentFile = null;
+      selectedIndices.clear();
+      extractedResult = null;
+      if (input) input.value = '';
+      if (box) box.classList.remove('hidden');
+      if (selectedSec) selectedSec.classList.add('hidden');
+      if (fileNameEl) fileNameEl.textContent = '';
+      if (fileSizeEl) fileSizeEl.textContent = '';
+      if (thumbGrid) thumbGrid.innerHTML = '';
+      if (actionBtn) {
+        actionBtn.disabled = true;
+        actionBtn.textContent = 'Extract Pages';
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+    }
+
+    registerToolReset('pdf-page-extractor', resetPdfPageExtractor);
   }
 
   function initZipCreator() {
@@ -2942,6 +3269,22 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetZipCreator() {
+      fileItems = [];
+      generatedZip = null;
+      if (input) input.value = '';
+      if (folderInput) folderInput.value = '';
+      renderList();
+      if (zipNameInput) zipNameInput.value = 'archive.zip';
+      if (actionBtn) {
+        actionBtn.disabled = true;
+        actionBtn.textContent = 'Create ZIP Archive';
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+    }
+
+    registerToolReset('zip-creator', resetZipCreator);
   }
 
   function initZipExtractor() {
@@ -3003,6 +3346,17 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetZipExtractor() {
+      currentZipData = null;
+      if (input) input.value = '';
+      if (box) box.classList.remove('hidden');
+      if (selectedSec) selectedSec.classList.add('hidden');
+      if (fileNameEl) fileNameEl.textContent = '';
+      if (entriesList) entriesList.innerHTML = '';
+    }
+
+    registerToolReset('zip-extractor', resetZipExtractor);
   }
 
   function initDownloadAllZip() {
@@ -3101,6 +3455,21 @@ const MobileApp = (() => {
         }
       });
     }
+
+    function resetDownloadAllZip() {
+      filesList = [];
+      packagedZip = null;
+      if (input) input.value = '';
+      renderList();
+      if (zipNameInput) zipNameInput.value = 'bundle.zip';
+      if (actionBtn) {
+        actionBtn.disabled = true;
+        actionBtn.textContent = 'Package & Download as ZIP';
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+    }
+
+    registerToolReset('download-all-zip', resetDownloadAllZip);
   }
 
   function handleAndroidBack() {
@@ -3125,14 +3494,20 @@ const MobileApp = (() => {
     const hash = (window.location.hash || '').replace('#', '').trim();
 
     if (hash && hash !== 'home' && hash !== 'settings' && !['about', 'privacy', 'terms'].includes(hash)) {
-      const activeToolView = document.getElementById(`tool-view-${hash}`);
-      if (activeToolView) {
-        const visibleResult = activeToolView.querySelector('.mobile-result-box:not(.hidden)');
-        if (visibleResult) {
-          visibleResult.classList.add('hidden');
-          return true;
+      if (isAndroidApp()) {
+        resetState(hash);
+      } else {
+        const activeToolView = document.getElementById(`tool-view-${hash}`);
+        if (activeToolView) {
+          const visibleResult = activeToolView.querySelector('.mobile-result-box:not(.hidden)');
+          if (visibleResult) {
+            visibleResult.classList.add('hidden');
+            return true;
+          }
         }
       }
+      window.location.hash = '';
+      return true;
     }
 
     if (['about', 'privacy', 'terms'].includes(hash)) {
