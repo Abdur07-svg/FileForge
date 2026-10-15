@@ -227,9 +227,11 @@ const MobileImageToPdf = (() => {
     const marginPts = MARGINS[marginKey] !== undefined ? MARGINS[marginKey] : 0;
     const quality = options.quality || 0.88;
 
-    let embeddedSig = null;
-    if (signatureData && signatureData.active && signatureData.dataUrl) {
-      const sigImg = await MobileUtils.loadImageFromSrc(signatureData.dataUrl);
+    const embeddedSigsCache = new Map();
+    async function getEmbeddedSig(dataUrl) {
+      if (!dataUrl) return null;
+      if (embeddedSigsCache.has(dataUrl)) return embeddedSigsCache.get(dataUrl);
+      const sigImg = await MobileUtils.loadImageFromSrc(dataUrl);
       const sigCanvas = document.createElement('canvas');
       sigCanvas.width = sigImg.naturalWidth;
       sigCanvas.height = sigImg.naturalHeight;
@@ -238,7 +240,9 @@ const MobileImageToPdf = (() => {
 
       const sigPngDataUrl = sigCanvas.toDataURL('image/png');
       const sigBytes = await fetch(sigPngDataUrl).then(res => res.arrayBuffer());
-      embeddedSig = await pdfDoc.embedPng(sigBytes);
+      const emb = await pdfDoc.embedPng(sigBytes);
+      embeddedSigsCache.set(dataUrl, emb);
+      return emb;
     }
 
     for (let i = 0; i < imageItems.length; i++) {
@@ -326,19 +330,25 @@ const MobileImageToPdf = (() => {
         height: drawH
       });
 
-      if (embeddedSig && signatureData) {
-        const sigPdfW = pageW * signatureData.relW;
-        const sigPdfH = sigPdfW / (signatureData.aspectRatio || 1);
-        const sigPdfX = pageW * signatureData.relX;
+      const itemSig = (item.signature && item.signature.active && item.signature.dataUrl)
+        ? item.signature
+        : (signatureData && signatureData.active && signatureData.dataUrl && !imageItems.some(it => it.signature && it.signature.active) ? signatureData : null);
 
-        const sigPdfY = pageH - (pageH * signatureData.relY) - sigPdfH;
+      if (itemSig) {
+        const sigEmb = await getEmbeddedSig(itemSig.dataUrl);
+        if (sigEmb) {
+          const sigPdfW = pageW * itemSig.relW;
+          const sigPdfH = sigPdfW / (itemSig.aspectRatio || 1);
+          const sigPdfX = pageW * itemSig.relX;
+          const sigPdfY = pageH - (pageH * itemSig.relY) - sigPdfH;
 
-        page.drawImage(embeddedSig, {
-          x: Math.max(0, sigPdfX),
-          y: Math.max(0, sigPdfY),
-          width: sigPdfW,
-          height: sigPdfH
-        });
+          page.drawImage(sigEmb, {
+            x: Math.max(0, sigPdfX),
+            y: Math.max(0, sigPdfY),
+            width: sigPdfW,
+            height: sigPdfH
+          });
+        }
       }
 
       renderCanvas.width = 1;

@@ -17,7 +17,7 @@ const ImageToPDF = (() => {
   };
   let signaturePlacement = {
     active: false,
-    applyToAll: true,
+    applyToAll: false,
 
     relX: 0.65,
     relY: 0.75,
@@ -292,6 +292,7 @@ const ImageToPDF = (() => {
           originalWidth: img.naturalWidth,
           originalHeight: img.naturalHeight,
           orientation: (dom.orientationSelect ? dom.orientationSelect.value : 'auto'),
+          signature: null,
           editState: {
             crop: null,
             rotate: 0,
@@ -1401,13 +1402,40 @@ const ImageToPDF = (() => {
 
   function openSignatureModal() {
     if (dom.signatureModal) dom.signatureModal.classList.remove('hidden');
-    if (signatureRawImage) {
+
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+
+    if (currentItem && currentItem.signature && currentItem.signature.active && currentItem.signature.rawImage) {
+      signatureRawImage = currentItem.signature.rawImage;
+      signatureDataUrl = currentItem.signature.dataUrl;
+      if (currentItem.signature.settings) {
+        signatureSettings = { ...currentItem.signature.settings };
+      }
+      if (dom.sigSensitivitySlider) {
+        dom.sigSensitivitySlider.value = signatureSettings.sensitivity;
+      }
+      if (dom.sigSensitivityVal) {
+        dom.sigSensitivityVal.textContent = signatureSettings.sensitivity + '%';
+      }
+      if (dom.sigColorChips) {
+        dom.sigColorChips.forEach(c => c.classList.toggle('active', c.dataset.color === signatureSettings.inkColor));
+      }
+      if (dom.sigAutoCropCheckbox) {
+        dom.sigAutoCropCheckbox.checked = signatureSettings.autoCrop;
+      }
       if (dom.sigDropzone) dom.sigDropzone.classList.add('hidden');
       if (dom.sigPreviewWrap) dom.sigPreviewWrap.classList.remove('hidden');
+      if (dom.sigUseBtn) dom.sigUseBtn.disabled = false;
       processSignature();
     } else {
+      signatureRawImage = null;
+      signatureDataUrl = null;
+      if (dom.sigFileInput) dom.sigFileInput.value = '';
       if (dom.sigDropzone) dom.sigDropzone.classList.remove('hidden');
       if (dom.sigPreviewWrap) dom.sigPreviewWrap.classList.add('hidden');
+      if (dom.sigUseBtn) dom.sigUseBtn.disabled = true;
     }
   }
 
@@ -1536,6 +1564,36 @@ const ImageToPDF = (() => {
       return;
     }
 
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+
+    if (!currentItem) {
+      Utils.showToast('No page selected.', 'warning');
+      return;
+    }
+
+    const isAll = dom.sigApplyScopeSelect && dom.sigApplyScopeSelect.value === 'all';
+    const newSig = {
+      active: true,
+      dataUrl: signatureDataUrl,
+      rawImage: signatureRawImage,
+      aspectRatio: signaturePlacement.aspectRatio || 1,
+      relX: (currentItem.signature && typeof currentItem.signature.relX === 'number') ? currentItem.signature.relX : 0.65,
+      relY: (currentItem.signature && typeof currentItem.signature.relY === 'number') ? currentItem.signature.relY : 0.75,
+      relW: (currentItem.signature && typeof currentItem.signature.relW === 'number') ? currentItem.signature.relW : 0.25,
+      preset: currentItem.signature ? currentItem.signature.preset : 'br',
+      settings: { ...signatureSettings }
+    };
+
+    if (isAll) {
+      imageList.forEach(item => {
+        item.signature = { ...newSig };
+      });
+    } else {
+      currentItem.signature = newSig;
+    }
+
     signaturePlacement.active = true;
     closeSignatureModal();
 
@@ -1546,26 +1604,58 @@ const ImageToPDF = (() => {
     `;
 
     updatePDFPreview();
-    Utils.showToast('Signature added! Drag or use position presets to place on page.', 'success');
+    Utils.showToast(isAll ? 'Signature added to all pages!' : 'Signature added! Drag or use position presets to place on page.', 'success');
+  }
+
+  function updateSigPosBtnStates(sig) {
+    if (!dom.sigPosBtns) return;
+    if (!sig) {
+      dom.sigPosBtns.forEach(b => b.classList.remove('active'));
+      return;
+    }
+    const p = (sig.preset || '').toLowerCase();
+    dom.sigPosBtns.forEach(b => {
+      const bPos = (b.dataset.pos || '').toLowerCase();
+      b.classList.toggle('active', bPos === p);
+    });
   }
 
   function bindSignatureOverlayEvents() {
     if (dom.sigDeleteBtn) {
       dom.sigDeleteBtn.addEventListener('click', () => {
-        signaturePlacement.active = false;
+        const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+          ? imageList[previewPageIndex]
+          : null;
+        if (currentItem) {
+          currentItem.signature = null;
+        }
         if (dom.sigOverlayBox) dom.sigOverlayBox.classList.add('hidden');
         if (dom.sigControlsRow) dom.sigControlsRow.classList.add('hidden');
+        if (dom.sigOverlayImg) dom.sigOverlayImg.src = '';
         if (dom.addSignatureBtn) dom.addSignatureBtn.innerHTML = `
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M10.5 14.5c.8-1.2 2-1.5 2.5-.5.5 1-1.5 2.5-.5 3.5 1 1 2.5 0 3-1.5"></path></svg>
           Add Signature
         `;
+        updateSigPosBtnStates(null);
         Utils.showToast('Signature removed.', 'info');
       });
     }
 
     if (dom.sigApplyScopeSelect) {
       dom.sigApplyScopeSelect.addEventListener('change', (e) => {
-        signaturePlacement.applyToAll = e.target.value === 'all';
+        const isAll = e.target.value === 'all';
+        signaturePlacement.applyToAll = isAll;
+        if (isAll) {
+          const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+            ? imageList[previewPageIndex]
+            : null;
+          if (currentItem && currentItem.signature && currentItem.signature.active) {
+            imageList.forEach(item => {
+              item.signature = { ...currentItem.signature };
+            });
+            Utils.showToast('Signature applied to all pages.', 'info');
+          }
+        }
       });
     }
 
@@ -1596,128 +1686,156 @@ const ImageToPDF = (() => {
   }
 
   function setSignaturePositionPreset(pos) {
-    if (!signaturePlacement.active || !dom.previewCanvas) return;
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+    if (!currentItem || !currentItem.signature || !currentItem.signature.active || !dom.previewCanvas) return;
     const cw = dom.previewCanvas.clientWidth || dom.previewCanvas.width;
     const ch = dom.previewCanvas.clientHeight || dom.previewCanvas.height;
     if (cw <= 0 || ch <= 0) return;
 
-    const w = signaturePlacement.relW;
+    const sig = currentItem.signature;
+    const w = sig.relW;
     const pxW = cw * w;
-    const pxH = pxW / (signaturePlacement.aspectRatio || 1);
+    const pxH = pxW / (sig.aspectRatio || 1);
     const relH = pxH / ch;
 
     const p = (pos || '').toLowerCase();
+    sig.preset = p;
     if (p === 'tl' || p === 'top-left') {
-      signaturePlacement.relX = 0.05;
-      signaturePlacement.relY = 0.05;
+      sig.relX = 0.05;
+      sig.relY = 0.05;
     } else if (p === 'tr' || p === 'top-right') {
-      signaturePlacement.relX = Math.max(0, 1 - w - 0.05);
-      signaturePlacement.relY = 0.05;
+      sig.relX = Math.max(0, 1 - w - 0.05);
+      sig.relY = 0.05;
     } else if (p === 'center') {
-      signaturePlacement.relX = Math.max(0, (1 - w) / 2);
-      signaturePlacement.relY = Math.max(0, (1 - relH) / 2);
+      sig.relX = Math.max(0, (1 - w) / 2);
+      sig.relY = Math.max(0, (1 - relH) / 2);
     } else if (p === 'bl' || p === 'bottom-left') {
-      signaturePlacement.relX = 0.05;
-      signaturePlacement.relY = Math.max(0, 1 - relH - 0.05);
+      sig.relX = 0.05;
+      sig.relY = Math.max(0, 1 - relH - 0.05);
     } else if (p === 'br' || p === 'bottom-right') {
-      signaturePlacement.relX = Math.max(0, 1 - w - 0.05);
-      signaturePlacement.relY = Math.max(0, 1 - relH - 0.05);
+      sig.relX = Math.max(0, 1 - w - 0.05);
+      sig.relY = Math.max(0, 1 - relH - 0.05);
     }
 
-    if (dom.sigPosBtns) {
-      dom.sigPosBtns.forEach(b => {
-        const bPos = (b.dataset.pos || '').toLowerCase();
-        b.classList.toggle('active', bPos === p);
-      });
-    }
-
+    updateSigPosBtnStates(sig);
     renderSignatureOverlayBox();
   }
 
   function onSigPointerDown(e) {
     if (e.target === dom.sigResizeHandle || e.target === dom.sigDeleteBtn || isResizingSig) return;
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+    if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     e.preventDefault();
     isDraggingSig = true;
     sigDragStart = {
       mouseX: e.clientX,
       mouseY: e.clientY,
-      origX: signaturePlacement.relX,
-      origY: signaturePlacement.relY
+      origX: currentItem.signature.relX,
+      origY: currentItem.signature.relY
     };
   }
 
   function onSigTouchStart(e) {
     if (e.target === dom.sigResizeHandle || e.target === dom.sigDeleteBtn || isResizingSig || e.touches.length === 0) return;
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+    if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     e.preventDefault();
     isDraggingSig = true;
     sigDragStart = {
       mouseX: e.touches[0].clientX,
       mouseY: e.touches[0].clientY,
-      origX: signaturePlacement.relX,
-      origY: signaturePlacement.relY
+      origX: currentItem.signature.relX,
+      origY: currentItem.signature.relY
     };
   }
 
   function onSigResizeDown(e) {
     e.stopPropagation();
     e.preventDefault();
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+    if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     isResizingSig = true;
     sigDragStart = {
       mouseX: e.clientX,
       mouseY: e.clientY,
-      origW: signaturePlacement.relW
+      origW: currentItem.signature.relW
     };
   }
 
   function onSigResizeTouchStart(e) {
     e.stopPropagation();
     if (e.touches.length === 0) return;
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+    if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     e.preventDefault();
     isResizingSig = true;
     sigDragStart = {
       mouseX: e.touches[0].clientX,
       mouseY: e.touches[0].clientY,
-      origW: signaturePlacement.relW
+      origW: currentItem.signature.relW
     };
   }
 
   function onSigPointerMove(e) {
-    if (!signaturePlacement.active || !dom.previewCanvas) return;
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+    if (!currentItem || !currentItem.signature || !currentItem.signature.active || !dom.previewCanvas) return;
     const cw = dom.previewCanvas.clientWidth || dom.previewCanvas.width;
     const ch = dom.previewCanvas.clientHeight || dom.previewCanvas.height;
     if (cw <= 0 || ch <= 0) return;
 
+    const sig = currentItem.signature;
+
     if (isDraggingSig) {
+      sig.preset = null;
+      updateSigPosBtnStates(null);
       const dx = (e.clientX - sigDragStart.mouseX) / cw;
       const dy = (e.clientY - sigDragStart.mouseY) / ch;
 
-      const pxW = cw * signaturePlacement.relW;
-      const pxH = pxW / (signaturePlacement.aspectRatio || 1);
+      const pxW = cw * sig.relW;
+      const pxH = pxW / (sig.aspectRatio || 1);
       const relH = pxH / ch;
 
-      signaturePlacement.relX = Math.max(0, Math.min(1 - signaturePlacement.relW, sigDragStart.origX + dx));
-      signaturePlacement.relY = Math.max(0, Math.min(1 - relH, sigDragStart.origY + dy));
+      sig.relX = Math.max(0, Math.min(1 - sig.relW, sigDragStart.origX + dx));
+      sig.relY = Math.max(0, Math.min(1 - relH, sigDragStart.origY + dy));
       renderSignatureOverlayBox();
     } else if (isResizingSig) {
+      sig.preset = null;
+      updateSigPosBtnStates(null);
       const dx = (e.clientX - sigDragStart.mouseX) / cw;
       const newW = Math.max(0.08, Math.min(0.9, sigDragStart.origW + dx));
       const pxW = cw * newW;
-      const pxH = pxW / (signaturePlacement.aspectRatio || 1);
+      const pxH = pxW / (sig.aspectRatio || 1);
       const relH = pxH / ch;
 
-      signaturePlacement.relW = newW;
-      if (signaturePlacement.relX + newW > 1) {
-        signaturePlacement.relX = Math.max(0, 1 - newW);
+      sig.relW = newW;
+      if (sig.relX + newW > 1) {
+        sig.relX = Math.max(0, 1 - newW);
       }
-      if (signaturePlacement.relY + relH > 1) {
-        signaturePlacement.relY = Math.max(0, 1 - relH);
+      if (sig.relY + relH > 1) {
+        sig.relY = Math.max(0, 1 - relH);
       }
       renderSignatureOverlayBox();
     }
   }
 
   function onSigTouchMove(e) {
-    if (!signaturePlacement.active || (!isDraggingSig && !isResizingSig) || e.touches.length === 0) return;
+    if ((!isDraggingSig && !isResizingSig) || e.touches.length === 0) return;
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+    if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     e.preventDefault();
     const touch = e.touches[0];
     onSigPointerMove(touch);
@@ -1729,20 +1847,49 @@ const ImageToPDF = (() => {
   }
 
   function renderSignatureOverlayBox() {
-    if (!signaturePlacement.active || !signatureDataUrl || !dom.sigOverlayBox || !dom.previewCanvas) return;
+    if (!dom.sigOverlayBox || !dom.previewCanvas) return;
+
+    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
+      ? imageList[previewPageIndex]
+      : null;
+
+    if (!currentItem || !currentItem.signature || !currentItem.signature.active || !currentItem.signature.dataUrl) {
+      dom.sigOverlayBox.classList.add('hidden');
+      if (dom.sigControlsRow) dom.sigControlsRow.classList.add('hidden');
+      if (dom.sigOverlayImg) dom.sigOverlayImg.src = '';
+      if (dom.addSignatureBtn) {
+        dom.addSignatureBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M10.5 14.5c.8-1.2 2-1.5 2.5-.5.5 1-1.5 2.5-.5 3.5 1 1 2.5 0 3-1.5"></path></svg>
+          Add Signature
+        `;
+      }
+      updateSigPosBtnStates(null);
+      return;
+    }
+
+    const sig = currentItem.signature;
 
     dom.sigOverlayBox.classList.remove('hidden');
     if (dom.sigControlsRow) dom.sigControlsRow.classList.remove('hidden');
-    if (dom.sigOverlayImg) dom.sigOverlayImg.src = signatureDataUrl;
+    if (dom.sigOverlayImg) dom.sigOverlayImg.src = sig.dataUrl;
+
+    if (dom.addSignatureBtn) {
+      dom.addSignatureBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        Edit Signature
+      `;
+    }
+
+    updateSigPosBtnStates(sig);
 
     const cw = dom.previewCanvas.clientWidth || dom.previewCanvas.width;
     const ch = dom.previewCanvas.clientHeight || dom.previewCanvas.height;
     if (cw <= 0 || ch <= 0) return;
 
-    const pxW = Math.max(20, Math.round(cw * signaturePlacement.relW));
-    const pxH = Math.max(10, Math.round(pxW / (signaturePlacement.aspectRatio || 1)));
-    const pxX = Math.round(cw * signaturePlacement.relX);
-    const pxY = Math.round(ch * signaturePlacement.relY);
+    const pxW = Math.max(20, Math.round(cw * sig.relW));
+    const pxH = Math.max(10, Math.round(pxW / (sig.aspectRatio || 1)));
+    const pxX = Math.round(cw * sig.relX);
+    const pxY = Math.round(ch * sig.relY);
 
     dom.sigOverlayBox.style.left = `${pxX}px`;
     dom.sigOverlayBox.style.top = `${pxY}px`;
@@ -1836,7 +1983,17 @@ const ImageToPDF = (() => {
   }
 
   async function updatePDFPreview() {
-    if (!dom.previewCanvas || imageList.length === 0) return;
+    if (!dom.previewCanvas || imageList.length === 0) {
+      if (dom.sigOverlayBox) dom.sigOverlayBox.classList.add('hidden');
+      if (dom.sigControlsRow) dom.sigControlsRow.classList.add('hidden');
+      if (dom.sigOverlayImg) dom.sigOverlayImg.src = '';
+      return;
+    }
+
+    // Immediately clear stale overlay and reset before redrawing
+    if (dom.sigOverlayBox) dom.sigOverlayBox.classList.add('hidden');
+    if (dom.sigControlsRow) dom.sigControlsRow.classList.add('hidden');
+    if (dom.sigOverlayImg) dom.sigOverlayImg.src = '';
 
     if (previewPageIndex >= imageList.length) previewPageIndex = Math.max(0, imageList.length - 1);
     const item = imageList[previewPageIndex];
@@ -1868,6 +2025,7 @@ const ImageToPDF = (() => {
     dom.previewCanvas.style.height = 'auto';
 
     const ctx = dom.previewCanvas.getContext('2d');
+    ctx.clearRect(0, 0, canvasW, canvasH);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvasW, canvasH);
 
@@ -1935,9 +2093,13 @@ const ImageToPDF = (() => {
     try {
       const pdfDoc = await PDFLib.PDFDocument.create();
 
-      let embeddedSig = null;
-      if (signaturePlacement.active && signatureDataUrl) {
-        const sigImgObj = await Utils.loadImage(signatureDataUrl);
+      const embeddedSigsCache = new Map();
+      async function getEmbeddedSig(dataUrl) {
+        if (!dataUrl) return null;
+        if (embeddedSigsCache.has(dataUrl)) {
+          return embeddedSigsCache.get(dataUrl);
+        }
+        const sigImgObj = await Utils.loadImage(dataUrl);
         const sigCanvas = document.createElement('canvas');
         sigCanvas.width = sigImgObj.naturalWidth;
         sigCanvas.height = sigImgObj.naturalHeight;
@@ -1946,9 +2108,12 @@ const ImageToPDF = (() => {
 
         const sigPngBlob = await Utils.canvasToBlob(sigCanvas, 'image/png');
         const sigBytes = await sigPngBlob.arrayBuffer();
-        embeddedSig = await pdfDoc.embedPng(sigBytes);
+        const emb = await pdfDoc.embedPng(sigBytes);
         sigCanvas.width = 1;
         sigCanvas.height = 1;
+
+        embeddedSigsCache.set(dataUrl, emb);
+        return emb;
       }
 
       for (let i = 0; i < imageList.length; i++) {
@@ -2029,20 +2194,23 @@ const ImageToPDF = (() => {
           height: drawHeight
         });
 
-        const shouldDrawSig = embeddedSig && (signaturePlacement.applyToAll || i === previewPageIndex);
-        if (shouldDrawSig) {
-          const sigPdfW = pageWidth * signaturePlacement.relW;
-          const sigPdfH = sigPdfW / signaturePlacement.aspectRatio;
-          const sigPdfX = pageWidth * signaturePlacement.relX;
+        // Draw page-specific signature if assigned to this page
+        if (item.signature && item.signature.active && item.signature.dataUrl) {
+          const sig = item.signature;
+          const embeddedSig = await getEmbeddedSig(sig.dataUrl);
+          if (embeddedSig) {
+            const sigPdfW = pageWidth * sig.relW;
+            const sigPdfH = sigPdfW / (sig.aspectRatio || 1);
+            const sigPdfX = pageWidth * sig.relX;
+            const sigPdfY = pageHeight - (pageHeight * sig.relY) - sigPdfH;
 
-          const sigPdfY = pageHeight - (pageHeight * signaturePlacement.relY) - sigPdfH;
-
-          page.drawImage(embeddedSig, {
-            x: Math.max(0, sigPdfX),
-            y: Math.max(0, sigPdfY),
-            width: sigPdfW,
-            height: sigPdfH
-          });
+            page.drawImage(embeddedSig, {
+              x: Math.max(0, sigPdfX),
+              y: Math.max(0, sigPdfY),
+              width: sigPdfW,
+              height: sigPdfH
+            });
+          }
         }
 
         renderCanvas.width = 1;
@@ -2062,7 +2230,8 @@ const ImageToPDF = (() => {
       const fileSizeStr = Utils.formatBytes(generatedPdfBlob.size);
       const readyMeta = document.getElementById('i2p-ready-meta');
       if (readyMeta) {
-        readyMeta.textContent = `${imageList.length} Page${imageList.length !== 1 ? 's' : ''} • ${fileSizeStr} ${signaturePlacement.active ? '• With Signature' : ''}`;
+        const hasAnySig = imageList.some(it => it.signature && it.signature.active);
+        readyMeta.textContent = `${imageList.length} Page${imageList.length !== 1 ? 's' : ''} • ${fileSizeStr} ${hasAnySig ? '• With Signature' : ''}`;
       }
 
       Utils.showToast(`Successfully created PDF with ${imageList.length} page(s)!`, 'success');
@@ -2094,7 +2263,16 @@ const ImageToPDF = (() => {
 
     signatureRawImage = null;
     signatureDataUrl = null;
-    signaturePlacement.active = false;
+    signaturePlacement = {
+      active: false,
+      applyToAll: false,
+      relX: 0.65,
+      relY: 0.75,
+      relW: 0.25,
+      aspectRatio: 1,
+      rotation: 0
+    };
+    if (dom.sigApplyScopeSelect) dom.sigApplyScopeSelect.value = 'current';
 
     if (dom.emptyState) dom.emptyState.classList.remove('hidden');
     if (dom.workspace) dom.workspace.classList.add('hidden');
@@ -2104,6 +2282,8 @@ const ImageToPDF = (() => {
     if (dom.signatureModal) dom.signatureModal.classList.add('hidden');
     if (dom.sigOverlayBox) dom.sigOverlayBox.classList.add('hidden');
     if (dom.sigControlsRow) dom.sigControlsRow.classList.add('hidden');
+    if (dom.sigOverlayImg) dom.sigOverlayImg.src = '';
+    updateSigPosBtnStates(null);
 
     if (dom.addSignatureBtn) dom.addSignatureBtn.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M10.5 14.5c.8-1.2 2-1.5 2.5-.5.5 1-1.5 2.5-.5 3.5 1 1 2.5 0 3-1.5"></path></svg>
@@ -2152,7 +2332,9 @@ const ImageToPDF = (() => {
     setPreset,
     reset: resetTool,
     closeEditor,
-    closeSignatureModal
+    closeSignatureModal,
+    getGeneratedBlob: () => generatedPdfBlob,
+    getImageList: () => imageList
   };
 })();
 

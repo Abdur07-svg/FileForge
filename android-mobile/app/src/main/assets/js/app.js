@@ -965,6 +965,7 @@ const MobileApp = (() => {
               width: img.width,
               height: img.height,
               orientation: 'auto',
+              signature: null,
               editState: {
                 crop: null,
                 rotate: 0,
@@ -984,6 +985,10 @@ const MobileApp = (() => {
       if (!previewCanvas || imageItems.length === 0) return;
       if (activePreviewPage >= imageItems.length) activePreviewPage = Math.max(0, imageItems.length - 1);
 
+      // Immediately clear stale overlay before loading/rendering
+      if (sigOverlay) sigOverlay.classList.add('hidden');
+      if (sigImgEl) sigImgEl.src = '';
+
       if (previewInfo) previewInfo.textContent = `Page ${activePreviewPage + 1} of ${imageItems.length}`;
       if (prevPageBtn) prevPageBtn.disabled = activePreviewPage === 0;
       if (nextPageBtn) nextPageBtn.disabled = activePreviewPage === imageItems.length - 1;
@@ -1002,28 +1007,35 @@ const MobileApp = (() => {
       previewCanvas.height = Math.max(100, Math.round(offscreen.height * scale));
 
       const ctx = previewCanvas.getContext('2d');
+      ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
       ctx.drawImage(offscreen, 0, 0, previewCanvas.width, previewCanvas.height);
 
       renderSignatureOverlay();
     }
 
     function renderSignatureOverlay() {
-      if (!sigOverlay || !signatureData.active || !signatureData.dataUrl) {
+      const curItem = (imageItems.length > 0 && activePreviewPage >= 0 && activePreviewPage < imageItems.length)
+        ? imageItems[activePreviewPage]
+        : null;
+
+      if (!sigOverlay || !curItem || !curItem.signature || !curItem.signature.active || !curItem.signature.dataUrl) {
         if (sigOverlay) sigOverlay.classList.add('hidden');
+        if (labelSigBtn) labelSigBtn.textContent = 'Signature Studio';
         return;
       }
 
       sigOverlay.classList.remove('hidden');
-      if (sigImgEl) sigImgEl.src = signatureData.dataUrl;
+      if (labelSigBtn) labelSigBtn.textContent = 'Edit Signature';
+      if (sigImgEl) sigImgEl.src = curItem.signature.dataUrl;
 
       const cw = previewCanvas.width;
       const ch = previewCanvas.height;
       if (cw <= 0 || ch <= 0) return;
 
-      const pxW = Math.max(24, Math.round(cw * signatureData.relW));
-      const pxH = Math.max(12, Math.round(pxW / (signatureData.aspectRatio || 1)));
-      const pxX = Math.max(0, Math.min(cw - pxW, Math.round(cw * signatureData.relX)));
-      const pxY = Math.max(0, Math.min(ch - pxH, Math.round(ch * signatureData.relY)));
+      const pxW = Math.max(24, Math.round(cw * curItem.signature.relW));
+      const pxH = Math.max(12, Math.round(pxW / (curItem.signature.aspectRatio || 1)));
+      const pxX = Math.max(0, Math.min(cw - pxW, Math.round(cw * curItem.signature.relX)));
+      const pxY = Math.max(0, Math.min(ch - pxH, Math.round(ch * curItem.signature.relY)));
 
       sigOverlay.style.left = `${pxX}px`;
       sigOverlay.style.top = `${pxY}px`;
@@ -1061,6 +1073,10 @@ const MobileApp = (() => {
       if (sigDelBtn) {
         sigDelBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          const curItem = imageItems[activePreviewPage];
+          if (curItem) {
+            curItem.signature = null;
+          }
           signatureData.active = false;
           renderSignatureOverlay();
           if (labelSigBtn) labelSigBtn.textContent = 'Signature Studio';
@@ -1071,35 +1087,41 @@ const MobileApp = (() => {
 
     function onSigPointerDown(e) {
       if (e.target === sigResizeHandle || e.target === sigDelBtn || isSigResizing) return;
+      const curItem = imageItems[activePreviewPage];
+      if (!curItem || !curItem.signature || !curItem.signature.active) return;
       isSigDragging = true;
       sigDragOrigin = {
         clientX: e.clientX,
         clientY: e.clientY,
-        relX: signatureData.relX,
-        relY: signatureData.relY
+        relX: curItem.signature.relX,
+        relY: curItem.signature.relY
       };
       e.preventDefault();
     }
 
     function onSigTouchStart(e) {
       if (e.target === sigResizeHandle || e.target === sigDelBtn || isSigResizing || !e.touches[0]) return;
+      const curItem = imageItems[activePreviewPage];
+      if (!curItem || !curItem.signature || !curItem.signature.active) return;
       isSigDragging = true;
       sigDragOrigin = {
         clientX: e.touches[0].clientX,
         clientY: e.touches[0].clientY,
-        relX: signatureData.relX,
-        relY: signatureData.relY
+        relX: curItem.signature.relX,
+        relY: curItem.signature.relY
       };
       e.preventDefault();
     }
 
     function onSigResizeDown(e) {
       e.stopPropagation();
+      const curItem = imageItems[activePreviewPage];
+      if (!curItem || !curItem.signature || !curItem.signature.active) return;
       isSigResizing = true;
       sigDragOrigin = {
         clientX: e.clientX,
         clientY: e.clientY,
-        relW: signatureData.relW
+        relW: curItem.signature.relW
       };
       e.preventDefault();
     }
@@ -1107,17 +1129,20 @@ const MobileApp = (() => {
     function onSigResizeTouchStart(e) {
       e.stopPropagation();
       if (!e.touches[0]) return;
+      const curItem = imageItems[activePreviewPage];
+      if (!curItem || !curItem.signature || !curItem.signature.active) return;
       isSigResizing = true;
       sigDragOrigin = {
         clientX: e.touches[0].clientX,
         clientY: e.touches[0].clientY,
-        relW: signatureData.relW
+        relW: curItem.signature.relW
       };
       e.preventDefault();
     }
 
     function handleSigDragMove(clientX, clientY) {
-      if (!signatureData.active || !previewCanvas) return;
+      const curItem = imageItems[activePreviewPage];
+      if (!curItem || !curItem.signature || !curItem.signature.active || !previewCanvas) return;
       const cw = previewCanvas.width;
       const ch = previewCanvas.height;
       if (cw <= 0 || ch <= 0) return;
@@ -1126,17 +1151,17 @@ const MobileApp = (() => {
         const dx = (clientX - sigDragOrigin.clientX) / cw;
         const dy = (clientY - sigDragOrigin.clientY) / ch;
 
-        const pxW = cw * signatureData.relW;
-        const pxH = pxW / (signatureData.aspectRatio || 1);
+        const pxW = cw * curItem.signature.relW;
+        const pxH = pxW / (curItem.signature.aspectRatio || 1);
         const relH = pxH / ch;
 
-        signatureData.relX = Math.max(0, Math.min(1 - signatureData.relW, sigDragOrigin.relX + dx));
-        signatureData.relY = Math.max(0, Math.min(1 - relH, sigDragOrigin.relY + dy));
+        curItem.signature.relX = Math.max(0, Math.min(1 - curItem.signature.relW, sigDragOrigin.relX + dx));
+        curItem.signature.relY = Math.max(0, Math.min(1 - relH, sigDragOrigin.relY + dy));
         renderSignatureOverlay();
       } else if (isSigResizing) {
         const dx = (clientX - sigDragOrigin.clientX) / cw;
         const newW = Math.max(0.1, Math.min(0.85, sigDragOrigin.relW + dx));
-        signatureData.relW = newW;
+        curItem.signature.relW = newW;
         renderSignatureOverlay();
       }
     }
@@ -1894,15 +1919,24 @@ const MobileApp = (() => {
     if (btnOpenSig) {
       btnOpenSig.addEventListener('click', () => {
         if (sigModal) sigModal.classList.remove('hidden');
-        if (signatureRawImg) {
+        const curItem = (imageItems.length > 0 && activePreviewPage >= 0 && activePreviewPage < imageItems.length)
+          ? imageItems[activePreviewPage]
+          : null;
+
+        if (curItem && curItem.signature && curItem.signature.active && signatureRawImg) {
           if (sigUploadBox) sigUploadBox.classList.add('hidden');
           if (sigPreviewWrap) sigPreviewWrap.classList.remove('hidden');
           if (sigControlsBox) sigControlsBox.classList.remove('hidden');
+          if (sigApplyBtn) sigApplyBtn.disabled = false;
           processSignature();
         } else {
+          signatureRawImg = null;
+          signatureExtracted = null;
+          if (sigInput) sigInput.value = '';
           if (sigUploadBox) sigUploadBox.classList.remove('hidden');
           if (sigPreviewWrap) sigPreviewWrap.classList.add('hidden');
           if (sigControlsBox) sigControlsBox.classList.add('hidden');
+          if (sigApplyBtn) sigApplyBtn.disabled = true;
         }
       });
     }
@@ -1971,6 +2005,20 @@ const MobileApp = (() => {
     if (sigApplyBtn) {
       sigApplyBtn.addEventListener('click', () => {
         if (!signatureExtracted || !signatureExtracted.dataUrl) return;
+        const curItem = (imageItems.length > 0 && activePreviewPage >= 0 && activePreviewPage < imageItems.length)
+          ? imageItems[activePreviewPage]
+          : null;
+        if (!curItem) return;
+
+        curItem.signature = {
+          active: true,
+          dataUrl: signatureExtracted.dataUrl,
+          aspectRatio: signatureExtracted.aspectRatio,
+          relX: (curItem.signature && typeof curItem.signature.relX === 'number') ? curItem.signature.relX : 0.60,
+          relY: (curItem.signature && typeof curItem.signature.relY === 'number') ? curItem.signature.relY : 0.72,
+          relW: (curItem.signature && typeof curItem.signature.relW === 'number') ? curItem.signature.relW : 0.30
+        };
+
         signatureData.active = true;
         signatureData.dataUrl = signatureExtracted.dataUrl;
         signatureData.aspectRatio = signatureExtracted.aspectRatio;
@@ -1979,7 +2027,7 @@ const MobileApp = (() => {
         if (sigModal) sigModal.classList.add('hidden');
 
         updateLivePreview();
-        MobileUtils.showToast('Signature added! Drag to position on pages.', 'success');
+        MobileUtils.showToast('Signature added! Drag to position on page.', 'success');
       });
     }
 
@@ -2003,7 +2051,8 @@ const MobileApp = (() => {
           });
 
           if (metaEl) {
-            metaEl.textContent = `${generatedPdf.pageCount} Page${generatedPdf.pageCount !== 1 ? 's' : ''} • ${MobileUtils.formatBytes(generatedPdf.size)} ${signatureData.active ? '• With Signature' : ''}`;
+            const hasAnySig = imageItems.some(it => it.signature && it.signature.active);
+            metaEl.textContent = `${generatedPdf.pageCount} Page${generatedPdf.pageCount !== 1 ? 's' : ''} • ${MobileUtils.formatBytes(generatedPdf.size)} ${hasAnySig ? '• With Signature' : ''}`;
           }
 
           resultBox.classList.remove('hidden');
