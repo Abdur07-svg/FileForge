@@ -1753,12 +1753,179 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="i2p-image-placement" class="form-label">Image Placement</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
+                      <label for="i2p-image-placement" class="form-label" style="margin-bottom: 0;">Image Size / Print Layout</label>
+                      <div class="btn-group" style="display: flex; gap: 3px;">
+                        <button type="button" id="i2p-scope-page" class="btn btn-xs btn-primary" title="Apply layout only to the currently previewed page">Page <span id="i2p-active-page-num">1</span> Only</button>
+                        <button type="button" id="i2p-scope-all" class="btn btn-xs btn-secondary" title="Apply layout to all pages">All Pages</button>
+                      </div>
+                    </div>
                     <select id="i2p-image-placement" class="form-control">
-                      <option value="fit" selected>Fit to Page (Maintain Aspect Ratio)</option>
+                      <option value="front-back" selected>ID Card: Front &amp; Back (Vertical Top/Bottom on A4)</option>
+                      <option value="fit">Fit to Page (Full A4 — Marksheets, Documents, Photos)</option>
+                      <option value="id-card">Single ID Card (1 Card Centered on Page)</option>
+                      <option value="custom">Custom Physical Size (mm)</option>
+                      <option value="multi-card">Multiple Cards Grid (4 Cards on A4)</option>
+                      <option value="original">Original Physical Dimensions (DPI-Preserved)</option>
                       <option value="fill">Fill Page (Cover Usable Area)</option>
-                      <option value="original">Original Size (Centered 1:1)</option>
                     </select>
+                  </div>
+
+                  <div id="i2p-front-back-panel" class="form-group" style="background: var(--bg-tertiary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                      <label for="i2p-fb-preset" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">ID Card Preset</label>
+                      <select id="i2p-fb-preset" class="form-control" style="font-size: 0.84rem;">
+                        <option value="standard-id" selected>Standard ID-1 / CR80 (85.6 × 54.0 mm) — PAN, Voter ID, Aadhaar PVC, DL</option>
+                        <option value="aadhaar-slip">Aadhaar Paper Slip / Cut-out (86.0 × 54.0 mm)</option>
+                        <option value="passport-in">Passport Photo (35.0 × 45.0 mm)</option>
+                        <option value="stamp">Stamp Size Photo (25.0 × 30.0 mm)</option>
+                        <option value="business-card">Visiting / Business Card (89.0 × 51.0 mm)</option>
+                        <option value="custom">Custom Dimensions (mm)</option>
+                      </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: flex-end;">
+                      <div>
+                        <label for="i2p-fb-width" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Card W (mm)</label>
+                        <input type="number" id="i2p-fb-width" class="form-control" value="85.6" step="0.1" min="10" max="300" style="padding: 6px 8px; font-size: 0.84rem;">
+                      </div>
+                      <div>
+                        <label for="i2p-fb-height" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Card H (mm)</label>
+                        <input type="number" id="i2p-fb-height" class="form-control" value="54.0" step="0.1" min="10" max="300" style="padding: 6px 8px; font-size: 0.84rem;">
+                      </div>
+                      <div>
+                        <label for="i2p-fb-gap" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Gap (mm)</label>
+                        <input type="number" id="i2p-fb-gap" class="form-control" value="15" step="1" min="0" max="100" style="padding: 6px 8px; font-size: 0.84rem;">
+                      </div>
+                      <button type="button" id="i2p-fb-swap-wh" class="btn btn-secondary" title="Swap Width and Height (Landscape / Portrait)" style="height: 35px; padding: 0 10px; font-size: 0.82rem; font-weight: 600;">⇄ Swap</button>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="i2p-fb-lock-ratio" checked style="accent-color: var(--color-primary);">
+                        <span>Preserve aspect ratio (never stretch, squash, or distort)</span>
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="i2p-fb-border" checked style="accent-color: var(--color-primary);">
+                        <span>Draw faint dashed cutting guide borders</span>
+                      </label>
+                    </div>
+                    <div id="i2p-fb-warning" class="hidden" style="font-size: 0.78rem; color: #f59e0b; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); padding: 8px 10px; border-radius: 6px; line-height: 1.4;">
+                      ⚠️ <strong>Warning:</strong> Configured dimensions exceed the printable page area! Cards will overflow. Please reduce height, gap, or margins.
+                    </div>
+                    <div style="font-size: 0.76rem; color: var(--color-info, #38bdf8); background: rgba(56, 189, 248, 0.08); padding: 6px 10px; border-radius: 4px; border-left: 3px solid #38bdf8;">
+                      💡 <strong>Front &amp; Back Vertical Layout:</strong> First image (Front) is placed at top, second image (Back) is placed below. Both are centered horizontally on A4 Portrait with a clean, consistent gap.
+                    </div>
+                  </div>
+
+                  <div id="i2p-id-card-panel" class="form-group hidden" style="background: var(--bg-tertiary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                      <label for="i2p-card-preset" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">ID Card Preset</label>
+                      <select id="i2p-card-preset" class="form-control" style="font-size: 0.84rem;">
+                        <option value="standard-id" selected>Standard ID-1 / CR80 (85.6 × 54.0 mm) — PAN, Voter ID, Aadhaar PVC, DL</option>
+                        <option value="aadhaar-slip">Aadhaar Paper Slip / Cut-out (86.0 × 54.0 mm)</option>
+                        <option value="passport-in">Passport Photo (35.0 × 45.0 mm)</option>
+                        <option value="stamp">Stamp Size Photo (25.0 × 30.0 mm)</option>
+                        <option value="business-card">Visiting / Business Card (89.0 × 51.0 mm)</option>
+                        <option value="custom">Custom ID Dimensions (mm)</option>
+                      </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: flex-end;">
+                      <div>
+                        <label for="i2p-card-width" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Width (mm)</label>
+                        <input type="number" id="i2p-card-width" class="form-control" value="85.6" step="0.1" min="10" max="300" style="padding: 6px 10px; font-size: 0.85rem;">
+                      </div>
+                      <div>
+                        <label for="i2p-card-height" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Height (mm)</label>
+                        <input type="number" id="i2p-card-height" class="form-control" value="54.0" step="0.1" min="10" max="300" style="padding: 6px 10px; font-size: 0.85rem;">
+                      </div>
+                      <button type="button" id="i2p-card-swap-wh" class="btn btn-secondary" title="Swap Width and Height (Landscape / Portrait)" style="height: 35px; padding: 0 10px; font-size: 0.82rem; font-weight: 600;">⇄ Swap</button>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="i2p-card-lock-ratio" checked style="accent-color: var(--color-primary);">
+                        <span>Lock aspect ratio (prevents stretching or distortion)</span>
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="i2p-card-border" checked style="accent-color: var(--color-primary);">
+                        <span>Draw faint cutting guide border</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div id="i2p-custom-dim-panel" class="form-group hidden" style="background: var(--bg-tertiary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                      <div>
+                        <label for="i2p-custom-mm-width" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Width (mm)</label>
+                        <input type="number" id="i2p-custom-mm-width" class="form-control" value="100.0" step="0.1" min="10" max="500" style="padding: 6px 10px; font-size: 0.85rem;">
+                      </div>
+                      <div>
+                        <label for="i2p-custom-mm-height" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Height (mm)</label>
+                        <input type="number" id="i2p-custom-mm-height" class="form-control" value="150.0" step="0.1" min="10" max="500" style="padding: 6px 10px; font-size: 0.85rem;">
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; color: var(--text-secondary);">
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="i2p-custom-lock-ratio" checked style="accent-color: var(--color-primary);">
+                        <span>Lock aspect ratio</span>
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="i2p-custom-border" style="accent-color: var(--color-primary);">
+                        <span>Draw faint cutting guide border</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div id="i2p-multi-card-panel" class="form-group hidden" style="background: var(--bg-tertiary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                      <label for="i2p-multi-card-layout" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Cards per Page Layout</label>
+                      <select id="i2p-multi-card-layout" class="form-control" style="font-size: 0.84rem;">
+                        <option value="2-vertical" selected>2 Cards per Page (Front &amp; Back - Stacked Vertically)</option>
+                        <option value="2-horizontal">2 Cards per Page (Side by Side)</option>
+                        <option value="4-grid">4 Cards per Page (2 × 2 Grid)</option>
+                      </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                      <div>
+                        <label for="i2p-multi-card-width" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Card W (mm)</label>
+                        <input type="number" id="i2p-multi-card-width" class="form-control" value="85.6" step="0.1" min="10" max="300" style="padding: 6px 8px; font-size: 0.84rem;">
+                      </div>
+                      <div>
+                        <label for="i2p-multi-card-height" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Card H (mm)</label>
+                        <input type="number" id="i2p-multi-card-height" class="form-control" value="54.0" step="0.1" min="10" max="300" style="padding: 6px 8px; font-size: 0.84rem;">
+                      </div>
+                      <div>
+                        <label for="i2p-multi-card-gap" class="form-label" style="font-size: 0.78rem; margin-bottom: 2px;">Gap (mm)</label>
+                        <input type="number" id="i2p-multi-card-gap" class="form-control" value="15" step="1" min="2" max="100" style="padding: 6px 8px; font-size: 0.84rem;">
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; color: var(--text-secondary);">
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="i2p-multi-lock-ratio" checked style="accent-color: var(--color-primary);">
+                        <span>Preserve aspect ratio for each card</span>
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="i2p-multi-border" checked style="accent-color: var(--color-primary);">
+                        <span>Draw faint cutting guide border</span>
+                      </label>
+                    </div>
+                    <div style="font-size: 0.76rem; color: var(--color-info, #38bdf8); background: rgba(56, 189, 248, 0.08); padding: 6px 10px; border-radius: 4px; border-left: 3px solid #38bdf8;">
+                      💡 Arranges Front and Back ID cards on a single sheet of A4 paper for easy printing and cutting.
+                    </div>
+                  </div>
+
+                  <div id="i2p-original-dpi-panel" class="form-group hidden" style="background: var(--bg-tertiary); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 8px;">
+                    <div>
+                      <label for="i2p-print-dpi" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Print Resolution (DPI)</label>
+                      <select id="i2p-print-dpi" class="form-control" style="font-size: 0.84rem;">
+                        <option value="auto" selected>Auto-detect from image metadata (Fallback: 300 DPI)</option>
+                        <option value="300">300 DPI (Standard High-Quality Print)</option>
+                        <option value="200">200 DPI (Medium Quality Print)</option>
+                        <option value="150">150 DPI (Compact Print)</option>
+                        <option value="96">96 DPI (Screen Resolution)</option>
+                      </select>
+                    </div>
+                    <div id="i2p-original-dpi-info" style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4;">
+                      Physical dimensions will be calculated using image resolution instead of stretching across the page.
+                    </div>
                   </div>
 
                   <div class="button-group-row">
@@ -1815,7 +1982,8 @@
                         Add Signature
                       </button>
                     </div>
-                    <div class="i2p-preview-nav">
+                    <div class="i2p-preview-nav" style="display: flex; align-items: center; gap: 6px;">
+                      <span id="i2p-preview-layout-badge" class="badge badge-primary" style="font-size: 0.73rem; padding: 3px 8px; font-weight: 600;">Front + Back</span>
                       <button type="button" id="i2p-preview-prev-btn" class="btn-icon" title="Previous Page">&larr;</button>
                       <span id="i2p-preview-page-num" style="font-weight: 700; font-size: 0.88rem;">Page 1</span>
                       <span id="i2p-preview-total-pages" style="color: var(--text-muted); font-size: 0.88rem;">of 1</span>

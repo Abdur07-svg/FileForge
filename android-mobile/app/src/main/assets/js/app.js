@@ -768,6 +768,7 @@ const MobileApp = (() => {
     const pageSizeSelect = document.getElementById('size-image-to-pdf');
     const orientationSelect = document.getElementById('orient-image-to-pdf');
     const marginSelect = document.getElementById('margin-image-to-pdf');
+    const layoutSelect = document.getElementById('layout-image-to-pdf');
     const actionBtn = document.getElementById('btn-image-to-pdf');
     const resultBox = document.getElementById('result-image-to-pdf');
     const metaEl = document.getElementById('meta-image-to-pdf');
@@ -981,23 +982,150 @@ const MobileApp = (() => {
       });
     }
 
+    [pageSizeSelect, orientationSelect, marginSelect, layoutSelect].forEach(el => {
+      if (el) el.addEventListener('change', () => updateLivePreview());
+    });
+
     async function updateLivePreview() {
-      if (!previewCanvas || imageItems.length === 0) return;
-      if (activePreviewPage >= imageItems.length) activePreviewPage = Math.max(0, imageItems.length - 1);
+      const layoutMode = layoutSelect ? layoutSelect.value : 'front-back';
+      const isMulti = layoutMode === 'front-back' || layoutMode === 'multi-card' || layoutMode === 'multi-card-4';
+      const cpp = layoutMode === 'multi-card-4' ? 4 : ((layoutMode === 'front-back' || layoutMode === 'multi-card') ? 2 : 1);
+      const totalPages = Math.ceil(imageItems.length / cpp);
+
+      if (activePreviewPage >= totalPages) activePreviewPage = Math.max(0, totalPages - 1);
 
       // Immediately clear stale overlay before loading/rendering
       if (sigOverlay) sigOverlay.classList.add('hidden');
       if (sigImgEl) sigImgEl.src = '';
 
-      if (previewInfo) previewInfo.textContent = `Page ${activePreviewPage + 1} of ${imageItems.length}`;
+      if (previewInfo) previewInfo.textContent = `Page ${activePreviewPage + 1} of ${totalPages}`;
       if (prevPageBtn) prevPageBtn.disabled = activePreviewPage === 0;
-      if (nextPageBtn) nextPageBtn.disabled = activePreviewPage === imageItems.length - 1;
+      if (nextPageBtn) nextPageBtn.disabled = activePreviewPage === totalPages - 1;
 
+      const pageW = 595.28;
+      const pageH = 841.89;
+      const marginKey = marginSelect ? marginSelect.value : 'none';
+      const marginPts = (marginKey === 'small' ? 18 : (marginKey === 'medium' ? 36 : (marginKey === 'large' ? 54 : 0)));
+
+      if (layoutMode === 'id-card') {
+        const previewScale = Math.min(270 / pageW, 370 / pageH);
+        previewCanvas.width = Math.round(pageW * previewScale);
+        previewCanvas.height = Math.round(pageH * previewScale);
+        const ctx = previewCanvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+        const curItem = imageItems[activePreviewPage];
+        if (curItem) {
+          const imgObj = await MobileUtils.loadImageFromSrc(curItem.dataUrl);
+          const offscreen = document.createElement('canvas');
+          MobileImageToPdf.renderEditedImageToCanvas(offscreen, imgObj, curItem.editState);
+
+          const ID_CARD_W = 85.6 * (72 / 25.4);
+          const ID_CARD_H = 54.0 * (72 / 25.4);
+          let boxW = ID_CARD_W;
+          let boxH = ID_CARD_H;
+          if (offscreen.height > offscreen.width) {
+            boxW = ID_CARD_H;
+            boxH = ID_CARD_W;
+          }
+
+          const usableW = pageW - marginPts * 2;
+          const usableH = pageH - marginPts * 2;
+          const slotX = (marginPts + (usableW - boxW) / 2) * previewScale;
+          const slotY = (marginPts + (usableH - boxH) / 2) * previewScale;
+          const slotW = boxW * previewScale;
+          const slotH = boxH * previewScale;
+
+          const scale = Math.min(slotW / offscreen.width, slotH / offscreen.height);
+          const drawW = offscreen.width * scale;
+          const drawH = offscreen.height * scale;
+          const drawX = slotX + (slotW - drawW) / 2;
+          const drawY = slotY + (slotH - drawH) / 2;
+
+          ctx.drawImage(offscreen, drawX, drawY, drawW, drawH);
+
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 3]);
+          ctx.strokeRect(slotX, slotY, slotW, slotH);
+          ctx.setLineDash([]);
+        }
+        renderSignatureOverlay();
+        return;
+      }
+
+      if (isMulti) {
+        const previewScale = Math.min(270 / pageW, 370 / pageH);
+        previewCanvas.width = Math.round(pageW * previewScale);
+        previewCanvas.height = Math.round(pageH * previewScale);
+        const ctx = previewCanvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+        const usableW = pageW - marginPts * 2;
+        const usableH = pageH - marginPts * 2;
+        const cardW = 85.6 * (72 / 25.4);
+        const cardH = 54.0 * (72 / 25.4);
+        const gap = 15 * (72 / 25.4);
+
+        const slots = [];
+        if (cpp === 2) {
+          const totalStackH = cardH * 2 + gap;
+          const startX = marginPts + (usableW - cardW) / 2;
+          const startY = marginPts + (usableH - totalStackH) / 2;
+          slots.push({ x: startX, y: startY, w: cardW, h: cardH });
+          slots.push({ x: startX, y: startY + cardH + gap, w: cardW, h: cardH });
+        } else {
+          const totalGridW = cardW * 2 + gap;
+          const totalGridH = cardH * 2 + gap;
+          const startX = marginPts + (usableW - totalGridW) / 2;
+          const startY = marginPts + (usableH - totalGridH) / 2;
+          slots.push({ x: startX, y: startY, w: cardW, h: cardH });
+          slots.push({ x: startX + cardW + gap, y: startY, w: cardW, h: cardH });
+          slots.push({ x: startX, y: startY + cardH + gap, w: cardW, h: cardH });
+          slots.push({ x: startX + cardW + gap, y: startY + cardH + gap, w: cardW, h: cardH });
+        }
+
+        const startIdx = activePreviewPage * cpp;
+        const endIdx = Math.min(imageItems.length, startIdx + cpp);
+
+        for (let i = startIdx; i < endIdx; i++) {
+          const item = imageItems[i];
+          const slot = slots[i - startIdx];
+          const imgObj = await MobileUtils.loadImageFromSrc(item.dataUrl);
+          const offscreen = document.createElement('canvas');
+          MobileImageToPdf.renderEditedImageToCanvas(offscreen, imgObj, item.editState);
+
+          const slotX = slot.x * previewScale;
+          const slotY = slot.y * previewScale;
+          const slotW = slot.w * previewScale;
+          const slotH = slot.h * previewScale;
+
+          const scale = Math.min(slotW / offscreen.width, slotH / offscreen.height);
+          const drawW = offscreen.width * scale;
+          const drawH = offscreen.height * scale;
+          const drawX = slotX + (slotW - drawW) / 2;
+          const drawY = slotY + (slotH - drawH) / 2;
+
+          ctx.drawImage(offscreen, drawX, drawY, drawW, drawH);
+
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 3]);
+          ctx.strokeRect(slotX, slotY, slotW, slotH);
+          ctx.setLineDash([]);
+        }
+
+        renderSignatureOverlay();
+        return;
+      }
+
+      // Default Fit
       const curItem = imageItems[activePreviewPage];
       if (!curItem) return;
 
       const imgObj = await MobileUtils.loadImageFromSrc(curItem.dataUrl);
-
       const offscreen = document.createElement('canvas');
       MobileImageToPdf.renderEditedImageToCanvas(offscreen, imgObj, curItem.editState);
 
@@ -1014,8 +1142,11 @@ const MobileApp = (() => {
     }
 
     function renderSignatureOverlay() {
-      const curItem = (imageItems.length > 0 && activePreviewPage >= 0 && activePreviewPage < imageItems.length)
-        ? imageItems[activePreviewPage]
+      const layoutMode = layoutSelect ? layoutSelect.value : 'fit';
+      const cpp = layoutMode === 'multi-card-4' ? 4 : (layoutMode === 'multi-card' ? 2 : 1);
+      const primaryIdx = activePreviewPage * cpp;
+      const curItem = (imageItems.length > 0 && primaryIdx >= 0 && primaryIdx < imageItems.length)
+        ? imageItems[primaryIdx]
         : null;
 
       if (!sigOverlay || !curItem || !curItem.signature || !curItem.signature.active || !curItem.signature.dataUrl) {
@@ -2043,6 +2174,7 @@ const MobileApp = (() => {
             pageSize: pageSizeSelect ? pageSizeSelect.value : 'a4',
             globalOrientation: orientationSelect ? orientationSelect.value : 'auto',
             margin: marginSelect ? marginSelect.value : 'none',
+            printLayout: layoutSelect ? layoutSelect.value : 'fit',
             filename: 'FileForge_Images.pdf'
           };
 
@@ -2115,6 +2247,7 @@ const MobileApp = (() => {
       if (pageSizeSelect) pageSizeSelect.value = 'a4';
       if (orientationSelect) orientationSelect.value = 'auto';
       if (marginSelect) marginSelect.value = 'none';
+      if (layoutSelect) layoutSelect.value = 'fit';
       if (actionBtn) {
         actionBtn.disabled = true;
         actionBtn.textContent = 'Create PDF';

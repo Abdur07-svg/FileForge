@@ -39,7 +39,126 @@ const ImageToPDF = (() => {
   let isResizingSig = false;
   let sigDragStart = { mouseX: 0, mouseY: 0, origX: 0, origY: 0, origW: 0 };
 
+  let layoutScope = 'page'; // 'page' (per-page override) or 'all' (all pages)
+  let isUpdatingFormFromPage = false;
+  let globalLayoutSettings = null;
+
   let dom = {};
+
+  const MM_TO_PT = 72 / 25.4; 
+
+  const CARD_PRESETS = {
+    'standard-id': { width: 85.6, height: 54.0 },
+    'aadhaar-slip': { width: 86.0, height: 54.0 },
+    'passport-in': { width: 35.0, height: 45.0 },
+    'stamp': { width: 25.0, height: 30.0 },
+    'business-card': { width: 89.0, height: 51.0 }
+  };
+
+  function extractImageDPI(bytes) {
+    if (!bytes || bytes.length < 16) return null;
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+    if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
+      let offset = 2;
+      while (offset < bytes.length - 4) {
+        if (bytes[offset] !== 0xFF) {
+          offset++;
+          continue;
+        }
+        const marker = bytes[offset + 1];
+        if (marker === 0xDA || marker === 0xD9) break; 
+
+        const length = view.getUint16(offset + 2);
+        if (length <= 0 || offset + 2 + length > bytes.length) break;
+
+        if (marker === 0xE0 && length >= 14) {
+          const id = String.fromCharCode(bytes[offset + 4], bytes[offset + 5], bytes[offset + 6], bytes[offset + 7]);
+          if (id === 'JFIF') {
+            const units = bytes[offset + 11]; 
+            const xDensity = view.getUint16(offset + 12);
+            const yDensity = view.getUint16(offset + 14);
+            if (units === 1 && xDensity > 0) {
+              return { dpiX: xDensity, dpiY: yDensity || xDensity, source: 'JFIF' };
+            } else if (units === 2 && xDensity > 0) {
+              const dpi = Math.round(xDensity * 2.54);
+              return { dpiX: dpi, dpiY: Math.round((yDensity || xDensity) * 2.54), source: 'JFIF' };
+            }
+          }
+        }
+
+        if (marker === 0xE1 && length >= 14) {
+          const exifId = String.fromCharCode(bytes[offset + 4], bytes[offset + 5], bytes[offset + 6], bytes[offset + 7]);
+          if (exifId === 'Exif') {
+            try {
+              const tiffStart = offset + 10;
+              const isLittle = bytes[tiffStart] === 0x49 && bytes[tiffStart + 1] === 0x49;
+              const ifdOffset = view.getUint32(tiffStart + 4, isLittle);
+              const numEntries = view.getUint16(tiffStart + ifdOffset, isLittle);
+              let resUnit = 2; 
+              let xRes = null, yRes = null;
+
+              for (let i = 0; i < numEntries; i++) {
+                const entryStart = tiffStart + ifdOffset + 2 + (i * 12);
+                if (entryStart + 12 > bytes.length) break;
+                const tag = view.getUint16(entryStart, isLittle);
+
+                if (tag === 0x0128) {
+                  resUnit = view.getUint16(entryStart + 8, isLittle);
+                } else if (tag === 0x011A) {
+                  const valOffset = view.getUint32(entryStart + 8, isLittle);
+                  if (tiffStart + valOffset + 8 <= bytes.length) {
+                    const num = view.getUint32(tiffStart + valOffset, isLittle);
+                    const den = view.getUint32(tiffStart + valOffset + 4, isLittle);
+                    if (den > 0) xRes = num / den;
+                  }
+                } else if (tag === 0x011B) {
+                  const valOffset = view.getUint32(entryStart + 8, isLittle);
+                  if (tiffStart + valOffset + 8 <= bytes.length) {
+                    const num = view.getUint32(tiffStart + valOffset, isLittle);
+                    const den = view.getUint32(tiffStart + valOffset + 4, isLittle);
+                    if (den > 0) yRes = num / den;
+                  }
+                }
+              }
+
+              if (xRes && xRes > 0) {
+                let dpi = xRes;
+                if (resUnit === 3) dpi = Math.round(xRes * 2.54);
+                return { dpiX: Math.round(dpi), dpiY: Math.round(yRes ? (resUnit === 3 ? yRes * 2.54 : yRes) : dpi), source: 'EXIF' };
+              }
+            } catch (e) {
+              
+            }
+          }
+        }
+
+        offset += 2 + length;
+      }
+    }
+
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+      let offset = 8;
+      while (offset < bytes.length - 8) {
+        const length = view.getUint32(offset);
+        const chunkType = String.fromCharCode(bytes[offset + 4], bytes[offset + 5], bytes[offset + 6], bytes[offset + 7]);
+        if (chunkType === 'pHYs' && length >= 9) {
+          const ppmX = view.getUint32(offset + 8);
+          const ppmY = view.getUint32(offset + 12);
+          const unit = bytes[offset + 16]; 
+          if (unit === 1 && ppmX > 0) {
+            const dpiX = Math.round(ppmX * 0.0254);
+            const dpiY = Math.round(ppmY * 0.0254);
+            return { dpiX, dpiY, source: 'pHYs' };
+          }
+        }
+        if (chunkType === 'IEND') break;
+        offset += 12 + length;
+      }
+    }
+
+    return null;
+  }
 
   const FILTER_PRESETS = [
     { id: 'original', name: 'Original', desc: 'No modification' },
@@ -74,6 +193,46 @@ const ImageToPDF = (() => {
       customMarginRow: document.getElementById('i2p-custom-margin-row'),
       customMarginInput: document.getElementById('i2p-custom-margin'),
       imagePlacementSelect: document.getElementById('i2p-image-placement'),
+      scopePageBtn: document.getElementById('i2p-scope-page'),
+      scopeAllBtn: document.getElementById('i2p-scope-all'),
+      activePageNumSpan: document.getElementById('i2p-active-page-num'),
+      previewLayoutBadge: document.getElementById('i2p-preview-layout-badge'),
+
+      frontBackPanel: document.getElementById('i2p-front-back-panel'),
+      fbPresetSelect: document.getElementById('i2p-fb-preset'),
+      fbWidthInput: document.getElementById('i2p-fb-width'),
+      fbHeightInput: document.getElementById('i2p-fb-height'),
+      fbGapInput: document.getElementById('i2p-fb-gap'),
+      fbSwapBtn: document.getElementById('i2p-fb-swap-wh'),
+      fbLockRatioCheck: document.getElementById('i2p-fb-lock-ratio'),
+      fbBorderCheck: document.getElementById('i2p-fb-border'),
+      fbWarning: document.getElementById('i2p-fb-warning'),
+
+      cardPresetSelect: document.getElementById('i2p-card-preset'),
+      cardWidthInput: document.getElementById('i2p-card-width'),
+      cardHeightInput: document.getElementById('i2p-card-height'),
+      cardSwapBtn: document.getElementById('i2p-card-swap-wh'),
+      cardLockRatioCheck: document.getElementById('i2p-card-lock-ratio'),
+      cardBorderCheck: document.getElementById('i2p-card-border'),
+      idCardPanel: document.getElementById('i2p-id-card-panel'),
+
+      customDimPanel: document.getElementById('i2p-custom-dim-panel'),
+      customMmWidthInput: document.getElementById('i2p-custom-mm-width'),
+      customMmHeightInput: document.getElementById('i2p-custom-mm-height'),
+      customLockRatioCheck: document.getElementById('i2p-custom-lock-ratio'),
+      customBorderCheck: document.getElementById('i2p-custom-border'),
+
+      multiCardPanel: document.getElementById('i2p-multi-card-panel'),
+      multiCardLayoutSelect: document.getElementById('i2p-multi-card-layout'),
+      multiCardWidthInput: document.getElementById('i2p-multi-card-width'),
+      multiCardHeightInput: document.getElementById('i2p-multi-card-height'),
+      multiCardGapInput: document.getElementById('i2p-multi-card-gap'),
+      multiLockRatioCheck: document.getElementById('i2p-multi-lock-ratio'),
+      multiBorderCheck: document.getElementById('i2p-multi-border'),
+
+      originalDpiPanel: document.getElementById('i2p-original-dpi-panel'),
+      printDpiSelect: document.getElementById('i2p-print-dpi'),
+      originalDpiInfo: document.getElementById('i2p-original-dpi-info'),
 
       generateBtn: document.getElementById('i2p-generate-btn'),
       downloadBtn: document.getElementById('i2p-download-btn'),
@@ -144,7 +303,179 @@ const ImageToPDF = (() => {
 
     if (!dom.container) return;
 
+    syncPlacementPanels();
+    updateScopeUI();
     bindEvents();
+  }
+
+  function syncPlacementPanels() {
+    const val = dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'front-back';
+    if (dom.frontBackPanel) dom.frontBackPanel.classList.toggle('hidden', val !== 'front-back');
+    if (dom.idCardPanel) dom.idCardPanel.classList.toggle('hidden', val !== 'id-card');
+    if (dom.customDimPanel) dom.customDimPanel.classList.toggle('hidden', val !== 'custom');
+    if (dom.multiCardPanel) dom.multiCardPanel.classList.toggle('hidden', val !== 'multi-card');
+    if (dom.originalDpiPanel) dom.originalDpiPanel.classList.toggle('hidden', val !== 'original');
+    updateOriginalDpiInfo();
+  }
+
+  function updateOriginalDpiInfo() {
+    if (!dom.originalDpiInfo) return;
+    const currentItem = getCurrentPagePrimaryItem();
+    if (!currentItem) {
+      dom.originalDpiInfo.textContent = 'Physical dimensions will be calculated using image resolution instead of stretching across the page.';
+      return;
+    }
+    const dims = getItemEffectiveDimensions(currentItem);
+    let dpi = 300;
+    const dpiSetting = dom.printDpiSelect ? dom.printDpiSelect.value : 'auto';
+    if (dpiSetting !== 'auto' && !isNaN(parseFloat(dpiSetting))) {
+      dpi = parseFloat(dpiSetting);
+    } else if (currentItem.detectedDpi && currentItem.detectedDpi >= 72) {
+      dpi = currentItem.detectedDpi;
+    }
+    const mmW = ((dims.width / dpi) * 25.4).toFixed(1);
+    const mmH = ((dims.height / dpi) * 25.4).toFixed(1);
+    if (currentItem.detectedDpi && (dpiSetting === 'auto' || parseFloat(dpiSetting) === currentItem.detectedDpi)) {
+      dom.originalDpiInfo.innerHTML = `<strong>Detected metadata:</strong> ${currentItem.detectedDpi} DPI (${currentItem.dpiInfo ? currentItem.dpiInfo.source : 'Exif'}). Physical print size: <strong>${mmW} × ${mmH} mm</strong>.`;
+    } else {
+      dom.originalDpiInfo.innerHTML = `Using <strong>${dpi} DPI</strong> standard print resolution. Physical print size: <strong>${mmW} × ${mmH} mm</strong> (${dims.width} × ${dims.height} px).`;
+    }
+  }
+
+  function updateScopeUI() {
+    if (dom.scopePageBtn) {
+      dom.scopePageBtn.classList.toggle('btn-primary', layoutScope === 'page');
+      dom.scopePageBtn.classList.toggle('btn-secondary', layoutScope !== 'page');
+    }
+    if (dom.scopeAllBtn) {
+      dom.scopeAllBtn.classList.toggle('btn-primary', layoutScope === 'all');
+      dom.scopeAllBtn.classList.toggle('btn-secondary', layoutScope !== 'all');
+    }
+    if (dom.activePageNumSpan) {
+      dom.activePageNumSpan.textContent = (previewPageIndex + 1);
+    }
+  }
+
+  function updatePreviewBadge(pageSettings) {
+    if (!dom.previewLayoutBadge) return;
+    const p = pageSettings ? (pageSettings.placement || 'front-back') : 'front-back';
+    if (p === 'front-back') {
+      const w = pageSettings && pageSettings.fbWidthMm !== undefined ? pageSettings.fbWidthMm : 85.6;
+      const h = pageSettings && pageSettings.fbHeightMm !== undefined ? pageSettings.fbHeightMm : 54.0;
+      dom.previewLayoutBadge.textContent = `Front + Back (${w}×${h}mm)`;
+      dom.previewLayoutBadge.className = 'badge badge-primary';
+    } else if (p === 'fit') {
+      dom.previewLayoutBadge.textContent = 'Fit to Page';
+      dom.previewLayoutBadge.className = 'badge badge-info';
+    } else if (p === 'id-card') {
+      const w = pageSettings && pageSettings.cardWidthMm !== undefined ? pageSettings.cardWidthMm : 85.6;
+      const h = pageSettings && pageSettings.cardHeightMm !== undefined ? pageSettings.cardHeightMm : 54.0;
+      dom.previewLayoutBadge.textContent = `Single Card (${w}×${h}mm)`;
+      dom.previewLayoutBadge.className = 'badge badge-primary';
+    } else if (p === 'custom') {
+      const w = pageSettings && pageSettings.customMmW !== undefined ? pageSettings.customMmW : 100;
+      const h = pageSettings && pageSettings.customMmH !== undefined ? pageSettings.customMmH : 150;
+      dom.previewLayoutBadge.textContent = `Custom (${w}×${h}mm)`;
+      dom.previewLayoutBadge.className = 'badge badge-primary';
+    } else if (p === 'multi-card') {
+      dom.previewLayoutBadge.textContent = (pageSettings && pageSettings.multiLayout === '4-grid') ? '4 Cards Grid' : '2 Cards';
+      dom.previewLayoutBadge.className = 'badge badge-secondary';
+    } else if (p === 'original') {
+      dom.previewLayoutBadge.textContent = 'Original Size';
+      dom.previewLayoutBadge.className = 'badge badge-secondary';
+    } else if (p === 'fill') {
+      dom.previewLayoutBadge.textContent = 'Fill Page';
+      dom.previewLayoutBadge.className = 'badge badge-secondary';
+    }
+  }
+
+  function checkPrintableAreaWarning(settings, pageDim, marginPts) {
+    if (!dom.fbWarning) return;
+    if (!settings || settings.placement !== 'front-back') {
+      dom.fbWarning.classList.add('hidden');
+      return;
+    }
+    const boxW = (settings.fbWidthMm || 85.6) * MM_TO_PT;
+    const boxH = (settings.fbHeightMm || 54.0) * MM_TO_PT;
+    const gap = (settings.fbGapMm !== undefined ? settings.fbGapMm : 15) * MM_TO_PT;
+    const usableW = Math.max(10, pageDim.width - marginPts * 2);
+    const usableH = Math.max(10, pageDim.height - marginPts * 2);
+    const totalH = boxH * 2 + gap;
+
+    const overflowsW = boxW > usableW;
+    const overflowsH = totalH > usableH;
+
+    if (overflowsW || overflowsH) {
+      dom.fbWarning.classList.remove('hidden');
+      const reqW = ((boxW / MM_TO_PT)).toFixed(1);
+      const reqH = ((totalH / MM_TO_PT)).toFixed(1);
+      const availW = ((usableW / MM_TO_PT)).toFixed(1);
+      const availH = ((usableH / MM_TO_PT)).toFixed(1);
+      dom.fbWarning.innerHTML = `⚠️ <strong>Warning:</strong> Configured dimensions (${reqW} × ${reqH} mm) exceed printable page area (${availW} × ${availH} mm)! Cards will overflow page margins. Please reduce card height, gap, or margins.`;
+    } else {
+      dom.fbWarning.classList.add('hidden');
+    }
+  }
+
+  function loadSettingsIntoForm(settings) {
+    if (!settings) return;
+    isUpdatingFormFromPage = true;
+    try {
+      if (dom.imagePlacementSelect) dom.imagePlacementSelect.value = settings.placement || 'front-back';
+
+      if (dom.fbPresetSelect && settings.fbPreset) dom.fbPresetSelect.value = settings.fbPreset;
+      if (dom.fbWidthInput && settings.fbWidthMm !== undefined) dom.fbWidthInput.value = settings.fbWidthMm;
+      if (dom.fbHeightInput && settings.fbHeightMm !== undefined) dom.fbHeightInput.value = settings.fbHeightMm;
+      if (dom.fbGapInput && settings.fbGapMm !== undefined) dom.fbGapInput.value = settings.fbGapMm;
+      if (dom.fbLockRatioCheck && settings.fbLockRatio !== undefined) dom.fbLockRatioCheck.checked = settings.fbLockRatio;
+      if (dom.fbBorderCheck && settings.fbBorder !== undefined) dom.fbBorderCheck.checked = settings.fbBorder;
+
+      if (dom.cardPresetSelect && settings.cardPreset) dom.cardPresetSelect.value = settings.cardPreset;
+      if (dom.cardWidthInput && settings.cardWidthMm !== undefined) dom.cardWidthInput.value = settings.cardWidthMm;
+      if (dom.cardHeightInput && settings.cardHeightMm !== undefined) dom.cardHeightInput.value = settings.cardHeightMm;
+      if (dom.cardLockRatioCheck && settings.cardLockRatio !== undefined) dom.cardLockRatioCheck.checked = settings.cardLockRatio;
+      if (dom.cardBorderCheck && settings.cardBorder !== undefined) dom.cardBorderCheck.checked = settings.cardBorder;
+
+      if (dom.customMmWidthInput && settings.customMmW !== undefined) dom.customMmWidthInput.value = settings.customMmW;
+      if (dom.customMmHeightInput && settings.customMmH !== undefined) dom.customMmHeightInput.value = settings.customMmH;
+      if (dom.customLockRatioCheck && settings.customLockRatio !== undefined) dom.customLockRatioCheck.checked = settings.customLockRatio;
+      if (dom.customBorderCheck && settings.customBorder !== undefined) dom.customBorderCheck.checked = settings.customBorder;
+
+      if (dom.multiCardLayoutSelect && settings.multiLayout) dom.multiCardLayoutSelect.value = settings.multiLayout;
+      if (dom.multiCardWidthInput && settings.multiWidthMm !== undefined) dom.multiCardWidthInput.value = settings.multiWidthMm;
+      if (dom.multiCardHeightInput && settings.multiHeightMm !== undefined) dom.multiCardHeightInput.value = settings.multiHeightMm;
+      if (dom.multiCardGapInput && settings.multiGapMm !== undefined) dom.multiCardGapInput.value = settings.multiGapMm;
+      if (dom.multiLockRatioCheck && settings.multiLockRatio !== undefined) dom.multiLockRatioCheck.checked = settings.multiLockRatio;
+      if (dom.multiBorderCheck && settings.multiBorder !== undefined) dom.multiBorderCheck.checked = settings.multiBorder;
+
+      if (dom.printDpiSelect && settings.printDpiSetting) dom.printDpiSelect.value = settings.printDpiSetting;
+
+      syncPlacementPanels();
+    } finally {
+      isUpdatingFormFromPage = false;
+    }
+  }
+
+  function onLayoutInputChange() {
+    if (isUpdatingFormFromPage) return;
+    const currentSettings = getLayoutSettings();
+
+    if (layoutScope === 'page') {
+      const pages = buildPDFPages(imageList);
+      const currentPageDef = pages[previewPageIndex];
+      if (currentPageDef && currentPageDef.leadItem) {
+        currentPageDef.leadItem.layoutOverride = { ...currentSettings };
+      }
+    } else {
+      globalLayoutSettings = { ...currentSettings };
+      imageList.forEach(item => {
+        delete item.layoutOverride;
+      });
+    }
+
+    syncPlacementPanels();
+    renderList();
+    updatePDFPreview();
   }
 
   function setPreset(preset) {
@@ -179,6 +510,22 @@ const ImageToPDF = (() => {
       });
     }
 
+    if (dom.scopePageBtn) {
+      dom.scopePageBtn.addEventListener('click', () => {
+        layoutScope = 'page';
+        updateScopeUI();
+        Utils.showToast(`Layout edits now apply only to Page ${previewPageIndex + 1}.`, 'info');
+      });
+    }
+
+    if (dom.scopeAllBtn) {
+      dom.scopeAllBtn.addEventListener('click', () => {
+        layoutScope = 'all';
+        updateScopeUI();
+        Utils.showToast('Layout edits now apply to All Pages.', 'info');
+      });
+    }
+
     if (dom.pageSizeSelect) {
       dom.pageSizeSelect.addEventListener('change', () => {
         if (dom.customSizeRow) dom.customSizeRow.classList.toggle('hidden', dom.pageSizeSelect.value !== 'custom');
@@ -204,7 +551,112 @@ const ImageToPDF = (() => {
       });
     }
     if (dom.customMarginInput) dom.customMarginInput.addEventListener('input', updatePDFPreview);
-    if (dom.imagePlacementSelect) dom.imagePlacementSelect.addEventListener('change', updatePDFPreview);
+
+    if (dom.imagePlacementSelect) {
+      dom.imagePlacementSelect.addEventListener('change', () => {
+        onLayoutInputChange();
+      });
+    }
+
+    // Front & Back vertical controls
+    if (dom.fbPresetSelect) {
+      dom.fbPresetSelect.addEventListener('change', () => {
+        const val = dom.fbPresetSelect.value;
+        const preset = CARD_PRESETS[val];
+        if (preset) {
+          if (dom.fbWidthInput) dom.fbWidthInput.value = preset.width;
+          if (dom.fbHeightInput) dom.fbHeightInput.value = preset.height;
+        }
+        onLayoutInputChange();
+      });
+    }
+    if (dom.fbWidthInput) {
+      dom.fbWidthInput.addEventListener('input', () => {
+        if (dom.fbPresetSelect) dom.fbPresetSelect.value = 'custom';
+        onLayoutInputChange();
+      });
+    }
+    if (dom.fbHeightInput) {
+      dom.fbHeightInput.addEventListener('input', () => {
+        if (dom.fbPresetSelect) dom.fbPresetSelect.value = 'custom';
+        onLayoutInputChange();
+      });
+    }
+    if (dom.fbGapInput) dom.fbGapInput.addEventListener('input', onLayoutInputChange);
+    if (dom.fbSwapBtn) {
+      dom.fbSwapBtn.addEventListener('click', () => {
+        if (dom.fbWidthInput && dom.fbHeightInput) {
+          const w = dom.fbWidthInput.value;
+          const h = dom.fbHeightInput.value;
+          dom.fbWidthInput.value = h;
+          dom.fbHeightInput.value = w;
+          if (dom.fbPresetSelect) dom.fbPresetSelect.value = 'custom';
+          onLayoutInputChange();
+        }
+      });
+    }
+    if (dom.fbLockRatioCheck) dom.fbLockRatioCheck.addEventListener('change', onLayoutInputChange);
+    if (dom.fbBorderCheck) dom.fbBorderCheck.addEventListener('change', onLayoutInputChange);
+
+    // Single ID Card controls
+    if (dom.cardPresetSelect) {
+      dom.cardPresetSelect.addEventListener('change', () => {
+        const val = dom.cardPresetSelect.value;
+        const preset = CARD_PRESETS[val];
+        if (preset) {
+          if (dom.cardWidthInput) dom.cardWidthInput.value = preset.width;
+          if (dom.cardHeightInput) dom.cardHeightInput.value = preset.height;
+        }
+        onLayoutInputChange();
+      });
+    }
+    if (dom.cardWidthInput) {
+      dom.cardWidthInput.addEventListener('input', () => {
+        if (dom.cardPresetSelect) dom.cardPresetSelect.value = 'custom';
+        onLayoutInputChange();
+      });
+    }
+    if (dom.cardHeightInput) {
+      dom.cardHeightInput.addEventListener('input', () => {
+        if (dom.cardPresetSelect) dom.cardPresetSelect.value = 'custom';
+        onLayoutInputChange();
+      });
+    }
+    if (dom.cardSwapBtn) {
+      dom.cardSwapBtn.addEventListener('click', () => {
+        if (dom.cardWidthInput && dom.cardHeightInput) {
+          const w = dom.cardWidthInput.value;
+          const h = dom.cardHeightInput.value;
+          dom.cardWidthInput.value = h;
+          dom.cardHeightInput.value = w;
+          if (dom.cardPresetSelect) dom.cardPresetSelect.value = 'custom';
+          onLayoutInputChange();
+        }
+      });
+    }
+    if (dom.cardLockRatioCheck) dom.cardLockRatioCheck.addEventListener('change', onLayoutInputChange);
+    if (dom.cardBorderCheck) dom.cardBorderCheck.addEventListener('change', onLayoutInputChange);
+
+    // Custom dimensions controls
+    if (dom.customMmWidthInput) dom.customMmWidthInput.addEventListener('input', onLayoutInputChange);
+    if (dom.customMmHeightInput) dom.customMmHeightInput.addEventListener('input', onLayoutInputChange);
+    if (dom.customLockRatioCheck) dom.customLockRatioCheck.addEventListener('change', onLayoutInputChange);
+    if (dom.customBorderCheck) dom.customBorderCheck.addEventListener('change', onLayoutInputChange);
+
+    // Multi-card controls
+    if (dom.multiCardLayoutSelect) dom.multiCardLayoutSelect.addEventListener('change', onLayoutInputChange);
+    if (dom.multiCardWidthInput) dom.multiCardWidthInput.addEventListener('input', onLayoutInputChange);
+    if (dom.multiCardHeightInput) dom.multiCardHeightInput.addEventListener('input', onLayoutInputChange);
+    if (dom.multiCardGapInput) dom.multiCardGapInput.addEventListener('input', onLayoutInputChange);
+    if (dom.multiLockRatioCheck) dom.multiLockRatioCheck.addEventListener('change', onLayoutInputChange);
+    if (dom.multiBorderCheck) dom.multiBorderCheck.addEventListener('change', onLayoutInputChange);
+
+    if (dom.printDpiSelect) {
+      dom.printDpiSelect.addEventListener('change', () => {
+        updateOriginalDpiInfo();
+        onLayoutInputChange();
+      });
+    }
 
     if (dom.generateBtn) dom.generateBtn.addEventListener('click', generatePDF);
     if (dom.downloadBtn) dom.downloadBtn.addEventListener('click', downloadPDF);
@@ -227,7 +679,8 @@ const ImageToPDF = (() => {
     }
     if (dom.previewNextBtn) {
       dom.previewNextBtn.addEventListener('click', () => {
-        if (previewPageIndex < imageList.length - 1) {
+        const total = getTotalPDFPages();
+        if (previewPageIndex < total - 1) {
           previewPageIndex++;
           updatePDFPreview();
         }
@@ -278,6 +731,13 @@ const ImageToPDF = (() => {
     try {
       for (let i = 0; i < valid.length; i++) {
         const file = valid[i];
+        let dpiInfo = null;
+        try {
+          const headerSlice = await file.slice(0, 65536).arrayBuffer();
+          dpiInfo = extractImageDPI(new Uint8Array(headerSlice));
+        } catch (e) {
+          // ignore error reading header
+        }
         const dataUrl = await Utils.readFileAsDataURL(file);
         const img = await Utils.loadImage(dataUrl);
 
@@ -291,6 +751,8 @@ const ImageToPDF = (() => {
           height: img.naturalHeight,
           originalWidth: img.naturalWidth,
           originalHeight: img.naturalHeight,
+          dpiInfo,
+          detectedDpi: (dpiInfo && dpiInfo.dpiX) ? dpiInfo.dpiX : null,
           orientation: (dom.orientationSelect ? dom.orientationSelect.value : 'auto'),
           signature: null,
           editState: {
@@ -311,6 +773,7 @@ const ImageToPDF = (() => {
       if (dom.pdfConfigCard) dom.pdfConfigCard.classList.remove('hidden');
 
       renderList();
+      updateOriginalDpiInfo();
       updatePDFPreview();
       Utils.showToast(`Added ${valid.length} image(s). Drag to reorder, click Edit to adjust, or add a signature!`, 'success');
     } catch (err) {
@@ -326,14 +789,37 @@ const ImageToPDF = (() => {
     if (!dom.imageListContainer) return;
     dom.imageListContainer.innerHTML = '';
 
+    const pages = buildPDFPages(imageList);
+    const totalPages = pages.length;
+
     if (dom.imageCountBadge) {
-      dom.imageCountBadge.textContent = `${imageList.length} Page${imageList.length !== 1 ? 's' : ''}`;
+      dom.imageCountBadge.textContent = `${totalPages} Page${totalPages !== 1 ? 's' : ''} (${imageList.length} img${imageList.length !== 1 ? 's' : ''})`;
     }
 
     if (imageList.length === 0) {
       resetTool();
       return;
     }
+
+    // Build map from item to page info
+    const itemPageMap = new Map();
+    pages.forEach((pDef) => {
+      pDef.items.forEach((item, slotIdx) => {
+        let role = '';
+        if (pDef.placement === 'front-back') {
+          role = (slotIdx === 0) ? 'Front' : 'Back';
+        } else if (pDef.placement === 'multi-card') {
+          role = `Card ${slotIdx + 1}`;
+        }
+        itemPageMap.set(item, {
+          pageIndex: pDef.pageIndex,
+          pageNumber: pDef.pageIndex + 1,
+          role,
+          placement: pDef.placement,
+          isLead: (slotIdx === 0)
+        });
+      });
+    });
 
     imageList.forEach((item, index) => {
       const card = document.createElement('div');
@@ -348,6 +834,12 @@ const ImageToPDF = (() => {
                        item.editState.filter !== 'original';
 
       const orient = item.orientation || 'auto';
+      const pInfo = itemPageMap.get(item) || { pageIndex: 0, pageNumber: 1, role: '', placement: 'front-back', isLead: true };
+      const badgeText = pInfo.role ? `P${pInfo.pageNumber} • ${pInfo.role}` : `Page ${pInfo.pageNumber}`;
+      const badgeColor = (pInfo.role === 'Front') ? 'background: rgba(99, 102, 241, 0.9); color: #fff;' :
+                         (pInfo.role === 'Back') ? 'background: rgba(16, 185, 129, 0.9); color: #fff;' :
+                         'background: var(--bg-tertiary); color: var(--text-secondary);';
+      const activePlacement = (item.layoutOverride && item.layoutOverride.placement) ? item.layoutOverride.placement : (pInfo.placement || 'front-back');
 
       card.innerHTML = `
         <div class="i2p-item-main-row">
@@ -356,14 +848,14 @@ const ImageToPDF = (() => {
               <path d="M7 2a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zm-6 6a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zm-6 6a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4z"/>
             </svg>
           </div>
-          <div class="i2p-item-preview">
-            <img src="${item.previewDataUrl}" alt="Page ${index + 1}">
-            <span class="i2p-page-badge">P${index + 1}</span>
+          <div class="i2p-item-preview" style="cursor: pointer;" title="Click to preview Page ${pInfo.pageNumber}">
+            <img src="${item.previewDataUrl}" alt="${Utils.escapeHtml(badgeText)}">
+            <span class="i2p-page-badge" style="${badgeColor} font-weight: 700; font-size: 0.72rem; padding: 2px 6px;">${badgeText}</span>
             ${hasEdits ? '<span class="i2p-edited-tag" title="Edited">Edited</span>' : ''}
           </div>
           <div class="i2p-item-info">
             <p class="i2p-item-name" title="${Utils.escapeHtml(item.name)}">${Utils.escapeHtml(item.name)}</p>
-            <span class="i2p-item-dims">${item.width} × ${item.height} px ${item.editState.filter !== 'original' ? '• ' + getFilterName(item.editState.filter) : ''}</span>
+            <span class="i2p-item-dims">${item.width} × ${item.height} px ${item.detectedDpi ? '• ' + item.detectedDpi + ' DPI' : ''} ${item.editState.filter !== 'original' ? '• ' + getFilterName(item.editState.filter) : ''}</span>
           </div>
           <div class="i2p-item-actions">
             <button type="button" class="btn btn-xs btn-secondary i2p-edit-btn" title="Edit image (Crop, Rotate, Filters)">
@@ -380,12 +872,26 @@ const ImageToPDF = (() => {
             <button type="button" class="btn-icon i2p-remove" title="Remove image">&times;</button>
           </div>
         </div>
-        <div class="i2p-item-orient-row">
-          <span class="i2p-orient-label">Orientation:</span>
-          <div class="i2p-orient-pill-group">
-            <button type="button" class="i2p-orient-pill ${orient === 'auto' ? 'active' : ''}" data-orient="auto" title="Auto: Detect aspect ratio">Auto</button>
-            <button type="button" class="i2p-orient-pill ${orient === 'portrait' ? 'active' : ''}" data-orient="portrait" title="Force Portrait page">Portrait</button>
-            <button type="button" class="i2p-orient-pill ${orient === 'landscape' ? 'active' : ''}" data-orient="landscape" title="Force Landscape page">Landscape</button>
+        <div class="i2p-item-orient-row" style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span class="i2p-orient-label" style="font-size: 0.74rem;">Orient:</span>
+            <div class="i2p-orient-pill-group">
+              <button type="button" class="i2p-orient-pill ${orient === 'auto' ? 'active' : ''}" data-orient="auto" title="Auto: Detect aspect ratio">Auto</button>
+              <button type="button" class="i2p-orient-pill ${orient === 'portrait' ? 'active' : ''}" data-orient="portrait" title="Force Portrait">Port</button>
+              <button type="button" class="i2p-orient-pill ${orient === 'landscape' ? 'active' : ''}" data-orient="landscape" title="Force Landscape">Land</button>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span style="font-size: 0.74rem; color: var(--text-secondary); font-weight: 600;">Layout:</span>
+            <select class="form-control i2p-item-layout-select" style="font-size: 0.74rem; padding: 1px 6px; height: 24px; border-radius: 4px; width: auto;">
+              <option value="front-back" ${activePlacement === 'front-back' ? 'selected' : ''}>Front + Back (2 on A4)</option>
+              <option value="fit" ${activePlacement === 'fit' ? 'selected' : ''}>Fit to Page (Full A4)</option>
+              <option value="id-card" ${activePlacement === 'id-card' ? 'selected' : ''}>Single ID Card</option>
+              <option value="custom" ${activePlacement === 'custom' ? 'selected' : ''}>Custom mm</option>
+              <option value="multi-card" ${activePlacement === 'multi-card' ? 'selected' : ''}>Cards Grid (4 on A4)</option>
+              <option value="original" ${activePlacement === 'original' ? 'selected' : ''}>Original DPI</option>
+              <option value="fill" ${activePlacement === 'fill' ? 'selected' : ''}>Fill Page</option>
+            </select>
           </div>
         </div>
       `;
@@ -423,6 +929,23 @@ const ImageToPDF = (() => {
         });
       });
 
+      const layoutSelect = card.querySelector('.i2p-item-layout-select');
+      if (layoutSelect) {
+        layoutSelect.addEventListener('change', (e) => {
+          e.stopPropagation();
+          const newPlacement = layoutSelect.value;
+          item.layoutOverride = { ...getLayoutSettings(), placement: newPlacement };
+          previewPageIndex = pInfo.pageIndex;
+          renderList();
+          updatePDFPreview();
+        });
+      }
+
+      card.querySelector('.i2p-item-preview').addEventListener('click', () => {
+        previewPageIndex = pInfo.pageIndex;
+        updatePDFPreview();
+      });
+
       card.querySelector('.i2p-edit-btn').addEventListener('click', () => openEditor(index));
 
       card.querySelector('.i2p-move-up').addEventListener('click', () => {
@@ -447,8 +970,9 @@ const ImageToPDF = (() => {
 
       card.querySelector('.i2p-remove').addEventListener('click', () => {
         imageList.splice(index, 1);
-        if (previewPageIndex >= imageList.length) {
-          previewPageIndex = Math.max(0, imageList.length - 1);
+        const newTotal = getTotalPDFPages();
+        if (previewPageIndex >= newTotal) {
+          previewPageIndex = Math.max(0, newTotal - 1);
         }
         renderList();
         updatePDFPreview();
@@ -1400,12 +1924,407 @@ const ImageToPDF = (() => {
     }
   }
 
+  function getEffectiveLayoutForItem(item) {
+    const global = globalLayoutSettings || getLayoutSettings();
+    if (item && item.layoutOverride) {
+      return { ...global, ...item.layoutOverride };
+    }
+    return { ...global };
+  }
+
+  function buildPDFPages(list = imageList) {
+    if (!list || list.length === 0) return [];
+    const pages = [];
+    let itemIndex = 0;
+    let pageIndex = 0;
+
+    while (itemIndex < list.length) {
+      const leadItem = list[itemIndex];
+      const effectiveSettings = getEffectiveLayoutForItem(leadItem);
+      const placement = effectiveSettings.placement || 'front-back';
+
+      if (placement === 'front-back') {
+        const items = [leadItem];
+        let advance = 1;
+        if (itemIndex + 1 < list.length) {
+          const nextItem = list[itemIndex + 1];
+          const nextPlacement = (nextItem.layoutOverride && nextItem.layoutOverride.placement) || null;
+          if (!nextPlacement || nextPlacement === 'front-back') {
+            items.push(nextItem);
+            advance = 2;
+          }
+        }
+        pages.push({
+          pageIndex,
+          leadItem,
+          settings: effectiveSettings,
+          items,
+          placement: 'front-back'
+        });
+        itemIndex += advance;
+        pageIndex++;
+      } else if (placement === 'multi-card') {
+        const cpp = (effectiveSettings.multiLayout === '4-grid') ? 4 : 2;
+        const items = [leadItem];
+        let advance = 1;
+        for (let k = 1; k < cpp && (itemIndex + k) < list.length; k++) {
+          const nextItem = list[itemIndex + k];
+          const nextPlacement = (nextItem.layoutOverride && nextItem.layoutOverride.placement) || null;
+          if (nextPlacement && nextPlacement !== 'multi-card') break;
+          items.push(nextItem);
+          advance++;
+        }
+        pages.push({
+          pageIndex,
+          leadItem,
+          settings: effectiveSettings,
+          items,
+          placement: 'multi-card'
+        });
+        itemIndex += advance;
+        pageIndex++;
+      } else {
+        pages.push({
+          pageIndex,
+          leadItem,
+          settings: effectiveSettings,
+          items: [leadItem],
+          placement
+        });
+        itemIndex += 1;
+        pageIndex++;
+      }
+    }
+    return pages;
+  }
+
+  function getCardsPerPage() {
+    const placement = dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'front-back';
+    if (placement === 'front-back') return 2;
+    if (placement !== 'multi-card') return 1;
+    const layout = dom.multiCardLayoutSelect ? dom.multiCardLayoutSelect.value : '2-vertical';
+    if (layout === '4-grid') return 4;
+    return 2;
+  }
+
+  function getTotalPDFPages() {
+    if (imageList.length === 0) return 0;
+    const pages = buildPDFPages(imageList);
+    return pages.length;
+  }
+
+  function getCurrentPagePrimaryItem() {
+    if (imageList.length === 0) return null;
+    const pages = buildPDFPages(imageList);
+    if (pages.length === 0 || previewPageIndex >= pages.length) return null;
+    return pages[previewPageIndex].leadItem || null;
+  }
+
+  function getLayoutSettings() {
+    const placement = dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'front-back';
+
+    const fbPreset = dom.fbPresetSelect ? dom.fbPresetSelect.value : 'standard-id';
+    let fbWidthMm = parseFloat(dom.fbWidthInput ? dom.fbWidthInput.value : 85.6);
+    let fbHeightMm = parseFloat(dom.fbHeightInput ? dom.fbHeightInput.value : 54.0);
+    let fbGapMm = parseFloat(dom.fbGapInput ? dom.fbGapInput.value : 15);
+    if (isNaN(fbWidthMm) || fbWidthMm <= 0) fbWidthMm = 85.6;
+    if (isNaN(fbHeightMm) || fbHeightMm <= 0) fbHeightMm = 54.0;
+    if (isNaN(fbGapMm) || fbGapMm < 0) fbGapMm = 15;
+    const fbLockRatio = dom.fbLockRatioCheck ? dom.fbLockRatioCheck.checked : true;
+    const fbBorder = dom.fbBorderCheck ? dom.fbBorderCheck.checked : true;
+
+    const cardPreset = dom.cardPresetSelect ? dom.cardPresetSelect.value : 'standard-id';
+    let cardWidthMm = parseFloat(dom.cardWidthInput ? dom.cardWidthInput.value : 85.6);
+    let cardHeightMm = parseFloat(dom.cardHeightInput ? dom.cardHeightInput.value : 54.0);
+    if (isNaN(cardWidthMm) || cardWidthMm <= 0) cardWidthMm = 85.6;
+    if (isNaN(cardHeightMm) || cardHeightMm <= 0) cardHeightMm = 54.0;
+    const cardLockRatio = dom.cardLockRatioCheck ? dom.cardLockRatioCheck.checked : true;
+    const cardBorder = dom.cardBorderCheck ? dom.cardBorderCheck.checked : true;
+
+    let customMmW = parseFloat(dom.customMmWidthInput ? dom.customMmWidthInput.value : 100);
+    let customMmH = parseFloat(dom.customMmHeightInput ? dom.customMmHeightInput.value : 150);
+    if (isNaN(customMmW) || customMmW <= 0) customMmW = 100;
+    if (isNaN(customMmH) || customMmH <= 0) customMmH = 150;
+    const customLockRatio = dom.customLockRatioCheck ? dom.customLockRatioCheck.checked : true;
+    const customBorder = dom.customBorderCheck ? dom.customBorderCheck.checked : false;
+
+    const multiLayout = dom.multiCardLayoutSelect ? dom.multiCardLayoutSelect.value : '2-vertical';
+    let multiWidthMm = parseFloat(dom.multiCardWidthInput ? dom.multiCardWidthInput.value : 85.6);
+    let multiHeightMm = parseFloat(dom.multiCardHeightInput ? dom.multiCardHeightInput.value : 54.0);
+    let multiGapMm = parseFloat(dom.multiCardGapInput ? dom.multiCardGapInput.value : 15);
+    if (isNaN(multiWidthMm) || multiWidthMm <= 0) multiWidthMm = 85.6;
+    if (isNaN(multiHeightMm) || multiHeightMm <= 0) multiHeightMm = 54.0;
+    if (isNaN(multiGapMm) || multiGapMm < 0) multiGapMm = 15;
+    const multiLockRatio = dom.multiLockRatioCheck ? dom.multiLockRatioCheck.checked : true;
+    const multiBorder = dom.multiBorderCheck ? dom.multiBorderCheck.checked : true;
+
+    const printDpiSetting = dom.printDpiSelect ? dom.printDpiSelect.value : 'auto';
+
+    return {
+      placement,
+      fbPreset,
+      fbWidthMm,
+      fbHeightMm,
+      fbGapMm,
+      fbLockRatio,
+      fbBorder,
+      cardPreset,
+      cardWidthMm,
+      cardHeightMm,
+      cardLockRatio,
+      cardBorder,
+      customMmW,
+      customMmH,
+      customLockRatio,
+      customBorder,
+      multiLayout,
+      multiWidthMm,
+      multiHeightMm,
+      multiGapMm,
+      multiLockRatio,
+      multiBorder,
+      printDpiSetting
+    };
+  }
+
+  function computePageLayout(pageIndex, list, pageDim, marginPts, settings) {
+    const pages = buildPDFPages(list);
+    const pageDef = (pages && pageIndex >= 0 && pageIndex < pages.length) ? pages[pageIndex] : null;
+    const effectiveSettings = (pageDef && pageDef.settings) ? pageDef.settings : (settings || getLayoutSettings());
+    const placement = effectiveSettings.placement || 'front-back';
+    const results = [];
+
+    const usableW = Math.max(10, pageDim.width - marginPts * 2);
+    const usableH = Math.max(10, pageDim.height - marginPts * 2);
+
+    if (placement === 'front-back') {
+      const pageItems = pageDef ? pageDef.items : list.slice(pageIndex * 2, pageIndex * 2 + 2);
+      const boxW = effectiveSettings.fbWidthMm * MM_TO_PT;
+      const boxH = effectiveSettings.fbHeightMm * MM_TO_PT;
+      const gap = effectiveSettings.fbGapMm * MM_TO_PT;
+      const totalStackH = boxH * 2 + gap;
+
+      const startX = marginPts + (usableW - boxW) / 2;
+      const startY = marginPts + (usableH - totalStackH) / 2;
+
+      const slots = [
+        { x: startX, y: startY, w: boxW, h: boxH, role: 'Front' },
+        { x: startX, y: startY + boxH + gap, w: boxW, h: boxH, role: 'Back' }
+      ];
+
+      for (let s = 0; s < pageItems.length && s < 2; s++) {
+        const item = pageItems[s];
+        const slot = slots[s];
+        const dims = getItemEffectiveDimensions(item);
+        const imgW = dims.width;
+        const imgH = dims.height;
+
+        let drawW = slot.w;
+        let drawH = slot.h;
+        if (effectiveSettings.fbLockRatio) {
+          const scale = Math.min(slot.w / imgW, slot.h / imgH);
+          drawW = imgW * scale;
+          drawH = imgH * scale;
+        }
+        const drawX = slot.x + (slot.w - drawW) / 2;
+        const drawY = slot.y + (slot.h - drawH) / 2;
+
+        results.push({
+          itemIndex: list.indexOf(item),
+          item,
+          slot,
+          draw: { x: drawX, y: drawY, w: drawW, h: drawH },
+          drawBorder: effectiveSettings.fbBorder,
+          role: slot.role,
+          isFrontBack: true
+        });
+      }
+
+      if (pageItems.length === 1 && results.length > 0) {
+        results[0].emptyBackSlot = slots[1];
+      }
+
+      return results;
+    }
+
+    if (placement === 'multi-card') {
+      const pageItems = pageDef ? pageDef.items : list.slice(pageIndex * 2, pageIndex * 2 + 2);
+      const cpp = (effectiveSettings.multiLayout === '4-grid') ? 4 : 2;
+      const boxW = effectiveSettings.multiWidthMm * MM_TO_PT;
+      const boxH = effectiveSettings.multiHeightMm * MM_TO_PT;
+      const gap = effectiveSettings.multiGapMm * MM_TO_PT;
+
+      const slots = [];
+      if (effectiveSettings.multiLayout === '2-vertical') {
+        const totalH = boxH * 2 + gap;
+        const startX = marginPts + (usableW - boxW) / 2;
+        const startY = marginPts + (usableH - totalH) / 2;
+        slots.push({ x: startX, y: startY, w: boxW, h: boxH });
+        slots.push({ x: startX, y: startY + boxH + gap, w: boxW, h: boxH });
+      } else if (effectiveSettings.multiLayout === '2-horizontal') {
+        const totalW = boxW * 2 + gap;
+        const startX = marginPts + (usableW - totalW) / 2;
+        const startY = marginPts + (usableH - boxH) / 2;
+        slots.push({ x: startX, y: startY, w: boxW, h: boxH });
+        slots.push({ x: startX + boxW + gap, y: startY, w: boxW, h: boxH });
+      } else if (effectiveSettings.multiLayout === '4-grid') {
+        const totalW = boxW * 2 + gap;
+        const totalH = boxH * 2 + gap;
+        const startX = marginPts + (usableW - totalW) / 2;
+        const startY = marginPts + (usableH - totalH) / 2;
+        slots.push({ x: startX, y: startY, w: boxW, h: boxH });
+        slots.push({ x: startX + boxW + gap, y: startY, w: boxW, h: boxH });
+        slots.push({ x: startX, y: startY + boxH + gap, w: boxW, h: boxH });
+        slots.push({ x: startX + boxW + gap, y: startY + boxH + gap, w: boxW, h: boxH });
+      }
+
+      for (let s = 0; s < pageItems.length && s < slots.length; s++) {
+        const item = pageItems[s];
+        const slot = slots[s];
+        const dims = getItemEffectiveDimensions(item);
+        const imgW = dims.width;
+        const imgH = dims.height;
+
+        let drawW = slot.w;
+        let drawH = slot.h;
+        if (effectiveSettings.multiLockRatio) {
+          const scale = Math.min(slot.w / imgW, slot.h / imgH);
+          drawW = imgW * scale;
+          drawH = imgH * scale;
+        }
+        const drawX = slot.x + (slot.w - drawW) / 2;
+        const drawY = slot.y + (slot.h - drawH) / 2;
+
+        results.push({
+          itemIndex: list.indexOf(item),
+          item,
+          slot,
+          draw: { x: drawX, y: drawY, w: drawW, h: drawH },
+          drawBorder: effectiveSettings.multiBorder
+        });
+      }
+
+      return results;
+    }
+
+    const item = pageDef ? (pageDef.items[0] || null) : ((pageIndex >= 0 && pageIndex < list.length) ? list[pageIndex] : null);
+    if (!item) return results;
+
+    const dims = getItemEffectiveDimensions(item);
+    const imgW = dims.width;
+    const imgH = dims.height;
+
+    if (placement === 'fit') {
+      const imgRatio = imgW / imgH;
+      const areaRatio = usableW / usableH;
+      let drawW, drawH;
+      if (imgRatio > areaRatio) {
+        drawW = usableW;
+        drawH = usableW / imgRatio;
+      } else {
+        drawH = usableH;
+        drawW = usableH * imgRatio;
+      }
+      const drawX = marginPts + (usableW - drawW) / 2;
+      const drawY = marginPts + (usableH - drawH) / 2;
+      results.push({
+        itemIndex: list.indexOf(item),
+        item,
+        slot: { x: marginPts, y: marginPts, w: usableW, h: usableH },
+        draw: { x: drawX, y: drawY, w: drawW, h: drawH },
+        drawBorder: false
+      });
+    } else if (placement === 'fill') {
+      results.push({
+        itemIndex: list.indexOf(item),
+        item,
+        slot: { x: marginPts, y: marginPts, w: usableW, h: usableH },
+        draw: { x: marginPts, y: marginPts, w: usableW, h: usableH },
+        drawBorder: false
+      });
+    } else if (placement === 'id-card') {
+      const boxW = effectiveSettings.cardWidthMm * MM_TO_PT;
+      const boxH = effectiveSettings.cardHeightMm * MM_TO_PT;
+      const slotX = marginPts + (usableW - boxW) / 2;
+      const slotY = marginPts + (usableH - boxH) / 2;
+      const slot = { x: slotX, y: slotY, w: boxW, h: boxH };
+
+      let drawW = boxW;
+      let drawH = boxH;
+      if (effectiveSettings.cardLockRatio) {
+        const scale = Math.min(boxW / imgW, boxH / imgH);
+        drawW = imgW * scale;
+        drawH = imgH * scale;
+      }
+      const drawX = slot.x + (slot.w - drawW) / 2;
+      const drawY = slot.y + (slot.h - drawH) / 2;
+
+      results.push({
+        itemIndex: list.indexOf(item),
+        item,
+        slot,
+        draw: { x: drawX, y: drawY, w: drawW, h: drawH },
+        drawBorder: effectiveSettings.cardBorder
+      });
+    } else if (placement === 'custom') {
+      const boxW = effectiveSettings.customMmW * MM_TO_PT;
+      const boxH = effectiveSettings.customMmH * MM_TO_PT;
+      const slotX = marginPts + (usableW - boxW) / 2;
+      const slotY = marginPts + (usableH - boxH) / 2;
+      const slot = { x: slotX, y: slotY, w: boxW, h: boxH };
+
+      let drawW = boxW;
+      let drawH = boxH;
+      if (effectiveSettings.customLockRatio) {
+        const scale = Math.min(boxW / imgW, boxH / imgH);
+        drawW = imgW * scale;
+        drawH = imgH * scale;
+      }
+      const drawX = slot.x + (slot.w - drawW) / 2;
+      const drawY = slot.y + (slot.h - drawH) / 2;
+
+      results.push({
+        itemIndex: list.indexOf(item),
+        item,
+        slot,
+        draw: { x: drawX, y: drawY, w: drawW, h: drawH },
+        drawBorder: effectiveSettings.customBorder
+      });
+    } else if (placement === 'original') {
+      let dpi = 300;
+      if (effectiveSettings.printDpiSetting !== 'auto' && !isNaN(parseFloat(effectiveSettings.printDpiSetting))) {
+        dpi = parseFloat(effectiveSettings.printDpiSetting);
+      } else if (item.detectedDpi && item.detectedDpi >= 72) {
+        dpi = item.detectedDpi;
+      }
+
+      let ptW = (imgW / dpi) * 72;
+      let ptH = (imgH / dpi) * 72;
+      if (ptW > usableW || ptH > usableH) {
+        const scale = Math.min(usableW / ptW, usableH / ptH);
+        ptW *= scale;
+        ptH *= scale;
+      }
+
+      const drawX = marginPts + (usableW - ptW) / 2;
+      const drawY = marginPts + (usableH - ptH) / 2;
+
+      results.push({
+        itemIndex: list.indexOf(item),
+        item,
+        slot: { x: drawX, y: drawY, w: ptW, h: ptH },
+        draw: { x: drawX, y: drawY, w: ptW, h: ptH },
+        drawBorder: false
+      });
+    }
+
+    return results;
+  }
+
   function openSignatureModal() {
     if (dom.signatureModal) dom.signatureModal.classList.remove('hidden');
 
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
 
     if (currentItem && currentItem.signature && currentItem.signature.active && currentItem.signature.rawImage) {
       signatureRawImage = currentItem.signature.rawImage;
@@ -1564,9 +2483,7 @@ const ImageToPDF = (() => {
       return;
     }
 
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
 
     if (!currentItem) {
       Utils.showToast('No page selected.', 'warning');
@@ -1623,9 +2540,7 @@ const ImageToPDF = (() => {
   function bindSignatureOverlayEvents() {
     if (dom.sigDeleteBtn) {
       dom.sigDeleteBtn.addEventListener('click', () => {
-        const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-          ? imageList[previewPageIndex]
-          : null;
+        const currentItem = getCurrentPagePrimaryItem();
         if (currentItem) {
           currentItem.signature = null;
         }
@@ -1646,9 +2561,7 @@ const ImageToPDF = (() => {
         const isAll = e.target.value === 'all';
         signaturePlacement.applyToAll = isAll;
         if (isAll) {
-          const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-            ? imageList[previewPageIndex]
-            : null;
+          const currentItem = getCurrentPagePrimaryItem();
           if (currentItem && currentItem.signature && currentItem.signature.active) {
             imageList.forEach(item => {
               item.signature = { ...currentItem.signature };
@@ -1686,9 +2599,7 @@ const ImageToPDF = (() => {
   }
 
   function setSignaturePositionPreset(pos) {
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
     if (!currentItem || !currentItem.signature || !currentItem.signature.active || !dom.previewCanvas) return;
     const cw = dom.previewCanvas.clientWidth || dom.previewCanvas.width;
     const ch = dom.previewCanvas.clientHeight || dom.previewCanvas.height;
@@ -1700,24 +2611,57 @@ const ImageToPDF = (() => {
     const pxH = pxW / (sig.aspectRatio || 1);
     const relH = pxH / ch;
 
+    const pageDim = getPageDimensions(previewPageIndex);
+    const margin = getMarginPoints();
+    const settings = getLayoutSettings();
+    const layout = computePageLayout(previewPageIndex, imageList, pageDim, margin, settings);
+
+    let targetBox = { x: 0, y: 0, w: pageDim.width, h: pageDim.height };
+    if (layout.length > 0) {
+      if (layout.length === 1) {
+        targetBox = layout[0].slot;
+      } else {
+        const p = (pos || '').toLowerCase();
+        if (p.includes('b')) {
+          targetBox = layout[layout.length - 1].slot;
+        } else if (p.includes('t')) {
+          targetBox = layout[0].slot;
+        } else {
+          const minX = Math.min(...layout.map(c => c.slot.x));
+          const minY = Math.min(...layout.map(c => c.slot.y));
+          const maxX = Math.max(...layout.map(c => c.slot.x + c.slot.w));
+          const maxY = Math.max(...layout.map(c => c.slot.y + c.slot.h));
+          targetBox = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+        }
+      }
+    }
+
+    const boxRelX = targetBox.x / pageDim.width;
+    const boxRelY = targetBox.y / pageDim.height;
+    const boxRelW = targetBox.w / pageDim.width;
+    const boxRelH = targetBox.h / pageDim.height;
+
     const p = (pos || '').toLowerCase();
     sig.preset = p;
     if (p === 'tl' || p === 'top-left') {
-      sig.relX = 0.05;
-      sig.relY = 0.05;
+      sig.relX = boxRelX + 0.02;
+      sig.relY = boxRelY + 0.02;
     } else if (p === 'tr' || p === 'top-right') {
-      sig.relX = Math.max(0, 1 - w - 0.05);
-      sig.relY = 0.05;
+      sig.relX = Math.max(0, boxRelX + boxRelW - w - 0.02);
+      sig.relY = boxRelY + 0.02;
     } else if (p === 'center') {
-      sig.relX = Math.max(0, (1 - w) / 2);
-      sig.relY = Math.max(0, (1 - relH) / 2);
+      sig.relX = Math.max(0, boxRelX + (boxRelW - w) / 2);
+      sig.relY = Math.max(0, boxRelY + (boxRelH - relH) / 2);
     } else if (p === 'bl' || p === 'bottom-left') {
-      sig.relX = 0.05;
-      sig.relY = Math.max(0, 1 - relH - 0.05);
+      sig.relX = boxRelX + 0.02;
+      sig.relY = Math.max(0, boxRelY + boxRelH - relH - 0.02);
     } else if (p === 'br' || p === 'bottom-right') {
-      sig.relX = Math.max(0, 1 - w - 0.05);
-      sig.relY = Math.max(0, 1 - relH - 0.05);
+      sig.relX = Math.max(0, boxRelX + boxRelW - w - 0.02);
+      sig.relY = Math.max(0, boxRelY + boxRelH - relH - 0.02);
     }
+
+    sig.relX = Math.max(0, Math.min(1 - w, sig.relX));
+    sig.relY = Math.max(0, Math.min(1 - relH, sig.relY));
 
     updateSigPosBtnStates(sig);
     renderSignatureOverlayBox();
@@ -1725,9 +2669,7 @@ const ImageToPDF = (() => {
 
   function onSigPointerDown(e) {
     if (e.target === dom.sigResizeHandle || e.target === dom.sigDeleteBtn || isResizingSig) return;
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
     if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     e.preventDefault();
     isDraggingSig = true;
@@ -1741,9 +2683,7 @@ const ImageToPDF = (() => {
 
   function onSigTouchStart(e) {
     if (e.target === dom.sigResizeHandle || e.target === dom.sigDeleteBtn || isResizingSig || e.touches.length === 0) return;
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
     if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     e.preventDefault();
     isDraggingSig = true;
@@ -1758,9 +2698,7 @@ const ImageToPDF = (() => {
   function onSigResizeDown(e) {
     e.stopPropagation();
     e.preventDefault();
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
     if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     isResizingSig = true;
     sigDragStart = {
@@ -1773,9 +2711,7 @@ const ImageToPDF = (() => {
   function onSigResizeTouchStart(e) {
     e.stopPropagation();
     if (e.touches.length === 0) return;
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
     if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     e.preventDefault();
     isResizingSig = true;
@@ -1787,9 +2723,7 @@ const ImageToPDF = (() => {
   }
 
   function onSigPointerMove(e) {
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
     if (!currentItem || !currentItem.signature || !currentItem.signature.active || !dom.previewCanvas) return;
     const cw = dom.previewCanvas.clientWidth || dom.previewCanvas.width;
     const ch = dom.previewCanvas.clientHeight || dom.previewCanvas.height;
@@ -1832,9 +2766,7 @@ const ImageToPDF = (() => {
 
   function onSigTouchMove(e) {
     if ((!isDraggingSig && !isResizingSig) || e.touches.length === 0) return;
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
     if (!currentItem || !currentItem.signature || !currentItem.signature.active) return;
     e.preventDefault();
     const touch = e.touches[0];
@@ -1849,9 +2781,7 @@ const ImageToPDF = (() => {
   function renderSignatureOverlayBox() {
     if (!dom.sigOverlayBox || !dom.previewCanvas) return;
 
-    const currentItem = (imageList.length > 0 && previewPageIndex >= 0 && previewPageIndex < imageList.length)
-      ? imageList[previewPageIndex]
-      : null;
+    const currentItem = getCurrentPagePrimaryItem();
 
     if (!currentItem || !currentItem.signature || !currentItem.signature.active || !currentItem.signature.dataUrl) {
       dom.sigOverlayBox.classList.add('hidden');
@@ -1930,7 +2860,10 @@ const ImageToPDF = (() => {
     let w = 595.28;
     let h = 841.89;
 
-    const item = (imageList.length > 0 && pageIndex >= 0 && pageIndex < imageList.length) ? imageList[pageIndex] : null;
+    const pages = buildPDFPages(imageList);
+    const pageDef = (pages && pageIndex >= 0 && pageIndex < pages.length) ? pages[pageIndex] : null;
+    const leadItem = pageDef ? pageDef.leadItem : ((imageList.length > 0 && pageIndex >= 0 && pageIndex < imageList.length) ? imageList[pageIndex] : null);
+    const placement = (pageDef && pageDef.settings) ? pageDef.settings.placement : (dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'front-back');
 
     if (size === 'a5') {
       w = 419.53;
@@ -1949,14 +2882,27 @@ const ImageToPDF = (() => {
         h = customH;
       }
     } else if (size === 'original') {
-      if (item) {
-        const dims = getItemEffectiveDimensions(item);
-        w = dims.width;
-        h = dims.height;
+      if (leadItem) {
+        const dims = getItemEffectiveDimensions(leadItem);
+        let dpi = 300;
+        const dpiSetting = dom.printDpiSelect ? dom.printDpiSelect.value : 'auto';
+        if (dpiSetting !== 'auto' && !isNaN(parseFloat(dpiSetting))) {
+          dpi = parseFloat(dpiSetting);
+        } else if (leadItem.detectedDpi && leadItem.detectedDpi >= 72) {
+          dpi = leadItem.detectedDpi;
+        }
+        w = (dims.width / dpi) * 72;
+        h = (dims.height / dpi) * 72;
       }
     }
 
-    const isLandscape = getEffectiveOrientation(item) === 'landscape';
+    let isLandscape = false;
+    if (placement === 'front-back') {
+      const orient = leadItem ? (leadItem.orientation || 'auto') : 'auto';
+      isLandscape = orient === 'landscape';
+    } else {
+      isLandscape = getEffectiveOrientation(leadItem) === 'landscape';
+    }
 
     if (size !== 'original') {
       if (isLandscape && w < h) {
@@ -1995,18 +2941,29 @@ const ImageToPDF = (() => {
     if (dom.sigControlsRow) dom.sigControlsRow.classList.add('hidden');
     if (dom.sigOverlayImg) dom.sigOverlayImg.src = '';
 
-    if (previewPageIndex >= imageList.length) previewPageIndex = Math.max(0, imageList.length - 1);
-    const item = imageList[previewPageIndex];
-    if (!item) return;
+    const pages = buildPDFPages(imageList);
+    const totalPages = pages.length;
+    if (totalPages === 0) return;
+    if (previewPageIndex >= totalPages) previewPageIndex = Math.max(0, totalPages - 1);
+
+    const pageDef = pages[previewPageIndex];
+    const settings = (pageDef && pageDef.settings) ? pageDef.settings : getLayoutSettings();
+
+    // Synchronize form settings with this preview page
+    loadSettingsIntoForm(settings);
+    updateScopeUI();
+    updatePreviewBadge(settings);
 
     if (dom.previewPageNum) dom.previewPageNum.textContent = `Page ${previewPageIndex + 1}`;
-    if (dom.previewTotalPages) dom.previewTotalPages.textContent = `of ${imageList.length}`;
+    if (dom.previewTotalPages) dom.previewTotalPages.textContent = `of ${totalPages}`;
     if (dom.previewPrevBtn) dom.previewPrevBtn.disabled = previewPageIndex === 0;
-    if (dom.previewNextBtn) dom.previewNextBtn.disabled = previewPageIndex === imageList.length - 1;
+    if (dom.previewNextBtn) dom.previewNextBtn.disabled = previewPageIndex >= totalPages - 1;
 
     const pageDim = getPageDimensions(previewPageIndex);
     const margin = getMarginPoints();
-    const placement = dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'fit';
+
+    // Warn if configured dimensions exceed available printable area
+    checkPrintableAreaWarning(settings, pageDim, margin);
 
     const stageEl = dom.previewStage || (dom.previewCanvas ? dom.previewCanvas.parentElement : null);
     const wrapEl = stageEl ? stageEl.closest('.i2p-preview-sheet-wrap') : null;
@@ -2042,38 +2999,78 @@ const ImageToPDF = (() => {
       ctx.setLineDash([]);
     }
 
-    const imgObj = await Utils.loadImage(item.originalDataUrl);
-    const offscreen = document.createElement('canvas');
-    renderEditedImageToCanvas(offscreen, imgObj, item.editState);
+    const layoutResults = computePageLayout(previewPageIndex, imageList, pageDim, margin, settings);
 
-    let drawW = usableW;
-    let drawH = usableH;
-    const imgRatio = offscreen.width / offscreen.height;
-    const areaRatio = usableW / usableH;
+    for (const card of layoutResults) {
+      const imgObj = await Utils.loadImage(card.item.originalDataUrl);
+      const offscreen = document.createElement('canvas');
+      renderEditedImageToCanvas(offscreen, imgObj, card.item.editState);
 
-    if (placement === 'fit') {
-      if (imgRatio > areaRatio) {
-        drawW = usableW;
-        drawH = usableW / imgRatio;
-      } else {
-        drawH = usableH;
-        drawW = usableH * imgRatio;
+      const cDrawX = card.draw.x * previewScale;
+      const cDrawY = card.draw.y * previewScale;
+      const cDrawW = card.draw.w * previewScale;
+      const cDrawH = card.draw.h * previewScale;
+
+      ctx.drawImage(offscreen, cDrawX, cDrawY, cDrawW, cDrawH);
+
+      if (card.drawBorder) {
+        const cSlotX = card.slot.x * previewScale;
+        const cSlotY = card.slot.y * previewScale;
+        const cSlotW = card.slot.w * previewScale;
+        const cSlotH = card.slot.h * previewScale;
+
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(cSlotX, cSlotY, cSlotW, cSlotH);
+        ctx.setLineDash([]);
       }
-    } else if (placement === 'fill') {
-      drawW = usableW;
-      drawH = usableH;
-    } else if (placement === 'original') {
-      drawW = Math.min(usableW, offscreen.width * previewScale);
-      drawH = Math.min(usableH, offscreen.height * previewScale);
+
+      if (card.role) {
+        const cSlotX = card.slot.x * previewScale;
+        const cSlotY = card.slot.y * previewScale;
+        ctx.save();
+        ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        const tagText = card.role.toUpperCase();
+        const tagW = ctx.measureText(tagText).width + 8;
+        const tagH = 14;
+        ctx.fillStyle = (card.role === 'Front') ? 'rgba(99, 102, 241, 0.85)' : 'rgba(16, 185, 129, 0.85)';
+        ctx.fillRect(cSlotX + 4, cSlotY + 4, tagW, tagH);
+        ctx.fillStyle = '#ffffff';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(tagText, cSlotX + 8, cSlotY + 4 + tagH / 2);
+        ctx.restore();
+      }
+
+      offscreen.width = 1;
+      offscreen.height = 1;
     }
 
-    const drawX = marginX + (usableW - drawW) / 2;
-    const drawY = marginY + (usableH - drawH) / 2;
+    // Render empty back slot placeholder for 1-image front-back page
+    if (layoutResults.length > 0 && layoutResults[0].emptyBackSlot) {
+      const backSlot = layoutResults[0].emptyBackSlot;
+      const bSlotX = backSlot.x * previewScale;
+      const bSlotY = backSlot.y * previewScale;
+      const bSlotW = backSlot.w * previewScale;
+      const bSlotH = backSlot.h * previewScale;
 
-    ctx.drawImage(offscreen, drawX, drawY, drawW, drawH);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(bSlotX, bSlotY, bSlotW, bSlotH);
+      ctx.setLineDash([]);
 
-    offscreen.width = 1;
-    offscreen.height = 1;
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.08)';
+      ctx.fillRect(bSlotX, bSlotY, bSlotW, bSlotH);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Back Side: Add 2nd image below', bSlotX + bSlotW / 2, bSlotY + bSlotH / 2);
+      ctx.restore();
+    }
 
     renderSignatureOverlayBox();
   }
@@ -2088,7 +3085,8 @@ const ImageToPDF = (() => {
     showProgress(5, 'Initializing PDF Document...');
 
     const margin = getMarginPoints();
-    const placement = dom.imagePlacementSelect ? dom.imagePlacementSelect.value : 'fit';
+    const pages = buildPDFPages(imageList);
+    const totalPages = pages.length;
 
     try {
       const pdfDoc = await PDFLib.PDFDocument.create();
@@ -2116,87 +3114,85 @@ const ImageToPDF = (() => {
         return emb;
       }
 
-      for (let i = 0; i < imageList.length; i++) {
-        const item = imageList[i];
-        const progressPct = Math.round(10 + ((i + 1) / imageList.length) * 78);
-        showProgress(progressPct, `Rendering Page ${i + 1} of ${imageList.length}...`);
+      for (let p = 0; p < totalPages; p++) {
+        const progressPct = Math.round(10 + ((p + 1) / totalPages) * 78);
+        showProgress(progressPct, `Rendering Page ${p + 1} of ${totalPages}...`);
 
-        const imgObj = await Utils.loadImage(item.originalDataUrl);
-        const renderCanvas = document.createElement('canvas');
-        renderEditedImageToCanvas(renderCanvas, imgObj, item.editState);
-
-        if (renderCanvas.width > 4096 || renderCanvas.height > 4096) {
-          const maxDim = 3840;
-          const scale = Math.min(maxDim / renderCanvas.width, maxDim / renderCanvas.height);
-          const scaledCanvas = document.createElement('canvas');
-          scaledCanvas.width = Math.round(renderCanvas.width * scale);
-          scaledCanvas.height = Math.round(renderCanvas.height * scale);
-          const sCtx = scaledCanvas.getContext('2d');
-          sCtx.drawImage(renderCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-          renderCanvas.width = scaledCanvas.width;
-          renderCanvas.height = scaledCanvas.height;
-          const rCtx = renderCanvas.getContext('2d');
-          rCtx.drawImage(scaledCanvas, 0, 0);
-          scaledCanvas.width = 1;
-          scaledCanvas.height = 1;
-        }
-
-        const hasAlpha = item.file.type === 'image/png' || item.file.type === 'image/webp';
-        let embeddedImage = null;
-
-        if (hasAlpha) {
-          const pngBlob = await Utils.canvasToBlob(renderCanvas, 'image/png');
-          const pngBytes = await pngBlob.arrayBuffer();
-          embeddedImage = await pdfDoc.embedPng(pngBytes);
-        } else {
-          const jpgBlob = await Utils.canvasToBlob(renderCanvas, 'image/jpeg', 0.92);
-          const jpgBytes = await jpgBlob.arrayBuffer();
-          embeddedImage = await pdfDoc.embedJpg(jpgBytes);
-        }
-
-        const pageDim = getPageDimensions(i);
+        const pageDef = pages[p];
+        const pageDim = getPageDimensions(p);
         const pageWidth = pageDim.width;
         const pageHeight = pageDim.height;
 
         const page = pdfDoc.addPage([pageWidth, pageHeight]);
 
-        const usableWidth = Math.max(10, pageWidth - margin * 2);
-        const usableHeight = Math.max(10, pageHeight - margin * 2);
+        const layoutResults = computePageLayout(p, imageList, pageDim, margin, pageDef.settings);
 
-        let drawWidth = usableWidth;
-        let drawHeight = usableHeight;
-        const imgRatio = renderCanvas.width / renderCanvas.height;
-        const areaRatio = usableWidth / usableHeight;
+        for (const card of layoutResults) {
+          const item = card.item;
+          const imgObj = await Utils.loadImage(item.originalDataUrl);
+          const renderCanvas = document.createElement('canvas');
+          renderEditedImageToCanvas(renderCanvas, imgObj, item.editState);
 
-        if (placement === 'fit') {
-          if (imgRatio > areaRatio) {
-            drawWidth = usableWidth;
-            drawHeight = usableWidth / imgRatio;
-          } else {
-            drawHeight = usableHeight;
-            drawWidth = usableHeight * imgRatio;
+          if (renderCanvas.width > 4096 || renderCanvas.height > 4096) {
+            const maxDim = 3840;
+            const scale = Math.min(maxDim / renderCanvas.width, maxDim / renderCanvas.height);
+            const scaledCanvas = document.createElement('canvas');
+            scaledCanvas.width = Math.round(renderCanvas.width * scale);
+            scaledCanvas.height = Math.round(renderCanvas.height * scale);
+            const sCtx = scaledCanvas.getContext('2d');
+            sCtx.drawImage(renderCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+            renderCanvas.width = scaledCanvas.width;
+            renderCanvas.height = scaledCanvas.height;
+            const rCtx = renderCanvas.getContext('2d');
+            rCtx.drawImage(scaledCanvas, 0, 0);
+            scaledCanvas.width = 1;
+            scaledCanvas.height = 1;
           }
-        } else if (placement === 'fill') {
-          drawWidth = usableWidth;
-          drawHeight = usableHeight;
-        } else if (placement === 'original') {
-          drawWidth = Math.min(usableWidth, renderCanvas.width);
-          drawHeight = Math.min(usableHeight, renderCanvas.height);
+
+          const hasAlpha = item.file.type === 'image/png' || item.file.type === 'image/webp';
+          let embeddedImage = null;
+
+          if (hasAlpha) {
+            const pngBlob = await Utils.canvasToBlob(renderCanvas, 'image/png');
+            const pngBytes = await pngBlob.arrayBuffer();
+            embeddedImage = await pdfDoc.embedPng(pngBytes);
+          } else {
+            const jpgBlob = await Utils.canvasToBlob(renderCanvas, 'image/jpeg', 0.94);
+            const jpgBytes = await jpgBlob.arrayBuffer();
+            embeddedImage = await pdfDoc.embedJpg(jpgBytes);
+          }
+
+          const pdfY = pageHeight - (card.draw.y + card.draw.h);
+
+          page.drawImage(embeddedImage, {
+            x: card.draw.x,
+            y: pdfY,
+            width: card.draw.w,
+            height: card.draw.h
+          });
+
+          // Draw cutting guide border
+          if (card.drawBorder) {
+            const borderPdfY = pageHeight - (card.slot.y + card.slot.h);
+            page.drawRectangle({
+              x: card.slot.x,
+              y: borderPdfY,
+              width: card.slot.w,
+              height: card.slot.h,
+              borderColor: PDFLib.rgb(0.7, 0.7, 0.7),
+              borderWidth: 0.5,
+              borderDashArray: [3, 3]
+            });
+          }
+
+          renderCanvas.width = 1;
+          renderCanvas.height = 1;
         }
 
-        const drawX = margin + (usableWidth - drawWidth) / 2;
-        const drawY = margin + (usableHeight - drawHeight) / 2;
-
-        page.drawImage(embeddedImage, {
-          x: drawX,
-          y: drawY,
-          width: drawWidth,
-          height: drawHeight
-        });
-
         // Draw page-specific signature if assigned to this page
-        if (item.signature && item.signature.active && item.signature.dataUrl) {
-          const sig = item.signature;
+        const primaryItem = pageDef.leadItem;
+        if (primaryItem && primaryItem.signature && primaryItem.signature.active && primaryItem.signature.dataUrl) {
+          const sig = primaryItem.signature;
           const embeddedSig = await getEmbeddedSig(sig.dataUrl);
           if (embeddedSig) {
             const sigPdfW = pageWidth * sig.relW;
@@ -2212,9 +3208,6 @@ const ImageToPDF = (() => {
             });
           }
         }
-
-        renderCanvas.width = 1;
-        renderCanvas.height = 1;
       }
 
       showProgress(92, 'Packaging final PDF file...');
@@ -2231,10 +3224,10 @@ const ImageToPDF = (() => {
       const readyMeta = document.getElementById('i2p-ready-meta');
       if (readyMeta) {
         const hasAnySig = imageList.some(it => it.signature && it.signature.active);
-        readyMeta.textContent = `${imageList.length} Page${imageList.length !== 1 ? 's' : ''} • ${fileSizeStr} ${hasAnySig ? '• With Signature' : ''}`;
+        readyMeta.textContent = `${totalPages} Page${totalPages !== 1 ? 's' : ''} • ${fileSizeStr} ${hasAnySig ? '• With Signature' : ''}`;
       }
 
-      Utils.showToast(`Successfully created PDF with ${imageList.length} page(s)!`, 'success');
+      Utils.showToast(`Successfully created PDF with ${totalPages} page(s)!`, 'success');
     } catch (err) {
       console.error(err);
       Utils.showToast('PDF generation failed: ' + err.message, 'error');
@@ -2260,6 +3253,9 @@ const ImageToPDF = (() => {
     editorImgObj = null;
     editorCropActive = false;
     previewPageIndex = 0;
+    layoutScope = 'page';
+    isUpdatingFormFromPage = false;
+    globalLayoutSettings = null;
 
     signatureRawImage = null;
     signatureDataUrl = null;
@@ -2273,6 +3269,7 @@ const ImageToPDF = (() => {
       rotation: 0
     };
     if (dom.sigApplyScopeSelect) dom.sigApplyScopeSelect.value = 'current';
+    updateScopeUI();
 
     if (dom.emptyState) dom.emptyState.classList.remove('hidden');
     if (dom.workspace) dom.workspace.classList.add('hidden');
@@ -2313,6 +3310,7 @@ const ImageToPDF = (() => {
       dom.sigPreviewCanvas.height = 1;
     }
 
+    syncPlacementPanels();
     hideProgress();
   }
 

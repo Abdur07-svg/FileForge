@@ -24,6 +24,10 @@ const MobileImageToPdf = (() => {
     large: 54
   };
 
+  const MM_TO_PT = 72 / 25.4;
+  const ID_CARD_W = 85.6 * MM_TO_PT;
+  const ID_CARD_H = 54.0 * MM_TO_PT;
+
   function renderEditedImageToCanvas(canvas, imgObj, editState = {}, targetWidth = null, targetHeight = null) {
     const rot = ((editState.rotate % 360) + 360) % 360;
     const isRotated90 = (rot === 90 || rot === 270);
@@ -226,6 +230,7 @@ const MobileImageToPdf = (() => {
     const marginKey = options.margin || 'none';
     const marginPts = MARGINS[marginKey] !== undefined ? MARGINS[marginKey] : 0;
     const quality = options.quality || 0.88;
+    const printLayout = options.printLayout || 'front-back';
 
     const embeddedSigsCache = new Map();
     async function getEmbeddedSig(dataUrl) {
@@ -245,12 +250,8 @@ const MobileImageToPdf = (() => {
       return emb;
     }
 
-    for (let i = 0; i < imageItems.length; i++) {
-      if (onProgress) onProgress(i + 1, imageItems.length);
-
-      const item = imageItems[i];
+    async function embedItemImage(item) {
       const imgObj = await MobileUtils.loadImageFromSrc(item.dataUrl || item.previewUrl);
-
       const renderCanvas = document.createElement('canvas');
       renderEditedImageToCanvas(renderCanvas, imgObj, item.editState || {});
 
@@ -283,76 +284,249 @@ const MobileImageToPdf = (() => {
 
       const imgWidth = renderCanvas.width;
       const imgHeight = renderCanvas.height;
-
-      let pageW, pageH;
-      const itemOrientation = item.orientation || globalOrientation;
-
-      if (pageSizeKey === 'fit') {
-        pageW = imgWidth + marginPts * 2;
-        pageH = imgHeight + marginPts * 2;
-      } else {
-        const baseSize = PAGE_SIZES[pageSizeKey] || PAGE_SIZES.a4;
-        let isLandscape = false;
-
-        if (itemOrientation === 'landscape') {
-          isLandscape = true;
-        } else if (itemOrientation === 'portrait') {
-          isLandscape = false;
-        } else {
-          isLandscape = imgWidth > imgHeight;
-        }
-
-        if (isLandscape) {
-          pageW = Math.max(baseSize.width, baseSize.height);
-          pageH = Math.min(baseSize.width, baseSize.height);
-        } else {
-          pageW = Math.min(baseSize.width, baseSize.height);
-          pageH = Math.max(baseSize.width, baseSize.height);
-        }
-      }
-
-      const page = pdfDoc.addPage([pageW, pageH]);
-
-      const availW = Math.max(1, pageW - marginPts * 2);
-      const availH = Math.max(1, pageH - marginPts * 2);
-
-      const scale = Math.min(availW / imgWidth, availH / imgHeight);
-      const drawW = imgWidth * scale;
-      const drawH = imgHeight * scale;
-
-      const drawX = marginPts + (availW - drawW) / 2;
-      const drawY = marginPts + (availH - drawH) / 2;
-
-      page.drawImage(embeddedImage, {
-        x: drawX,
-        y: drawY,
-        width: drawW,
-        height: drawH
-      });
-
-      const itemSig = (item.signature && item.signature.active && item.signature.dataUrl)
-        ? item.signature
-        : (signatureData && signatureData.active && signatureData.dataUrl && !imageItems.some(it => it.signature && it.signature.active) ? signatureData : null);
-
-      if (itemSig) {
-        const sigEmb = await getEmbeddedSig(itemSig.dataUrl);
-        if (sigEmb) {
-          const sigPdfW = pageW * itemSig.relW;
-          const sigPdfH = sigPdfW / (itemSig.aspectRatio || 1);
-          const sigPdfX = pageW * itemSig.relX;
-          const sigPdfY = pageH - (pageH * itemSig.relY) - sigPdfH;
-
-          page.drawImage(sigEmb, {
-            x: Math.max(0, sigPdfX),
-            y: Math.max(0, sigPdfY),
-            width: sigPdfW,
-            height: sigPdfH
-          });
-        }
-      }
-
       renderCanvas.width = 1;
       renderCanvas.height = 1;
+      return { embeddedImage, imgWidth, imgHeight };
+    }
+
+    let finalPageCount = imageItems.length;
+
+    if (printLayout === 'front-back' || printLayout === 'multi-card' || printLayout === 'multi-card-4') {
+      const cpp = (printLayout === 'multi-card-4') ? 4 : 2;
+      finalPageCount = Math.ceil(imageItems.length / cpp);
+
+      for (let p = 0; p < finalPageCount; p++) {
+        if (onProgress) onProgress(p + 1, finalPageCount);
+
+        const baseSize = PAGE_SIZES[pageSizeKey] || PAGE_SIZES.a4;
+        const pageW = Math.min(baseSize.width, baseSize.height);
+        const pageH = Math.max(baseSize.width, baseSize.height);
+        const page = pdfDoc.addPage([pageW, pageH]);
+
+        const usableW = Math.max(10, pageW - marginPts * 2);
+        const usableH = Math.max(10, pageH - marginPts * 2);
+
+        const cardW = ID_CARD_W;
+        const cardH = ID_CARD_H;
+        const gap = 15 * MM_TO_PT;
+
+        const slots = [];
+        if (cpp === 2) {
+          const totalStackH = cardH * 2 + gap;
+          const startX = marginPts + (usableW - cardW) / 2;
+          const startY = marginPts + (usableH - totalStackH) / 2;
+          slots.push({ x: startX, y: startY, w: cardW, h: cardH });
+          slots.push({ x: startX, y: startY + cardH + gap, w: cardW, h: cardH });
+        } else {
+          const totalGridW = cardW * 2 + gap;
+          const totalGridH = cardH * 2 + gap;
+          const startX = marginPts + (usableW - totalGridW) / 2;
+          const startY = marginPts + (usableH - totalGridH) / 2;
+          slots.push({ x: startX, y: startY, w: cardW, h: cardH });
+          slots.push({ x: startX + cardW + gap, y: startY, w: cardW, h: cardH });
+          slots.push({ x: startX, y: startY + cardH + gap, w: cardW, h: cardH });
+          slots.push({ x: startX + cardW + gap, y: startY + cardH + gap, w: cardW, h: cardH });
+        }
+
+        const startIdx = p * cpp;
+        const endIdx = Math.min(imageItems.length, startIdx + cpp);
+
+        for (let i = startIdx; i < endIdx; i++) {
+          const slot = slots[i - startIdx];
+          const item = imageItems[i];
+          const { embeddedImage, imgWidth, imgHeight } = await embedItemImage(item);
+
+          const scale = Math.min(slot.w / imgWidth, slot.h / imgHeight);
+          const drawW = imgWidth * scale;
+          const drawH = imgHeight * scale;
+          const drawX = slot.x + (slot.w - drawW) / 2;
+          const drawY = slot.y + (slot.h - drawH) / 2;
+          const pdfY = pageH - (drawY + drawH);
+
+          page.drawImage(embeddedImage, {
+            x: drawX,
+            y: pdfY,
+            width: drawW,
+            height: drawH
+          });
+
+          // Cutting guide border
+          const borderPdfY = pageH - (slot.y + slot.h);
+          page.drawRectangle({
+            x: slot.x,
+            y: borderPdfY,
+            width: slot.w,
+            height: slot.h,
+            borderColor: PDFLib.rgb(0.7, 0.7, 0.7),
+            borderWidth: 0.5,
+            borderDashArray: [3, 3]
+          });
+        }
+
+        const primaryItem = imageItems[startIdx];
+        if (primaryItem && primaryItem.signature && primaryItem.signature.active && primaryItem.signature.dataUrl) {
+          const sigEmb = await getEmbeddedSig(primaryItem.signature.dataUrl);
+          if (sigEmb) {
+            const sigPdfW = pageW * primaryItem.signature.relW;
+            const sigPdfH = sigPdfW / (primaryItem.signature.aspectRatio || 1);
+            const sigPdfX = pageW * primaryItem.signature.relX;
+            const sigPdfY = pageH - (pageH * primaryItem.signature.relY) - sigPdfH;
+            page.drawImage(sigEmb, {
+              x: Math.max(0, sigPdfX),
+              y: Math.max(0, sigPdfY),
+              width: sigPdfW,
+              height: sigPdfH
+            });
+          }
+        }
+      }
+    } else if (printLayout === 'id-card') {
+      finalPageCount = imageItems.length;
+
+      for (let i = 0; i < imageItems.length; i++) {
+        if (onProgress) onProgress(i + 1, imageItems.length);
+
+        const item = imageItems[i];
+        const { embeddedImage, imgWidth, imgHeight } = await embedItemImage(item);
+
+        const baseSize = PAGE_SIZES[pageSizeKey] || PAGE_SIZES.a4;
+        const pageW = Math.min(baseSize.width, baseSize.height);
+        const pageH = Math.max(baseSize.width, baseSize.height);
+        const page = pdfDoc.addPage([pageW, pageH]);
+
+        const usableW = Math.max(10, pageW - marginPts * 2);
+        const usableH = Math.max(10, pageH - marginPts * 2);
+
+        let boxW = ID_CARD_W;
+        let boxH = ID_CARD_H;
+        if (imgHeight > imgWidth) {
+          boxW = ID_CARD_H;
+          boxH = ID_CARD_W;
+        }
+
+        const slotX = marginPts + (usableW - boxW) / 2;
+        const slotY = marginPts + (usableH - boxH) / 2;
+
+        const scale = Math.min(boxW / imgWidth, boxH / imgHeight);
+        const drawW = imgWidth * scale;
+        const drawH = imgHeight * scale;
+        const drawX = slotX + (boxW - drawW) / 2;
+        const drawY = slotY + (boxH - drawH) / 2;
+        const pdfY = pageH - (drawY + drawH);
+
+        page.drawImage(embeddedImage, {
+          x: drawX,
+          y: pdfY,
+          width: drawW,
+          height: drawH
+        });
+
+        // Cutting guide border
+        const borderPdfY = pageH - (slotY + boxH);
+        page.drawRectangle({
+          x: slotX,
+          y: borderPdfY,
+          width: boxW,
+          height: boxH,
+          borderColor: PDFLib.rgb(0.7, 0.7, 0.7),
+          borderWidth: 0.5,
+          borderDashArray: [3, 3]
+        });
+
+        const itemSig = (item.signature && item.signature.active && item.signature.dataUrl) ? item.signature : null;
+        if (itemSig) {
+          const sigEmb = await getEmbeddedSig(itemSig.dataUrl);
+          if (sigEmb) {
+            const sigPdfW = pageW * itemSig.relW;
+            const sigPdfH = sigPdfW / (itemSig.aspectRatio || 1);
+            const sigPdfX = pageW * itemSig.relX;
+            const sigPdfY = pageH - (pageH * itemSig.relY) - sigPdfH;
+            page.drawImage(sigEmb, {
+              x: Math.max(0, sigPdfX),
+              y: Math.max(0, sigPdfY),
+              width: sigPdfW,
+              height: sigPdfH
+            });
+          }
+        }
+      }
+    } else {
+      // Standard Fit layout
+      finalPageCount = imageItems.length;
+
+      for (let i = 0; i < imageItems.length; i++) {
+        if (onProgress) onProgress(i + 1, imageItems.length);
+
+        const item = imageItems[i];
+        const { embeddedImage, imgWidth, imgHeight } = await embedItemImage(item);
+
+        let pageW, pageH;
+        const itemOrientation = item.orientation || globalOrientation;
+
+        if (pageSizeKey === 'fit') {
+          pageW = imgWidth + marginPts * 2;
+          pageH = imgHeight + marginPts * 2;
+        } else {
+          const baseSize = PAGE_SIZES[pageSizeKey] || PAGE_SIZES.a4;
+          let isLandscape = false;
+
+          if (itemOrientation === 'landscape') {
+            isLandscape = true;
+          } else if (itemOrientation === 'portrait') {
+            isLandscape = false;
+          } else {
+            isLandscape = imgWidth > imgHeight;
+          }
+
+          if (isLandscape) {
+            pageW = Math.max(baseSize.width, baseSize.height);
+            pageH = Math.min(baseSize.width, baseSize.height);
+          } else {
+            pageW = Math.min(baseSize.width, baseSize.height);
+            pageH = Math.max(baseSize.width, baseSize.height);
+          }
+        }
+
+        const page = pdfDoc.addPage([pageW, pageH]);
+
+        const availW = Math.max(1, pageW - marginPts * 2);
+        const availH = Math.max(1, pageH - marginPts * 2);
+
+        const scale = Math.min(availW / imgWidth, availH / imgHeight);
+        const drawW = imgWidth * scale;
+        const drawH = imgHeight * scale;
+
+        const drawX = marginPts + (availW - drawW) / 2;
+        const drawY = marginPts + (availH - drawH) / 2;
+
+        page.drawImage(embeddedImage, {
+          x: drawX,
+          y: drawY,
+          width: drawW,
+          height: drawH
+        });
+
+        const itemSig = (item.signature && item.signature.active && item.signature.dataUrl)
+          ? item.signature
+          : (signatureData && signatureData.active && signatureData.dataUrl && !imageItems.some(it => it.signature && it.signature.active) ? signatureData : null);
+
+        if (itemSig) {
+          const sigEmb = await getEmbeddedSig(itemSig.dataUrl);
+          if (sigEmb) {
+            const sigPdfW = pageW * itemSig.relW;
+            const sigPdfH = sigPdfW / (itemSig.aspectRatio || 1);
+            const sigPdfX = pageW * itemSig.relX;
+            const sigPdfY = pageH - (pageH * itemSig.relY) - sigPdfH;
+
+            page.drawImage(sigEmb, {
+              x: Math.max(0, sigPdfX),
+              y: Math.max(0, sigPdfY),
+              width: sigPdfW,
+              height: sigPdfH
+            });
+          }
+        }
+      }
     }
 
     const pdfBytes = await pdfDoc.save();
@@ -362,7 +536,7 @@ const MobileImageToPdf = (() => {
       blob,
       filename: options.filename || 'images_to_pdf.pdf',
       size: blob.size,
-      pageCount: imageItems.length
+      pageCount: finalPageCount
     };
   }
 

@@ -593,13 +593,23 @@
                     <option value="landscape">Landscape</option>
                   </select>
                 </div>
-                <div class="mobile-control-group">
+                <div class="mobile-control-group" style="margin-bottom: 8px;">
                   <label class="mobile-control-label">Page Margins</label>
                   <select id="margin-image-to-pdf" class="mobile-select">
                     <option value="none" selected>No Margins (Edge to Edge)</option>
                     <option value="small">Small Margin (18 pt)</option>
                     <option value="medium">Medium Margin (36 pt)</option>
                     <option value="large">Large Margin (54 pt)</option>
+                  </select>
+                </div>
+                <div class="mobile-control-group">
+                  <label class="mobile-control-label">Print Layout / ID Card Sizing</label>
+                  <select id="layout-image-to-pdf" class="mobile-select">
+                    <option value="front-back" selected>ID Card: Front &amp; Back (Vertical on A4)</option>
+                    <option value="fit">Fit to Page (Full Sheet)</option>
+                    <option value="id-card">Single ID Card (85.6 × 54 mm)</option>
+                    <option value="multi-card">2 Cards per Page (Front &amp; Back Stacked on A4)</option>
+                    <option value="multi-card-4">4 Cards per Page (2×2 Grid on A4)</option>
                   </select>
                 </div>
               </div>
