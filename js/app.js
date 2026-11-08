@@ -1002,11 +1002,23 @@ const App = (() => {
 
     const apkDownloadBtn = document.getElementById('apk-download-btn');
     const mobileApkDownloadBtn = document.getElementById('mobile-apk-download-btn');
+    const modalDownloadBtn = document.getElementById('apk-modal-disabled-download-btn');
     if (apkDownloadBtn) {
       apkDownloadBtn.addEventListener('click', handleGetApkClick);
     }
     if (mobileApkDownloadBtn) {
       mobileApkDownloadBtn.addEventListener('click', handleGetApkClick);
+    }
+    if (modalDownloadBtn) {
+      modalDownloadBtn.removeAttribute('disabled');
+      modalDownloadBtn.removeAttribute('aria-disabled');
+      modalDownloadBtn.style.opacity = '1';
+      modalDownloadBtn.style.cursor = 'pointer';
+      modalDownloadBtn.style.pointerEvents = 'auto';
+      modalDownloadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        triggerApkDownload();
+      });
     }
   }
 
@@ -1017,6 +1029,22 @@ const App = (() => {
       }
     } catch (e) {}
     return 'https://raw.githubusercontent.com/Abdur07-svg/FileForge/main/FileForge-Mobile.apk';
+  }
+
+  function triggerApkDownload() {
+    if (window.Utils && typeof window.Utils.showToast === 'function') {
+      window.Utils.showToast('Starting FileForge-Mobile.apk download...', 'info', 3000);
+    }
+    const apkUrl = getApkDownloadUrl();
+    const link = document.createElement('a');
+    link.href = apkUrl;
+    link.setAttribute('download', 'FileForge-Mobile.apk');
+    link.setAttribute('target', '_blank');
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (link.parentElement) link.parentElement.removeChild(link);
+    }, 1000);
   }
 
   function getDeviceType() {
@@ -1037,44 +1065,7 @@ const App = (() => {
 
   function handleGetApkClick(e) {
     if (e) e.preventDefault();
-    const device = getDeviceType();
-
-    if (device === 'android') {
-
-      if (window.Utils && typeof window.Utils.showToast === 'function') {
-        window.Utils.showToast('Starting FileForge-Mobile.apk download...', 'info', 3000);
-      }
-      const apkUrl = getApkDownloadUrl();
-      const link = document.createElement('a');
-      link.href = apkUrl;
-      link.setAttribute('download', 'FileForge-Mobile.apk');
-      link.setAttribute('target', '_blank');
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        if (link.parentElement) link.parentElement.removeChild(link);
-      }, 1000);
-    } else if (device === 'ios') {
-
-      const msg1 = document.getElementById('apk-modal-message-1');
-      const msg2 = document.getElementById('apk-modal-message-2');
-      const tag = document.getElementById('apk-modal-device-tag');
-      if (msg1) msg1.textContent = 'The FileForge APK is designed for Android devices.';
-      if (msg2) msg2.textContent = 'You can continue using FileForge directly in your mobile browser.';
-      if (tag) tag.textContent = 'Android devices only';
-
-      openModal('apk-info-modal');
-    } else {
-
-      const msg1 = document.getElementById('apk-modal-message-1');
-      const msg2 = document.getElementById('apk-modal-message-2');
-      const tag = document.getElementById('apk-modal-device-tag');
-      if (msg1) msg1.textContent = 'This APK is designed specifically for mobile/Android devices.';
-      if (msg2) msg2.textContent = 'Please use FileForge directly in your desktop browser.';
-      if (tag) tag.textContent = 'Mobile devices only';
-
-      openModal('apk-info-modal');
-    }
+    triggerApkDownload();
   }
 
   function openModal(id) {

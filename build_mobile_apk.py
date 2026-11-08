@@ -879,6 +879,10 @@ def build_mobile_apk():
     root_apk = os.path.join(BASE_DIR, 'FileForge-Mobile.apk')
     shutil.copy2(final_apk, root_apk)
 
+    assets_apk = os.path.join(BASE_DIR, 'assets', 'FileForge-Mobile.apk')
+    if os.path.exists(os.path.join(BASE_DIR, 'assets')):
+        shutil.copy2(final_apk, assets_apk)
+
     print("\n==================================================")
     print("   FILEFORGE MOBILE RELEASE APK READY!")
     print("==================================================")

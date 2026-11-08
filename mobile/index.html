@@ -22,56 +22,200 @@
 
   <div class="mobile-app-wrap">
 
-    <header class="mobile-header">
-      <a href="#" class="mobile-brand mobile-home-btn" aria-label="FileForge Mobile Home">
-        <img src="assets/logo.svg" alt="FileForge Logo" class="mobile-brand-logo">
-        <span class="mobile-brand-name">FileForge</span>
-      </a>
+    <header class="mobile-header" id="mobile-top-header">
+      <div class="mobile-brand-wrap">
+        <a href="#home" class="ff-brand" id="ff-brand-link" aria-label="FileForge Mobile Home">
+          <span class="ff-brand-dot">.</span><span class="ff-brand-name">fileforge</span>
+        </a>
+      </div>
       <div class="mobile-header-actions">
-        <div class="mobile-badge-private">
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"/></svg>
-          <span>100% Local</span>
-        </div>
-        <button type="button" id="btn-open-settings" class="mobile-settings-btn" aria-label="Settings and Information" title="Settings">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button type="button" id="btn-header-settings" class="mobile-icon-btn" aria-label="Settings and Preferences" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
         </button>
+        <button type="button" id="btn-kebab-menu" class="hidden" aria-hidden="true"></button>
+        <button type="button" id="btn-grid-menu" class="hidden" aria-hidden="true"></button>
+        <button type="button" id="btn-open-settings" class="hidden" aria-hidden="true"></button>
       </div>
     </header>
 
     <main class="mobile-main">
 
       <div id="mobile-home-view" class="mobile-view-enter">
-        <div class="mobile-hero-tagline">
-          <h1 class="hero-tagline-title">Mobile File Tools</h1>
-          <p class="hero-tagline-sub">Simple • Private • Processed on your device</p>
-        </div>
 
-        <div class="mobile-search-wrap">
-          <svg class="mobile-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="mobile-search-input" class="mobile-search-input" placeholder="Search 15 mobile tools..." aria-label="Search tools">
-          <button type="button" id="mobile-search-clear" class="mobile-search-clear hidden" aria-label="Clear search">✕</button>
-        </div>
+        <section id="ff-screen-home" class="ff-screen active">
+          <div class="ff-home-hero">
+            <h1 class="ff-hero-heading">
+              <span class="ff-hero-dot">.</span>fileforge
+            </h1>
 
-        <div class="mobile-filter-chips" role="tablist" aria-label="Tool Categories">
-          <button type="button" class="mobile-filter-chip active" data-category="all" role="tab" aria-selected="true">All Tools</button>
-          <button type="button" class="mobile-filter-chip" data-category="pdf" role="tab" aria-selected="false">PDF Tools</button>
-          <button type="button" class="mobile-filter-chip" data-category="image" role="tab" aria-selected="false">Image Tools</button>
-          <button type="button" class="mobile-filter-chip" data-category="archive" role="tab" aria-selected="false">Archive &amp; ZIP</button>
-        </div>
+            <div class="ff-hero-action-box">
+              <button type="button" id="btn-hero-upload" class="ff-btn-upload" aria-label="Upload a File">
+                <span class="ff-btn-upload-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <polyline points="9 15 12 12 15 15"></polyline>
+                  </svg>
+                </span>
+                <span class="ff-btn-upload-text">Upload a File</span>
+              </button>
+              <input type="file" id="hero-universal-input" class="hidden" accept="*/*">
+              <p class="ff-hero-meta">Maximum file size 20 MB</p>
+            </div>
 
-        <div id="mobile-tool-grid" class="mobile-tool-grid">
+            <div class="ff-home-footer-text">FileForge Mobile • 100% Client-Side Privacy</div>
+          </div>
 
-        </div>
+          <div class="ff-curved-decoration" aria-hidden="true">
+            <svg viewBox="0 0 375 90" fill="none" preserveAspectRatio="none">
+              <path d="M0,15 C90,75 285,75 375,28 L375,90 L0,90 Z" fill="currentColor"/>
+            </svg>
+          </div>
 
-        <div id="mobile-search-empty" class="mobile-search-empty hidden">
-          <p>No tools matched your search.</p>
-        </div>
+          <button type="button" id="ff-fab-home" class="ff-floating-circle-btn" aria-label="Explore Tools Dashboard" title="Dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </button>
+        </section>
+
+
+        <section id="ff-screen-dashboard" class="ff-screen hidden">
+
+          <div class="ff-segmented-nav" role="tablist" aria-label="Tools Navigation">
+            <button type="button" id="ff-tab-recent" class="ff-segment-tab" role="tab" aria-selected="false">Recent</button>
+            <button type="button" id="ff-tab-all" class="ff-segment-tab active" role="tab" aria-selected="true">All (51)</button>
+          </div>
+
+          <div id="ff-recent-section" class="ff-recent-section hidden">
+            <div class="ff-section-title">RECENT EDITS</div>
+            <div id="ff-recent-list" class="ff-recent-list">
+            </div>
+          </div>
+
+          <div id="ff-search-container" class="ff-search-container hidden">
+            <div class="mobile-search-wrap">
+              <svg class="mobile-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="mobile-search-input" class="mobile-search-input" placeholder="Search all 51 tools..." aria-label="Search tools">
+              <button type="button" id="mobile-search-clear" class="mobile-search-clear hidden" aria-label="Clear search">✕</button>
+            </div>
+            <div id="ff-search-results-list" class="ff-search-results-list hidden"></div>
+          </div>
+
+          <div id="ff-category-grid" class="ff-category-grid">
+
+            <div class="ff-folder-card" data-category="pdf" role="button" tabindex="0">
+              <div class="ff-folder-graphic" style="--folder-color: #ff5733;">
+                <svg viewBox="0 0 76 60" width="68" height="54" fill="none" class="folder-svg">
+                  <path d="M6 14C6 9.58 9.58 6 14 6H28C30.4 6 32.6 7.2 34 9.2L36.8 13H68C72.42 13 76 16.58 76 21V48C76 52.42 72.42 56 68 56H14C9.58 56 6 52.42 6 48V14Z" fill="currentColor"/>
+                  <text x="41" y="39" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">PDF</text>
+                </svg>
+              </div>
+              <div class="ff-folder-title">PDF Tools (16)</div>
+            </div>
+
+            <div class="ff-folder-card" data-category="document" role="button" tabindex="0">
+              <div class="ff-folder-graphic" style="--folder-color: #ff9f1c;">
+                <svg viewBox="0 0 76 60" width="68" height="54" fill="none" class="folder-svg">
+                  <path d="M6 14C6 9.58 9.58 6 14 6H28C30.4 6 32.6 7.2 34 9.2L36.8 13H68C72.42 13 76 16.58 76 21V48C76 52.42 72.42 56 68 56H14C9.58 56 6 52.42 6 48V14Z" fill="currentColor"/>
+                  <text x="41" y="39" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">DOC</text>
+                </svg>
+              </div>
+              <div class="ff-folder-title">Document Tools (5)</div>
+            </div>
+
+            <div class="ff-folder-card" data-category="image" role="button" tabindex="0">
+              <div class="ff-folder-graphic" style="--folder-color: #2f80ed;">
+                <svg viewBox="0 0 76 60" width="68" height="54" fill="none" class="folder-svg">
+                  <path d="M6 14C6 9.58 9.58 6 14 6H28C30.4 6 32.6 7.2 34 9.2L36.8 13H68C72.42 13 76 16.58 76 21V48C76 52.42 72.42 56 68 56H14C9.58 56 6 52.42 6 48V14Z" fill="currentColor"/>
+                  <text x="41" y="39" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">IMG</text>
+                </svg>
+              </div>
+              <div class="ff-folder-title">Image Tools (15)</div>
+            </div>
+
+            <div class="ff-folder-card" data-category="utilities" role="button" tabindex="0">
+              <div class="ff-folder-graphic" style="--folder-color: #00bfa5;">
+                <svg viewBox="0 0 76 60" width="68" height="54" fill="none" class="folder-svg">
+                  <path d="M6 14C6 9.58 9.58 6 14 6H28C30.4 6 32.6 7.2 34 9.2L36.8 13H68C72.42 13 76 16.58 76 21V48C76 52.42 72.42 56 68 56H14C9.58 56 6 52.42 6 48V14Z" fill="currentColor"/>
+                  <text x="41" y="39" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">UTIL</text>
+                </svg>
+              </div>
+              <div class="ff-folder-title">File Utilities (7)</div>
+            </div>
+
+            <div class="ff-folder-card" data-category="compression" role="button" tabindex="0">
+              <div class="ff-folder-graphic" style="--folder-color: #00c2ff;">
+                <svg viewBox="0 0 76 60" width="68" height="54" fill="none" class="folder-svg">
+                  <path d="M6 14C6 9.58 9.58 6 14 6H28C30.4 6 32.6 7.2 34 9.2L36.8 13H68C72.42 13 76 16.58 76 21V48C76 52.42 72.42 56 68 56H14C9.58 56 6 52.42 6 48V14Z" fill="currentColor"/>
+                  <text x="41" y="39" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">ZIP</text>
+                </svg>
+              </div>
+              <div class="ff-folder-title">Compression Tools (3)</div>
+            </div>
+
+            <div class="ff-folder-card" data-category="conversion" role="button" tabindex="0">
+              <div class="ff-folder-graphic" style="--folder-color: #22c55e;">
+                <svg viewBox="0 0 76 60" width="68" height="54" fill="none" class="folder-svg">
+                  <path d="M6 14C6 9.58 9.58 6 14 6H28C30.4 6 32.6 7.2 34 9.2L36.8 13H68C72.42 13 76 16.58 76 21V48C76 52.42 72.42 56 68 56H14C9.58 56 6 52.42 6 48V14Z" fill="currentColor"/>
+                  <text x="41" y="39" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">CNV</text>
+                </svg>
+              </div>
+              <div class="ff-folder-title">Conversion Tools (14)</div>
+            </div>
+
+            <div class="ff-folder-card" data-category="editing" role="button" tabindex="0">
+              <div class="ff-folder-graphic" style="--folder-color: #8b5cf6;">
+                <svg viewBox="0 0 76 60" width="68" height="54" fill="none" class="folder-svg">
+                  <path d="M6 14C6 9.58 9.58 6 14 6H28C30.4 6 32.6 7.2 34 9.2L36.8 13H68C72.42 13 76 16.58 76 21V48C76 52.42 72.42 56 68 56H14C9.58 56 6 52.42 6 48V14Z" fill="currentColor"/>
+                  <text x="41" y="39" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">EDIT</text>
+                </svg>
+              </div>
+              <div class="ff-folder-title">Editing & Organizing (10)</div>
+            </div>
+
+            <div class="ff-folder-card" data-category="security" role="button" tabindex="0">
+              <div class="ff-folder-graphic" style="--folder-color: #f43f5e;">
+                <svg viewBox="0 0 76 60" width="68" height="54" fill="none" class="folder-svg">
+                  <path d="M6 14C6 9.58 9.58 6 14 6H28C30.4 6 32.6 7.2 34 9.2L36.8 13H68C72.42 13 76 16.58 76 21V48C76 52.42 72.42 56 68 56H14C9.58 56 6 52.42 6 48V14Z" fill="currentColor"/>
+                  <text x="41" y="39" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">SEC</text>
+                </svg>
+              </div>
+              <div class="ff-folder-title">Security & Privacy (5)</div>
+            </div>
+
+          </div>
+
+          <div class="hidden">
+            <div class="mobile-filter-chips" role="tablist">
+              <button type="button" class="mobile-filter-chip active" data-category="all">All</button>
+            </div>
+            <div id="mobile-tool-grid" class="mobile-tool-grid"></div>
+            <div id="mobile-search-empty" class="mobile-search-empty hidden">
+              <p>No tools matched your search.</p>
+            </div>
+          </div>
+
+          <div class="ff-dash-footer-text">
+            FileForge Mobile • 100% Client-Side Privacy
+          </div>
+
+          <button type="button" id="ff-fab-search" class="ff-floating-circle-btn" aria-label="Search Tools" title="Search Tools">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </section>
+
       </div>
 
       <div id="mobile-settings-view" class="mobile-view-enter hidden">
@@ -179,6 +323,7 @@
           <div>Version 1.0.0 (Release Build) • Developed by Abdur</div>
           <div style="margin-top: 4px; font-size: 0.76rem; color: var(--text-muted);">&copy; 2026 FileForge • 100% Client-Side Privacy</div>
         </div>
+        <div class="settings-footer-text">FileForge Mobile • 100% Client-Side Privacy</div>
       </div>
 
       <div id="mobile-about-view" class="mobile-view-enter hidden">
@@ -245,6 +390,7 @@
             <div><strong>Copyright:</strong> &copy; 2026 FileForge</div>
           </div>
         </div>
+        <div class="settings-footer-text">FileForge Mobile • 100% Client-Side Privacy</div>
       </div>
 
       <div id="mobile-privacy-view" class="mobile-view-enter hidden">
@@ -324,6 +470,7 @@
             For privacy inquiries, contact: <a href="mailto:support@fileforge.app" style="color: var(--color-primary);">support@fileforge.app</a>
           </p>
         </div>
+        <div class="settings-footer-text">FileForge Mobile • 100% Client-Side Privacy</div>
       </div>
 
       <div id="mobile-terms-view" class="mobile-view-enter hidden">
@@ -378,6 +525,7 @@
           <h3>13. Contact</h3>
           <p>Email: <a href="mailto:support@fileforge.app" style="color: var(--color-primary);">support@fileforge.app</a></p>
         </div>
+        <div class="settings-footer-text">FileForge Mobile • 100% Client-Side Privacy</div>
       </div>
 
       <div id="mobile-tool-container" class="hidden">
@@ -1666,6 +1814,55 @@
 
     <div id="mobile-toast-container" class="mobile-toast-container" aria-live="polite"></div>
 
+    <div id="ff-category-sheet-modal" class="ff-sheet-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="ff-sheet-cat-title">
+      <div class="ff-sheet-dialog">
+        <div class="ff-sheet-handle"></div>
+        <div class="ff-sheet-header">
+          <div class="ff-sheet-header-left">
+            <div id="ff-sheet-folder-badge" class="ff-sheet-folder-badge">
+              <svg viewBox="0 0 76 60" width="34" height="27" fill="currentColor">
+                <path d="M6 14C6 9.58 9.58 6 14 6H28C30.4 6 32.6 7.2 34 9.2L36.8 13H68C72.42 13 76 16.58 76 21V48C76 52.42 72.42 56 68 56H14C9.58 56 6 52.42 6 48V14Z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 id="ff-sheet-cat-title" class="ff-sheet-title">PDF Tools</h3>
+              <div id="ff-sheet-cat-count" class="ff-sheet-sub">16 tools available</div>
+            </div>
+          </div>
+          <button type="button" id="btn-close-category-sheet" class="ff-sheet-close-btn" aria-label="Close">✕</button>
+        </div>
+
+        <div id="ff-sheet-tools-list" class="ff-sheet-tools-list">
+        </div>
+      </div>
+    </div>
+
+    <div id="ff-upload-sheet-modal" class="ff-sheet-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="ff-upload-sheet-title">
+      <div class="ff-sheet-dialog">
+        <div class="ff-sheet-handle"></div>
+        <div class="ff-sheet-header">
+          <div class="ff-sheet-header-left">
+            <div class="ff-sheet-folder-badge" style="color: #ff5733;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="24" height="24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <polyline points="9 15 12 12 15 15"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h3 id="ff-upload-sheet-title" class="ff-sheet-title">File Selected</h3>
+              <div id="ff-upload-sheet-meta" class="ff-sheet-sub">Choose a tool to process your file</div>
+            </div>
+          </div>
+          <button type="button" id="btn-close-upload-sheet" class="ff-sheet-close-btn" aria-label="Close">✕</button>
+        </div>
+
+        <div id="ff-upload-tools-list" class="ff-sheet-tools-list">
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/utils.js"></script>
@@ -1674,5 +1871,764 @@
   <script src="js/image-to-pdf.js"></script>
   <script src="js/zip-engine.js"></script>
   <script src="js/app.js"></script>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const CATEGORIES = [
+        {
+          id: 'pdf',
+          name: 'PDF Tools',
+          tag: 'PDF',
+          color: '#ff5733',
+          count: 16,
+          tools: [
+            { id: 'pdf-compressor', name: 'PDF Compressor', desc: 'Reduce PDF file size', implemented: true },
+            { id: 'pdf-merger', name: 'PDF Merger', desc: 'Combine multiple PDFs into one', implemented: true },
+            { id: 'pdf-splitter', name: 'PDF Splitter', desc: 'Divide PDF by page ranges', implemented: true },
+            { id: 'pdf-page-extractor', name: 'PDF Page Extractor', desc: 'Extract specific pages from PDF', implemented: true },
+            { id: 'pdf-to-jpg', name: 'PDF to JPG', desc: 'Extract PDF pages as JPG images', implemented: true },
+            { id: 'pdf-to-png', name: 'PDF to PNG', desc: 'Extract PDF pages as PNG images', implemented: true },
+            { id: 'pdf-protect', name: 'PDF Protect', desc: 'Encrypt PDF with strong password', implemented: false },
+            { id: 'pdf-rotate', name: 'PDF Rotate', desc: 'Rotate pages visually by angle', implemented: false },
+            { id: 'pdf-delete-pages', name: 'Delete Pages', desc: 'Remove unwanted pages from PDF', implemented: false },
+            { id: 'pdf-reorder-pages', name: 'Reorder Pages', desc: 'Reorder pages via drag and drop', implemented: false },
+            { id: 'pdf-watermark', name: 'PDF Watermark', desc: 'Stamp text or logo on PDF pages', implemented: false },
+            { id: 'pdf-page-number', name: 'Page Numbers', desc: 'Insert headers, footers & numbers', implemented: false },
+            { id: 'pdf-to-text', name: 'PDF to Text', desc: 'Extract plain text from PDF documents', implemented: false },
+            { id: 'pdf-metadata-editor', name: 'Metadata Editor', desc: 'Edit title, author and document tags', implemented: false },
+            { id: 'pdf-crop', name: 'PDF Crop', desc: 'Trim document margins and borders', implemented: false },
+            { id: 'pdf-grayscale', name: 'PDF Grayscale', desc: 'Convert colored PDF to black & white', implemented: false }
+          ]
+        },
+        {
+          id: 'document',
+          name: 'Document Tools',
+          tag: 'DOC',
+          color: '#ff9f1c',
+          count: 5,
+          tools: [
+            { id: 'image-to-pdf', name: 'Image to PDF', desc: 'Convert photos to clean PDF document', implemented: true },
+            { id: 'pdf-to-text', name: 'PDF to Text', desc: 'Extract readable document text', implemented: false },
+            { id: 'file-previewer', name: 'Universal File Previewer', desc: 'Preview PDF, images and text files', implemented: false },
+            { id: 'file-analyzer', name: 'File Size Analyzer', desc: 'Deep metrics, MIME & SHA-256 hash', implemented: false },
+            { id: 'pdf-metadata-editor', name: 'PDF Metadata Editor', desc: 'Inspect and edit document properties', implemented: false }
+          ]
+        },
+        {
+          id: 'image',
+          name: 'Image Tools',
+          tag: 'IMG',
+          color: '#2f80ed',
+          count: 15,
+          tools: [
+            { id: 'image-compressor', name: 'Image Compressor', desc: 'Reduce image file size quickly', implemented: true },
+            { id: 'image-resizer', name: 'Image Resizer', desc: 'Interactive resize with finger touch', implemented: true },
+            { id: 'image-converter', name: 'Image Converter', desc: 'Convert JPG, PNG, WebP formats', implemented: true },
+            { id: 'jpg-to-png', name: 'JPG to PNG', desc: 'Convert JPG to lossless PNG', implemented: true },
+            { id: 'png-to-jpg', name: 'PNG to JPG', desc: 'Convert PNG to compact JPG', implemented: true },
+            { id: 'image-to-pdf', name: 'Image to PDF', desc: 'Convert photos to PDF document', implemented: true },
+            { id: 'image-cropper', name: 'Image Cropper', desc: 'Crop standard and custom aspect ratios', implemented: false },
+            { id: 'image-rotate', name: 'Image Rotate', desc: 'Rotate images by 90° or custom angles', implemented: false },
+            { id: 'image-flip', name: 'Image Flip', desc: 'Horizontal and vertical mirror', implemented: false },
+            { id: 'image-watermark', name: 'Image Watermark', desc: 'Stamp custom logo or text on photo', implemented: false },
+            { id: 'image-grayscale', name: 'Image Grayscale', desc: 'Black & white photo effect', implemented: false },
+            { id: 'image-color-picker', name: 'Color Picker', desc: 'Eyedropper tool & palette picker', implemented: false },
+            { id: 'image-preview-tool', name: 'Image Previewer', desc: 'Inspector with pan and zoom controls', implemented: false },
+            { id: 'image-to-base64', name: 'Image to Base64', desc: 'Generate Data URI and embed code', implemented: false },
+            { id: 'base64-to-image', name: 'Base64 to Image', desc: 'Decode base64 string to image file', implemented: false }
+          ]
+        },
+        {
+          id: 'utilities',
+          name: 'File Utilities',
+          tag: 'UTIL',
+          color: '#00bfa5',
+          count: 7,
+          tools: [
+            { id: 'zip-creator', name: 'ZIP File Creator', desc: 'Create ZIP archive with files & folders', implemented: true },
+            { id: 'zip-extractor', name: 'ZIP File Extractor', desc: 'Unzip archive and inspect files', implemented: true },
+            { id: 'download-all-zip', name: 'Download All as ZIP', desc: 'Pack multiple files to a ZIP', implemented: true },
+            { id: 'file-analyzer', name: 'File Size Analyzer', desc: 'Detailed file metrics and hashing', implemented: false },
+            { id: 'file-previewer', name: 'Universal File Previewer', desc: 'Preview any file format instantly', implemented: false },
+            { id: 'file-renamer', name: 'Batch File Renamer', desc: 'Custom patterns, numbering & prefix', implemented: false },
+            { id: 'batch-processor', name: 'Batch File Processor', desc: 'Process multiple files simultaneously', implemented: false }
+          ]
+        },
+        {
+          id: 'compression',
+          name: 'Compression Tools',
+          tag: 'ZIP',
+          color: '#00c2ff',
+          count: 3,
+          tools: [
+            { id: 'pdf-compressor', name: 'PDF Compressor', desc: 'Compress and reduce PDF size', implemented: true },
+            { id: 'image-compressor', name: 'Image Compressor', desc: 'Reduce image file size quickly', implemented: true },
+            { id: 'zip-creator', name: 'ZIP File Creator', desc: 'Compress multiple files into ZIP archive', implemented: true }
+          ]
+        },
+        {
+          id: 'conversion',
+          name: 'Conversion Tools',
+          tag: 'CNV',
+          color: '#22c55e',
+          count: 14,
+          tools: [
+            { id: 'image-to-pdf', name: 'Image to PDF', desc: 'Convert multiple photos into a single PDF', implemented: true },
+            { id: 'pdf-to-jpg', name: 'PDF to JPG', desc: 'Extract PDF pages as JPG images', implemented: true },
+            { id: 'pdf-to-png', name: 'PDF to PNG', desc: 'Extract PDF pages as PNG images', implemented: true },
+            { id: 'jpg-to-png', name: 'JPG to PNG', desc: 'Convert JPG to lossless PNG', implemented: true },
+            { id: 'png-to-jpg', name: 'PNG to JPG', desc: 'Convert PNG to compact JPG', implemented: true },
+            { id: 'image-converter', name: 'Image Converter', desc: 'Convert JPG, PNG, WebP formats', implemented: true },
+            { id: 'jpg-to-webp', name: 'JPG to WebP', desc: 'Modern lightweight WebP conversion', implemented: false },
+            { id: 'webp-to-jpg', name: 'WebP to JPG', desc: 'Convert modern WebP to JPEG', implemented: false },
+            { id: 'webp-to-png', name: 'WebP to PNG', desc: 'Convert WebP with alpha to PNG', implemented: false },
+            { id: 'png-to-webp', name: 'PNG to WebP', desc: 'Transparent WebP graphics', implemented: false },
+            { id: 'gif-to-jpg', name: 'GIF to JPG', desc: 'Extract first frame to JPG image', implemented: false },
+            { id: 'gif-to-png', name: 'GIF to PNG', desc: 'Extract frame to crisp PNG image', implemented: false },
+            { id: 'svg-to-png', name: 'SVG to PNG', desc: 'Rasterize SVG vector to high-res PNG', implemented: false },
+            { id: 'bmp-to-jpg', name: 'BMP to JPG', desc: 'Convert bitmap graphic to JPG photo', implemented: false }
+          ]
+        },
+        {
+          id: 'editing',
+          name: 'Editing & Organizing',
+          tag: 'EDIT',
+          color: '#8b5cf6',
+          count: 10,
+          tools: [
+            { id: 'pdf-merger', name: 'PDF Merger', desc: 'Combine multiple PDF files into one', implemented: true },
+            { id: 'pdf-splitter', name: 'PDF Splitter', desc: 'Divide PDF by page ranges', implemented: true },
+            { id: 'pdf-page-extractor', name: 'PDF Page Extractor', desc: 'Extract specific pages from PDF', implemented: true },
+            { id: 'image-resizer', name: 'Image Resizer', desc: 'Touch & drag resize with finger', implemented: true },
+            { id: 'pdf-rotate', name: 'PDF Rotate', desc: 'Rotate orientation of pages', implemented: false },
+            { id: 'pdf-delete-pages', name: 'Delete Pages', desc: 'Remove unwanted pages from document', implemented: false },
+            { id: 'pdf-reorder-pages', name: 'Reorder Pages', desc: 'Reorder pages visually', implemented: false },
+            { id: 'image-cropper', name: 'Image Cropper', desc: 'Crop standard and custom photos', implemented: false },
+            { id: 'image-rotate', name: 'Image Rotate', desc: 'Rotate image angles freely', implemented: false },
+            { id: 'image-flip', name: 'Image Flip', desc: 'Mirror photo horizontal or vertical', implemented: false }
+          ]
+        },
+        {
+          id: 'security',
+          name: 'Security & Privacy',
+          tag: 'SEC',
+          color: '#f43f5e',
+          count: 5,
+          tools: [
+            { id: 'pdf-protect', name: 'PDF Protect', desc: 'Encrypt PDF with custom password', implemented: false },
+            { id: 'pdf-watermark', name: 'PDF Watermark', desc: 'Stamp document with text or logo', implemented: false },
+            { id: 'image-watermark', name: 'Image Watermark', desc: 'Stamp photo with watermark', implemented: false },
+            { id: 'image-metadata-remover', name: 'Metadata Remover', desc: 'Strip EXIF & GPS location metadata', implemented: false },
+            { id: 'pdf-metadata-editor', name: 'Metadata Editor', desc: 'Edit or remove PDF author and info tags', implemented: false }
+          ]
+        }
+      ];
+
+      const ALL_TOOLS_MAP = new Map();
+      CATEGORIES.forEach(cat => {
+        cat.tools.forEach(t => {
+          if (!ALL_TOOLS_MAP.has(t.id)) {
+            ALL_TOOLS_MAP.set(t.id, t);
+          }
+        });
+      });
+
+      let currentScreen = 'home';
+      let screenBeforeSettings = 'home';
+      let lastVisitedTool = false;
+      let uploadedFileStash = null;
+
+      function haptic(type) {
+        if (window.MobileUtils && typeof MobileUtils.triggerHaptic === 'function') {
+          MobileUtils.triggerHaptic(type || 'light');
+        }
+      }
+
+      function showToast(message, type) {
+        if (window.MobileUtils && typeof MobileUtils.showToast === 'function') {
+          MobileUtils.showToast(message, type || 'info');
+          return;
+        }
+        const container = document.getElementById('mobile-toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'mobile-toast ' + (type ? 'toast-' + type : '');
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.classList.add('fade-out');
+          setTimeout(() => toast.remove(), 250);
+        }, 2800);
+      }
+
+      function setScreen(screenName) {
+        const homeScreen = document.getElementById('ff-screen-home');
+        const dashScreen = document.getElementById('ff-screen-dashboard');
+
+        currentScreen = screenName;
+
+        if (screenName === 'dashboard') {
+          if (homeScreen) { homeScreen.classList.add('hidden'); homeScreen.classList.remove('active'); }
+          if (dashScreen) { dashScreen.classList.remove('hidden'); dashScreen.classList.add('active'); }
+        } else {
+          if (dashScreen) { dashScreen.classList.add('hidden'); dashScreen.classList.remove('active'); }
+          if (homeScreen) { homeScreen.classList.remove('hidden'); homeScreen.classList.add('active'); }
+        }
+        window.scrollTo(0, 0);
+      }
+
+      function recordActivity(toolId, toolName, fileName) {
+        try {
+          let recents = [];
+          const saved = localStorage.getItem('fileforge_mobile_recent_list');
+          if (saved) {
+            try { recents = JSON.parse(saved); } catch (e) {}
+          }
+          if (!Array.isArray(recents)) recents = [];
+
+          recents = recents.filter(r => r.toolId !== toolId);
+
+          recents.unshift({
+            toolId: toolId,
+            title: fileName || toolName,
+            subtitle: fileName ? `Processed with ${toolName}` : 'Recently used',
+            time: 'Just now',
+            timestamp: Date.now()
+          });
+
+          recents = recents.slice(0, 6);
+          localStorage.setItem('fileforge_mobile_recent_list', JSON.stringify(recents));
+          localStorage.setItem('fileforge_mobile_recent', JSON.stringify(recents[0]));
+          renderRecentSection();
+        } catch (e) {}
+      }
+
+      function renderRecentSection() {
+        const listEl = document.getElementById('ff-recent-list');
+        if (!listEl) return;
+
+        let recents = [];
+        try {
+          const savedList = localStorage.getItem('fileforge_mobile_recent_list');
+          if (savedList) {
+            recents = JSON.parse(savedList);
+          } else {
+            const single = localStorage.getItem('fileforge_mobile_recent');
+            if (single) recents = [JSON.parse(single)];
+          }
+        } catch (e) {}
+
+        if (Array.isArray(recents) && recents.length > 0) {
+          listEl.innerHTML = recents.map(item => `
+            <div class="ff-recent-card" data-tool-id="${item.toolId}" role="button" tabindex="0">
+              <div class="ff-recent-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <polyline points="9 15 12 12 15 15"></polyline>
+                </svg>
+              </div>
+              <div class="ff-recent-details">
+                <div class="ff-recent-heading">${item.title}</div>
+                <div class="ff-recent-sub">${item.subtitle}</div>
+              </div>
+              <div class="ff-recent-chevron">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+            </div>
+          `).join('');
+
+          listEl.querySelectorAll('.ff-recent-card').forEach(card => {
+            card.addEventListener('click', () => {
+              const toolId = card.getAttribute('data-tool-id');
+              if (toolId) {
+                haptic('light');
+                window.location.hash = '#' + toolId;
+              }
+            });
+          });
+        } else {
+          listEl.innerHTML = `
+            <div class="ff-recent-empty">
+              <div class="ff-recent-empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <div class="ff-recent-empty-title">No recent tools yet</div>
+              <div class="ff-recent-empty-sub">Tools you open will appear here for quick access</div>
+            </div>
+          `;
+        }
+      }
+
+      function openCategorySheet(catId) {
+        const cat = CATEGORIES.find(c => c.id === catId);
+        if (!cat) return;
+
+        const modal = document.getElementById('ff-category-sheet-modal');
+        const titleEl = document.getElementById('ff-sheet-cat-title');
+        const countEl = document.getElementById('ff-sheet-cat-count');
+        const badgeEl = document.getElementById('ff-sheet-folder-badge');
+        const listEl = document.getElementById('ff-sheet-tools-list');
+
+        if (!modal || !titleEl || !countEl || !listEl) return;
+
+        titleEl.textContent = cat.name;
+        countEl.textContent = `${cat.count} tools available`;
+        if (badgeEl) badgeEl.style.color = cat.color;
+
+        listEl.innerHTML = cat.tools.map(tool => {
+          if (tool.implemented) {
+            return `
+              <div class="ff-tool-item" data-tool-id="${tool.id}" role="button" tabindex="0">
+                <div class="ff-tool-item-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                </div>
+                <div class="ff-tool-item-meta">
+                  <div class="ff-tool-item-name">${tool.name}</div>
+                  <div class="ff-tool-item-desc">${tool.desc}</div>
+                </div>
+                <div class="ff-tool-item-action">
+                  <span class="ff-tool-arrow">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                  </span>
+                </div>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="ff-tool-item ff-tool-coming-soon" data-tool-name="${tool.name}" role="button" tabindex="0">
+                <div class="ff-tool-item-icon muted">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <div class="ff-tool-item-meta">
+                  <div class="ff-tool-item-name">${tool.name}</div>
+                  <div class="ff-tool-item-desc">${tool.desc}</div>
+                </div>
+                <div class="ff-tool-item-action">
+                  <span class="ff-tool-badge-coming-soon">Coming Soon</span>
+                </div>
+              </div>
+            `;
+          }
+        }).join('');
+
+        listEl.querySelectorAll('.ff-tool-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const toolId = item.getAttribute('data-tool-id');
+            const toolName = item.getAttribute('data-tool-name');
+
+            if (toolId) {
+              haptic('medium');
+              closeCategorySheet();
+              const found = cat.tools.find(t => t.id === toolId);
+              recordActivity(toolId, found ? found.name : toolId);
+              window.location.hash = '#' + toolId;
+            } else if (toolName) {
+              haptic('heavy');
+              showToast(`${toolName} is coming soon to mobile! Available on desktop FileForge.`, 'info');
+            }
+          });
+        });
+
+        modal.classList.remove('hidden');
+      }
+
+      function closeCategorySheet() {
+        const modal = document.getElementById('ff-category-sheet-modal');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      function handleUniversalUpload(file) {
+        if (!file) return;
+        uploadedFileStash = file;
+
+        const modal = document.getElementById('ff-upload-sheet-modal');
+        const titleEl = document.getElementById('ff-upload-sheet-title');
+        const metaEl = document.getElementById('ff-upload-sheet-meta');
+        const listEl = document.getElementById('ff-upload-tools-list');
+
+        if (!modal || !titleEl || !metaEl || !listEl) return;
+
+        const fname = file.name || 'file';
+        const ext = fname.split('.').pop().toLowerCase();
+        const fsizeStr = file.size ? (file.size > 1048576 ? (file.size / 1048576).toFixed(1) + ' MB' : Math.round(file.size / 1024) + ' KB') : '';
+
+        titleEl.textContent = fname;
+        metaEl.textContent = fsizeStr ? `${fsizeStr} • Select tool to process` : 'Select tool to process';
+
+        let suggestedIds = [];
+        if (ext === 'pdf') {
+          suggestedIds = ['pdf-compressor', 'pdf-to-jpg', 'pdf-to-png', 'pdf-splitter', 'pdf-merger', 'pdf-page-extractor'];
+        } else if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg'].includes(ext)) {
+          suggestedIds = ['image-compressor', 'image-to-pdf', 'image-resizer', 'image-converter', 'jpg-to-png', 'png-to-jpg'];
+        } else if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext)) {
+          suggestedIds = ['zip-extractor', 'download-all-zip'];
+        } else {
+          suggestedIds = ['download-all-zip', 'zip-creator', 'image-to-pdf'];
+        }
+
+        listEl.innerHTML = suggestedIds.map(id => {
+          const t = ALL_TOOLS_MAP.get(id);
+          if (!t) return '';
+          return `
+            <div class="ff-tool-item" data-tool-id="${t.id}" role="button" tabindex="0">
+              <div class="ff-tool-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+              </div>
+              <div class="ff-tool-item-meta">
+                <div class="ff-tool-item-name">${t.name}</div>
+                <div class="ff-tool-item-desc">${t.desc}</div>
+              </div>
+              <div class="ff-tool-item-action">
+                <span class="ff-tool-arrow">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        listEl.querySelectorAll('.ff-tool-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const toolId = item.getAttribute('data-tool-id');
+            if (toolId) {
+              haptic('medium');
+              closeUploadSheet();
+              const found = ALL_TOOLS_MAP.get(toolId);
+              recordActivity(toolId, found ? found.name : toolId, fname);
+
+              stageFileInTool(toolId, uploadedFileStash);
+              window.location.hash = '#' + toolId;
+            }
+          });
+        });
+
+        modal.classList.remove('hidden');
+      }
+
+      function stageFileInTool(toolId, file) {
+        if (!file) return;
+        const input = document.getElementById(`input-${toolId}`);
+        if (!input) return;
+
+        try {
+          if (window.DataTransfer) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        } catch (e) {}
+      }
+
+      function closeUploadSheet() {
+        const modal = document.getElementById('ff-upload-sheet-modal');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      function initMobileRedesign() {
+        const fabHome = document.getElementById('ff-fab-home');
+        if (fabHome) {
+          fabHome.addEventListener('click', (e) => {
+            e.preventDefault();
+            haptic('light');
+            window.location.hash = '#dashboard';
+            setScreen('dashboard');
+          });
+        }
+
+        const fabSearch = document.getElementById('ff-fab-search');
+        const searchBox = document.getElementById('ff-search-container');
+        const searchInput = document.getElementById('mobile-search-input');
+        if (fabSearch) {
+          fabSearch.addEventListener('click', (e) => {
+            e.preventDefault();
+            haptic('light');
+            if (searchBox) {
+              const isHidden = searchBox.classList.contains('hidden');
+              if (isHidden) {
+                searchBox.classList.remove('hidden');
+                if (searchInput) searchInput.focus();
+              } else {
+                searchBox.classList.add('hidden');
+              }
+            }
+          });
+        }
+
+        const brandLink = document.getElementById('ff-brand-link');
+        if (brandLink) {
+          brandLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            haptic('light');
+            screenBeforeSettings = 'home';
+            lastVisitedTool = false;
+            window.location.hash = '#home';
+            setScreen('home');
+          });
+        }
+
+        const headerSettingsBtn = document.getElementById('btn-header-settings');
+        if (headerSettingsBtn) {
+          headerSettingsBtn.addEventListener('click', () => {
+            haptic('light');
+            screenBeforeSettings = currentScreen;
+            window.location.hash = '#settings';
+          });
+        }
+
+        document.querySelectorAll('#mobile-settings-view .mobile-back-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            haptic('light');
+
+            const settingsView = document.getElementById('mobile-settings-view');
+            const homeView = document.getElementById('mobile-home-view');
+            if (settingsView) settingsView.classList.add('hidden');
+            if (homeView) homeView.classList.remove('hidden');
+
+            const target = screenBeforeSettings || 'dashboard';
+            screenBeforeSettings = 'home';
+            setScreen(target);
+
+            if (target === 'dashboard') {
+              window.location.hash = '#dashboard';
+            } else {
+              window.location.hash = '#home';
+            }
+          }, true);
+        });
+
+        document.querySelectorAll('#mobile-tool-container .mobile-back-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            lastVisitedTool = true;
+          }, true);
+        });
+
+        const tabRecent = document.getElementById('ff-tab-recent');
+        const tabAll = document.getElementById('ff-tab-all');
+        const recentSec = document.getElementById('ff-recent-section');
+        const catGrid = document.getElementById('ff-category-grid');
+
+        if (tabRecent) {
+          tabRecent.addEventListener('click', () => {
+            haptic('light');
+            tabRecent.classList.add('active');
+            tabRecent.setAttribute('aria-selected', 'true');
+            if (tabAll) {
+              tabAll.classList.remove('active');
+              tabAll.setAttribute('aria-selected', 'false');
+            }
+            if (catGrid) catGrid.classList.add('hidden');
+            if (recentSec) recentSec.classList.remove('hidden');
+            renderRecentSection();
+          });
+        }
+
+        if (tabAll) {
+          tabAll.addEventListener('click', () => {
+            haptic('light');
+            tabAll.classList.add('active');
+            tabAll.setAttribute('aria-selected', 'true');
+            if (tabRecent) {
+              tabRecent.classList.remove('active');
+              tabRecent.setAttribute('aria-selected', 'false');
+            }
+            if (recentSec) recentSec.classList.add('hidden');
+            if (catGrid) catGrid.classList.remove('hidden');
+          });
+        }
+
+        document.querySelectorAll('.ff-folder-card').forEach(card => {
+          card.addEventListener('click', () => {
+            haptic('light');
+            const catId = card.getAttribute('data-category');
+            if (catId) openCategorySheet(catId);
+          });
+        });
+
+        const closeCatBtn = document.getElementById('btn-close-category-sheet');
+        if (closeCatBtn) closeCatBtn.addEventListener('click', closeCategorySheet);
+
+        const closeUploadBtn = document.getElementById('btn-close-upload-sheet');
+        if (closeUploadBtn) closeUploadBtn.addEventListener('click', closeUploadSheet);
+
+        document.querySelectorAll('.ff-sheet-backdrop').forEach(bd => {
+          bd.addEventListener('click', (e) => {
+            if (e.target === bd) {
+              bd.classList.add('hidden');
+            }
+          });
+        });
+
+        const heroUploadBtn = document.getElementById('btn-hero-upload');
+        const heroInput = document.getElementById('hero-universal-input');
+        if (heroUploadBtn && heroInput) {
+          heroUploadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            haptic('medium');
+            heroInput.value = '';
+            heroInput.click();
+          });
+          heroInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              handleUniversalUpload(e.target.files[0]);
+            }
+          });
+        }
+
+        const clearSearchBtn = document.getElementById('mobile-search-clear');
+        const resultsList = document.getElementById('ff-search-results-list');
+
+        if (searchInput && resultsList) {
+          searchInput.addEventListener('input', () => {
+            const q = searchInput.value.toLowerCase().trim();
+            if (clearSearchBtn) {
+              clearSearchBtn.classList.toggle('hidden', q.length === 0);
+            }
+
+            if (q.length === 0) {
+              resultsList.classList.add('hidden');
+              resultsList.innerHTML = '';
+              if (catGrid) catGrid.classList.remove('hidden');
+              if (recentSec) recentSec.classList.remove('hidden');
+              return;
+            }
+
+            if (catGrid) catGrid.classList.add('hidden');
+            if (recentSec) recentSec.classList.add('hidden');
+            resultsList.classList.remove('hidden');
+
+            const matches = [];
+            ALL_TOOLS_MAP.forEach(t => {
+              if (t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.id.includes(q)) {
+                matches.push(t);
+              }
+            });
+
+            if (matches.length === 0) {
+              resultsList.innerHTML = `<div class="ff-search-empty"><p>No tools matched "<strong>${q}</strong>"</p></div>`;
+              return;
+            }
+
+            resultsList.innerHTML = matches.map(t => `
+              <div class="ff-tool-item ${t.implemented ? '' : 'ff-tool-coming-soon'}" data-tool-id="${t.implemented ? t.id : ''}" data-tool-name="${t.name}" role="button" tabindex="0">
+                <div class="ff-tool-item-icon ${t.implemented ? '' : 'muted'}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="ff-tool-item-meta">
+                  <div class="ff-tool-item-name">${t.name}</div>
+                  <div class="ff-tool-item-desc">${t.desc}</div>
+                </div>
+                <div class="ff-tool-item-action">
+                  ${t.implemented
+                    ? '<span class="ff-tool-arrow"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg></span>'
+                    : '<span class="ff-tool-badge-coming-soon">Coming Soon</span>'
+                  }
+                </div>
+              </div>
+            `).join('');
+
+            resultsList.querySelectorAll('.ff-tool-item').forEach(item => {
+              item.addEventListener('click', () => {
+                const toolId = item.getAttribute('data-tool-id');
+                const toolName = item.getAttribute('data-tool-name');
+                if (toolId) {
+                  haptic('medium');
+                  recordActivity(toolId, toolName);
+                  window.location.hash = '#' + toolId;
+                } else if (toolName) {
+                  haptic('heavy');
+                  showToast(`${toolName} is coming soon to mobile! Available on desktop FileForge.`, 'info');
+                }
+              });
+            });
+          });
+
+          if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+              haptic('light');
+              searchInput.value = '';
+              clearSearchBtn.classList.add('hidden');
+              resultsList.classList.add('hidden');
+              resultsList.innerHTML = '';
+              if (catGrid) catGrid.classList.remove('hidden');
+              if (recentSec) recentSec.classList.remove('hidden');
+            });
+          }
+        }
+
+        renderRecentSection();
+
+        function syncHeaderAndViews() {
+          const homeView = document.getElementById('mobile-home-view');
+          const topHeader = document.getElementById('mobile-top-header');
+          const isHomeVisible = homeView && !homeView.classList.contains('hidden');
+
+          if (isHomeVisible) {
+            document.body.classList.remove('in-subview');
+            if (topHeader) topHeader.classList.remove('hidden');
+          } else {
+            document.body.classList.add('in-subview');
+            if (topHeader) topHeader.classList.add('hidden');
+          }
+        }
+
+        const homeViewEl = document.getElementById('mobile-home-view');
+        if (homeViewEl && window.MutationObserver) {
+          const viewObserver = new MutationObserver(syncHeaderAndViews);
+          viewObserver.observe(homeViewEl, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        window.addEventListener('hashchange', () => {
+          const hash = (window.location.hash || '').replace('#', '').trim();
+          if (!hash || hash === 'home') {
+            if (screenBeforeSettings === 'dashboard' || lastVisitedTool) {
+              setScreen('dashboard');
+              lastVisitedTool = false;
+              screenBeforeSettings = 'home';
+            } else {
+              setScreen('home');
+            }
+          } else if (hash === 'dashboard') {
+            setScreen('dashboard');
+            screenBeforeSettings = 'home';
+          } else if (hash === 'settings') {
+            screenBeforeSettings = currentScreen;
+          } else if (ALL_TOOLS_MAP.has(hash)) {
+            lastVisitedTool = true;
+          }
+          syncHeaderAndViews();
+        });
+
+        const initialHash = (window.location.hash || '').replace('#', '').trim();
+        if (initialHash === 'dashboard') {
+          setScreen('dashboard');
+        } else if (initialHash === 'settings') {
+          screenBeforeSettings = 'home';
+        } else if (ALL_TOOLS_MAP.has(initialHash)) {
+          lastVisitedTool = true;
+        } else {
+          setScreen('home');
+        }
+        syncHeaderAndViews();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMobileRedesign);
+      } else {
+        initMobileRedesign();
+      }
+    })();
+  </script>
 </body>
 </html>
