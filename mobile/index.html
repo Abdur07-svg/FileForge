@@ -1551,219 +1551,414 @@
             </div>
           </div>
 
-          <!-- Visual Pattern Selector -->
-          <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
-            <div class="mqr-card-head">
-              <span class="mqr-card-title">Body Pattern</span>
-              <span class="mqr-active-badge" id="mqr-pattern-label">Square</span>
-            </div>
-            <div class="mqr-visual-grid mqr-grid-3col" id="mqr-pattern-group">
-              <button type="button" class="mqr-visual-card active" data-pattern="square" title="Square (Standard)">
-                <div class="mqr-visual-thumb">
-                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
-                    <rect x="3" y="3" width="11" height="11"/>
-                    <rect x="18" y="3" width="11" height="11"/>
-                    <rect x="3" y="18" width="11" height="11"/>
-                    <rect x="18" y="18" width="11" height="11"/>
-                  </svg>
-                </div>
-                <span class="mqr-visual-title">Square</span>
-              </button>
-              <button type="button" class="mqr-visual-card" data-pattern="rounded" title="Rounded">
-                <div class="mqr-visual-thumb">
-                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
-                    <rect x="3" y="3" width="11" height="11" rx="3"/>
-                    <rect x="18" y="3" width="11" height="11" rx="3"/>
-                    <rect x="3" y="18" width="11" height="11" rx="3"/>
-                    <rect x="18" y="18" width="11" height="11" rx="3"/>
-                  </svg>
-                </div>
-                <span class="mqr-visual-title">Rounded</span>
-              </button>
-              <button type="button" class="mqr-visual-card" data-pattern="dots" title="Dots">
-                <div class="mqr-visual-thumb">
-                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
-                    <circle cx="8" cy="8" r="5.5"/>
-                    <circle cx="24" cy="8" r="5.5"/>
-                    <circle cx="8" cy="24" r="5.5"/>
-                    <circle cx="24" cy="24" r="5.5"/>
-                  </svg>
-                </div>
-                <span class="mqr-visual-title">Dots</span>
-              </button>
-              <button type="button" class="mqr-visual-card" data-pattern="extra-rounded" title="Extra Rounded">
-                <div class="mqr-visual-thumb">
-                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
-                    <rect x="3" y="3" width="11" height="11" rx="5.5"/>
-                    <rect x="18" y="3" width="11" height="11" rx="5.5"/>
-                    <rect x="3" y="18" width="11" height="11" rx="5.5"/>
-                    <rect x="18" y="18" width="11" height="11" rx="5.5"/>
-                  </svg>
-                </div>
-                <span class="mqr-visual-title">Extra Round</span>
-              </button>
-              <button type="button" class="mqr-visual-card" data-pattern="classy" title="Classy Diamond">
-                <div class="mqr-visual-thumb">
-                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
-                    <polygon points="8,2 14,8 8,14 2,8"/>
-                    <polygon points="24,2 30,8 24,14 18,8"/>
-                    <polygon points="8,18 14,24 8,30 2,24"/>
-                    <polygon points="24,18 30,24 24,30 18,24"/>
-                  </svg>
-                </div>
-                <span class="mqr-visual-title">Classy</span>
-              </button>
-              <button type="button" class="mqr-visual-card" data-pattern="classy-rounded" title="Classy Rounded">
-                <div class="mqr-visual-thumb">
-                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
-                    <path d="M3 3 H14 V9 C14 11.8 11.8 14 9 14 H3 Z"/>
-                    <path d="M18 3 H29 V14 H23 C20.2 14 18 11.8 18 9 Z"/>
-                    <path d="M3 18 H9 C11.8 18 14 20.2 14 23 V29 H3 Z"/>
-                    <path d="M29 18 V29 H18 V23 C18 20.2 20.2 18 23 18 Z"/>
-                  </svg>
-                </div>
-                <span class="mqr-visual-title">Classy Round</span>
-              </button>
+          <!-- Mobile QR Customizer Navigation Tabs -->
+          <div class="mobile-card" style="padding: 6px; margin-bottom: 12px;">
+            <div class="mqr-tab-bar" id="mobile-studio-tabs" style="display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;">
+              <button type="button" class="mqr-tab-btn active" data-tab="presets" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">🎨 Presets (45)</button>
+              <button type="button" class="mqr-tab-btn" data-tab="frames" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">🖼️ Frames (52)</button>
+              <button type="button" class="mqr-tab-btn" data-tab="label" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">🏷️ Label Text</button>
+              <button type="button" class="mqr-tab-btn" data-tab="custom" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">✨ Custom</button>
+              <button type="button" class="mqr-tab-btn" data-tab="settings" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">⚙️ Settings</button>
             </div>
           </div>
 
-          <!-- Visual Corner Eyes -->
-          <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
-            <span class="mqr-card-title" style="margin-bottom: 8px;">Corner Eye Style</span>
-            <div style="margin-bottom: 10px;">
-              <span class="mqr-subhead">Corner Frame</span>
-              <div class="mqr-visual-grid mqr-grid-3col" id="mqr-corner-sq-group">
-                <button type="button" class="mqr-visual-card active" data-corner-sq="square" title="Square Frame">
-                  <div class="mqr-visual-thumb">
-                    <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.5">
-                      <rect x="4" y="4" width="24" height="24"/>
-                    </svg>
-                  </div>
-                  <span class="mqr-visual-title">Square</span>
-                </button>
-                <button type="button" class="mqr-visual-card" data-corner-sq="extra-rounded" title="Rounded Frame">
-                  <div class="mqr-visual-thumb">
-                    <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.5">
-                      <rect x="4" y="4" width="24" height="24" rx="7"/>
-                    </svg>
-                  </div>
-                  <span class="mqr-visual-title">Rounded</span>
-                </button>
-                <button type="button" class="mqr-visual-card" data-corner-sq="dot" title="Circle Frame">
-                  <div class="mqr-visual-thumb">
-                    <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.5">
-                      <circle cx="16" cy="16" r="12"/>
-                    </svg>
-                  </div>
-                  <span class="mqr-visual-title">Circle</span>
-                </button>
+          <div class="mqr-mobile-panels">
+            <!-- Mobile Panel 1: Presets (45) -->
+            <div class="mqr-mobile-panel" id="mqr-panel-presets">
+              <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+                <div class="mqr-card-head" style="margin-bottom: 8px;">
+                  <span class="mqr-card-title">45 Style Presets across 9 Themes</span>
+                </div>
+                <!-- Theme Pills Row -->
+                <div class="mqr-theme-scroll" id="mqr-style-theme-nav" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px;">
+                  <button type="button" class="mqr-theme-pill active" data-style-theme="all">All (45)</button>
+                  <button type="button" class="mqr-theme-pill" data-style-theme="classic">Classic (5)</button>
+                  <button type="button" class="mqr-theme-pill" data-style-theme="tech">Tech (5)</button>
+                  <button type="button" class="mqr-theme-pill" data-style-theme="luxury">Luxury (5)</button>
+                  <button type="button" class="mqr-theme-pill" data-style-theme="nature">Eco (5)</button>
+                  <button type="button" class="mqr-theme-pill" data-style-theme="sunset">Sunset (5)</button>
+                  <button type="button" class="mqr-theme-pill" data-style-theme="neon">Neon (5)</button>
+                  <button type="button" class="mqr-theme-pill" data-style-theme="dark">Dark (5)</button>
+                  <button type="button" class="mqr-theme-pill" data-style-theme="pastel">Pastel (5)</button>
+                  <button type="button" class="mqr-theme-pill" data-style-theme="geometric">Geo (5)</button>
+                </div>
+                <!-- Presets Grid -->
+                <div class="mqr-gallery-grid" id="mqr-style-presets-gallery"></div>
               </div>
             </div>
-            <div>
-              <span class="mqr-subhead">Inner Dot</span>
-              <div class="mqr-visual-grid mqr-grid-2col" id="mqr-corner-dot-group">
-                <button type="button" class="mqr-visual-card active" data-corner-dot="square" title="Square Dot">
-                  <div class="mqr-visual-thumb">
-                    <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
-                      <rect x="8" y="8" width="16" height="16"/>
-                    </svg>
+
+            <!-- Mobile Panel 2: Frames (52) -->
+            <div class="mqr-mobile-panel hidden" id="mqr-panel-frames">
+              <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+                <div class="mqr-card-head" style="margin-bottom: 8px;">
+                  <span class="mqr-card-title">52 Frames across 7 Themes</span>
+                </div>
+
+                <!-- Frame Text & Colors -->
+                <div style="background: var(--bg-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 12px;">
+                  <label for="mqr-frame-text-input" class="mobile-form-label" style="font-size: 0.78rem; margin-bottom: 4px;">Frame CTA Text</label>
+                  <input type="text" id="mqr-frame-text-input" class="mobile-input" style="height: 34px; font-size: 0.82rem; margin-bottom: 8px;" placeholder="e.g. SCAN ME, ORDER HERE" value="SCAN ME">
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                    <div>
+                      <span class="mqr-subhead" style="font-size: 0.7rem; margin-bottom: 3px;">Frame</span>
+                      <div class="mqr-color-chip-wrap">
+                        <input type="color" id="mqr-frame-color" class="qr-hidden-picker" value="#121214">
+                        <button type="button" class="mqr-color-swatch" id="mqr-frame-swatch" style="background-color: #121214; width: 26px; height: 26px;"></button>
+                        <input type="text" id="mqr-frame-color-hex" class="mobile-input mqr-hex-compact" style="height: 26px; font-size: 0.7rem; padding: 2px 4px;" value="#121214" maxlength="7">
+                      </div>
+                    </div>
+                    <div>
+                      <span class="mqr-subhead" style="font-size: 0.7rem; margin-bottom: 3px;">Text</span>
+                      <div class="mqr-color-chip-wrap">
+                        <input type="color" id="mqr-frame-text-color" class="qr-hidden-picker" value="#ffffff">
+                        <button type="button" class="mqr-color-swatch" id="mqr-frame-text-swatch" style="background-color: #ffffff; width: 26px; height: 26px;"></button>
+                        <input type="text" id="mqr-frame-text-hex" class="mobile-input mqr-hex-compact" style="height: 26px; font-size: 0.7rem; padding: 2px 4px;" value="#FFFFFF" maxlength="7">
+                      </div>
+                    </div>
+                    <div>
+                      <span class="mqr-subhead" style="font-size: 0.7rem; margin-bottom: 3px;">Card BG</span>
+                      <div class="mqr-color-chip-wrap">
+                        <input type="color" id="mqr-frame-bg-color" class="qr-hidden-picker" value="#ffffff">
+                        <button type="button" class="mqr-color-swatch" id="mqr-frame-bg-swatch" style="background-color: #ffffff; width: 26px; height: 26px;"></button>
+                        <input type="text" id="mqr-frame-bg-hex" class="mobile-input mqr-hex-compact" style="height: 26px; font-size: 0.7rem; padding: 2px 4px;" value="#FFFFFF" maxlength="7">
+                      </div>
+                    </div>
                   </div>
-                  <span class="mqr-visual-title">Square</span>
-                </button>
-                <button type="button" class="mqr-visual-card" data-corner-dot="dot" title="Circle Dot">
-                  <div class="mqr-visual-thumb">
-                    <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
-                      <circle cx="16" cy="16" r="8"/>
-                    </svg>
-                  </div>
-                  <span class="mqr-visual-title">Circle</span>
-                </button>
+                </div>
+
+                <!-- Frame Themes Nav -->
+                <div class="mqr-theme-scroll" id="mqr-frame-theme-nav" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px;">
+                  <button type="button" class="mqr-theme-pill active" data-frame-theme="all">All (52)</button>
+                  <button type="button" class="mqr-theme-pill" data-frame-theme="standard">Clean (8)</button>
+                  <button type="button" class="mqr-theme-pill" data-frame-theme="badges">Badges (8)</button>
+                  <button type="button" class="mqr-theme-pill" data-frame-theme="devices">Tech (7)</button>
+                  <button type="button" class="mqr-theme-pill" data-frame-theme="marketing">Action (8)</button>
+                  <button type="button" class="mqr-theme-pill" data-frame-theme="artistic">Art (7)</button>
+                  <button type="button" class="mqr-theme-pill" data-frame-theme="events">Events (7)</button>
+                  <button type="button" class="mqr-theme-pill" data-frame-theme="borders">Cards (7)</button>
+                </div>
+                <!-- Frames Grid -->
+                <div class="mqr-gallery-grid mqr-frames-grid" id="mqr-frames-gallery"></div>
               </div>
             </div>
-          </div>
 
-          <!-- Color Customization -->
-          <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
-            <span class="mqr-card-title" style="margin-bottom: 8px;">Colors &amp; Theme</span>
-            <div class="mqr-palette-row">
-              <button type="button" class="mqr-palette-btn active" data-fg="#121214" data-bg="#ffffff" title="Classic Monochrome" style="background: linear-gradient(135deg, #121214 50%, #ffffff 50%);"></button>
-              <button type="button" class="mqr-palette-btn" data-fg="#ff5733" data-bg="#faf8f5" title="FileForge Coral" style="background: linear-gradient(135deg, #ff5733 50%, #faf8f5 50%);"></button>
-              <button type="button" class="mqr-palette-btn" data-fg="#1d4ed8" data-bg="#f0f7ff" title="Ocean Blue" style="background: linear-gradient(135deg, #1d4ed8 50%, #f0f7ff 50%);"></button>
-              <button type="button" class="mqr-palette-btn" data-fg="#047857" data-bg="#ecfdf5" title="Forest Emerald" style="background: linear-gradient(135deg, #047857 50%, #ecfdf5 50%);"></button>
-              <button type="button" class="mqr-palette-btn" data-fg="#6d28d9" data-bg="#f5f3ff" title="Royal Violet" style="background: linear-gradient(135deg, #6d28d9 50%, #f5f3ff 50%);"></button>
-              <button type="button" class="mqr-palette-btn" data-fg="#d97706" data-bg="#fffbeb" title="Sunset Amber" style="background: linear-gradient(135deg, #d97706 50%, #fffbeb 50%);"></button>
-              <button type="button" class="mqr-palette-btn" data-fg="#ffffff" data-bg="#111216" title="Dark Inverted" style="background: linear-gradient(135deg, #ffffff 50%, #111216 50%);"></button>
-            </div>
+            <!-- Mobile Panel 3: Label Text -->
+            <div class="mqr-mobile-panel hidden" id="mqr-panel-label">
+              <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+                <div class="mqr-card-head" style="margin-bottom: 8px;">
+                  <span class="mqr-card-title">Dedicated Label Typography</span>
+                </div>
 
-            <div class="mqr-colors-row">
-              <div class="mqr-color-chip-box">
-                <span class="mqr-subhead">QR Color</span>
-                <div class="mqr-color-chip-wrap">
-                  <input type="color" id="mqr-color-fg" class="qr-hidden-picker" value="#121214">
-                  <button type="button" class="mqr-color-swatch" id="mqr-fg-swatch" style="background-color: #121214;" title="Tap to pick color"></button>
-                  <input type="text" id="mqr-color-fg-hex" class="mobile-input mqr-hex-compact" value="#121214" maxlength="7">
+                <div style="margin-bottom: 10px;">
+                  <label for="mqr-label-text-input" class="mobile-form-label">Label Text</label>
+                  <input type="text" id="mqr-label-text-input" class="mobile-input" placeholder="e.g. Scan with Camera or Visit Us">
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                  <span class="mqr-subhead">Label Position</span>
+                  <div class="mqr-segmented-bar" id="mqr-label-pos-group">
+                    <button type="button" class="mqr-segmented-btn" data-pos="top">Top</button>
+                    <button type="button" class="mqr-segmented-btn active" data-pos="bottom">Bottom</button>
+                    <button type="button" class="mqr-segmented-btn" data-pos="left">Left</button>
+                    <button type="button" class="mqr-segmented-btn" data-pos="right">Right</button>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; margin-bottom: 10px;">
+                  <div>
+                    <label for="mqr-label-font" class="mqr-subhead">Font Family</label>
+                    <select id="mqr-label-font" class="mobile-input" style="font-size: 0.78rem; height: 34px; padding: 4px 6px;">
+                      <option value="Inter, sans-serif" selected>Inter (Clean)</option>
+                      <option value="Roboto, sans-serif">Roboto</option>
+                      <option value="Poppins, sans-serif">Poppins</option>
+                      <option value="Georgia, serif">Georgia</option>
+                      <option value="'Courier New', monospace">Courier</option>
+                      <option value="Impact, sans-serif">Impact</option>
+                    </select>
+                  </div>
+                  <div>
+                    <span class="mqr-subhead">Weight</span>
+                    <div class="mqr-segmented-bar" id="mqr-label-weight-group">
+                      <button type="button" class="mqr-segmented-btn" data-weight="400">400</button>
+                      <button type="button" class="mqr-segmented-btn active" data-weight="600">600</button>
+                      <button type="button" class="mqr-segmented-btn" data-weight="800">800</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                      <span class="mqr-subhead" style="margin-bottom: 0;">Size</span>
+                      <span id="mqr-label-size-val" style="font-size: 0.74rem; font-weight: 700; color: var(--color-primary);">16px</span>
+                    </div>
+                    <input type="range" id="mqr-label-size" min="10" max="36" value="16" step="1" style="width: 100%;">
+                  </div>
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                      <span class="mqr-subhead" style="margin-bottom: 0;">Padding</span>
+                      <span id="mqr-label-pad-val" style="font-size: 0.74rem; font-weight: 700; color: var(--color-primary);">12px</span>
+                    </div>
+                    <input type="range" id="mqr-label-pad" min="0" max="36" value="12" step="2" style="width: 100%;">
+                  </div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                  <span class="mqr-subhead">Alignment</span>
+                  <div class="mqr-segmented-bar" id="mqr-label-align-group">
+                    <button type="button" class="mqr-segmented-btn" data-align="left">Left</button>
+                    <button type="button" class="mqr-segmented-btn active" data-align="center">Center</button>
+                    <button type="button" class="mqr-segmented-btn" data-align="right">Right</button>
+                  </div>
+                </div>
+
+                <div class="mqr-colors-row">
+                  <div class="mqr-color-chip-box">
+                    <span class="mqr-subhead">Text Color</span>
+                    <div class="mqr-color-chip-wrap">
+                      <input type="color" id="mqr-label-color" class="qr-hidden-picker" value="#121214">
+                      <button type="button" class="mqr-color-swatch" id="mqr-label-color-swatch" style="background-color: #121214;"></button>
+                      <input type="text" id="mqr-label-color-hex" class="mobile-input mqr-hex-compact" value="#121214" maxlength="7">
+                    </div>
+                  </div>
+                  <div class="mqr-color-chip-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                      <span class="mqr-subhead" style="margin-bottom: 0;">Background</span>
+                      <label class="mqr-toggle-mini">
+                        <input type="checkbox" id="mqr-label-bg-trans-check" checked>
+                        <span class="mqr-toggle-slider"></span>
+                      </label>
+                    </div>
+                    <div id="mqr-label-bg-wrap" class="mqr-color-chip-wrap disabled-control">
+                      <input type="color" id="mqr-label-bg" class="qr-hidden-picker" value="#ffffff">
+                      <button type="button" class="mqr-color-swatch" id="mqr-label-bg-swatch" style="background-color: #ffffff;"></button>
+                      <input type="text" id="mqr-label-bg-hex" class="mobile-input mqr-hex-compact" value="#FFFFFF" maxlength="7">
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="mqr-color-chip-box">
-                <span class="mqr-subhead">Background</span>
-                <div class="mqr-color-chip-wrap">
-                  <input type="color" id="mqr-color-bg" class="qr-hidden-picker" value="#ffffff">
-                  <button type="button" class="mqr-color-swatch" id="mqr-bg-swatch" style="background-color: #ffffff;" title="Tap to pick color"></button>
-                  <input type="text" id="mqr-color-bg-hex" class="mobile-input mqr-hex-compact" value="#FFFFFF" maxlength="7">
+            </div>
+
+            <!-- Mobile Panel 4: Custom -->
+            <div class="mqr-mobile-panel hidden" id="mqr-panel-custom">
+              <!-- Visual Pattern Selector -->
+              <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+                <div class="mqr-card-head">
+                  <span class="mqr-card-title">Body Pattern</span>
+                  <span class="mqr-active-badge" id="mqr-pattern-label">Square</span>
+                </div>
+                <div class="mqr-visual-grid mqr-grid-3col" id="mqr-pattern-group">
+                  <button type="button" class="mqr-visual-card active" data-pattern="square" title="Square (Standard)">
+                    <div class="mqr-visual-thumb">
+                      <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                        <rect x="3" y="3" width="11" height="11"/>
+                        <rect x="18" y="3" width="11" height="11"/>
+                        <rect x="3" y="18" width="11" height="11"/>
+                        <rect x="18" y="18" width="11" height="11"/>
+                      </svg>
+                    </div>
+                    <span class="mqr-visual-title">Square</span>
+                  </button>
+                  <button type="button" class="mqr-visual-card" data-pattern="rounded" title="Rounded">
+                    <div class="mqr-visual-thumb">
+                      <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                        <rect x="3" y="3" width="11" height="11" rx="3"/>
+                        <rect x="18" y="3" width="11" height="11" rx="3"/>
+                        <rect x="3" y="18" width="11" height="11" rx="3"/>
+                        <rect x="18" y="18" width="11" height="11" rx="3"/>
+                      </svg>
+                    </div>
+                    <span class="mqr-visual-title">Rounded</span>
+                  </button>
+                  <button type="button" class="mqr-visual-card" data-pattern="dots" title="Dots">
+                    <div class="mqr-visual-thumb">
+                      <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                        <circle cx="8" cy="8" r="5.5"/>
+                        <circle cx="24" cy="8" r="5.5"/>
+                        <circle cx="8" cy="24" r="5.5"/>
+                        <circle cx="24" cy="24" r="5.5"/>
+                      </svg>
+                    </div>
+                    <span class="mqr-visual-title">Dots</span>
+                  </button>
+                  <button type="button" class="mqr-visual-card" data-pattern="extra-rounded" title="Extra Rounded">
+                    <div class="mqr-visual-thumb">
+                      <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                        <rect x="3" y="3" width="11" height="11" rx="5.5"/>
+                        <rect x="18" y="3" width="11" height="11" rx="5.5"/>
+                        <rect x="3" y="18" width="11" height="11" rx="5.5"/>
+                        <rect x="18" y="18" width="11" height="11" rx="5.5"/>
+                      </svg>
+                    </div>
+                    <span class="mqr-visual-title">Extra Round</span>
+                  </button>
+                  <button type="button" class="mqr-visual-card" data-pattern="classy" title="Classy Diamond">
+                    <div class="mqr-visual-thumb">
+                      <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                        <polygon points="8,2 14,8 8,14 2,8"/>
+                        <polygon points="24,2 30,8 24,14 18,8"/>
+                        <polygon points="8,18 14,24 8,30 2,24"/>
+                        <polygon points="24,18 30,24 24,30 18,24"/>
+                      </svg>
+                    </div>
+                    <span class="mqr-visual-title">Classy</span>
+                  </button>
+                  <button type="button" class="mqr-visual-card" data-pattern="classy-rounded" title="Classy Rounded">
+                    <div class="mqr-visual-thumb">
+                      <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                        <path d="M3 3 H14 V9 C14 11.8 11.8 14 9 14 H3 Z"/>
+                        <path d="M18 3 H29 V14 H23 C20.2 14 18 11.8 18 9 Z"/>
+                        <path d="M3 18 H9 C11.8 18 14 20.2 14 23 V29 H3 Z"/>
+                        <path d="M29 18 V29 H18 V23 C18 20.2 20.2 18 23 18 Z"/>
+                      </svg>
+                    </div>
+                    <span class="mqr-visual-title">Classy Round</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Visual Corner Eyes -->
+              <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+                <span class="mqr-card-title" style="margin-bottom: 8px;">Corner Eye Style</span>
+                <div style="margin-bottom: 10px;">
+                  <span class="mqr-subhead">Corner Frame</span>
+                  <div class="mqr-visual-grid mqr-grid-3col" id="mqr-corner-sq-group">
+                    <button type="button" class="mqr-visual-card active" data-corner-sq="square" title="Square Frame">
+                      <div class="mqr-visual-thumb">
+                        <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.5">
+                          <rect x="4" y="4" width="24" height="24"/>
+                        </svg>
+                      </div>
+                      <span class="mqr-visual-title">Square</span>
+                    </button>
+                    <button type="button" class="mqr-visual-card" data-corner-sq="extra-rounded" title="Rounded Frame">
+                      <div class="mqr-visual-thumb">
+                        <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.5">
+                          <rect x="4" y="4" width="24" height="24" rx="7"/>
+                        </svg>
+                      </div>
+                      <span class="mqr-visual-title">Rounded</span>
+                    </button>
+                    <button type="button" class="mqr-visual-card" data-corner-sq="dot" title="Circle Frame">
+                      <div class="mqr-visual-thumb">
+                        <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.5">
+                          <circle cx="16" cy="16" r="12"/>
+                        </svg>
+                      </div>
+                      <span class="mqr-visual-title">Circle</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <span class="mqr-subhead">Inner Dot</span>
+                  <div class="mqr-visual-grid mqr-grid-2col" id="mqr-corner-dot-group">
+                    <button type="button" class="mqr-visual-card active" data-corner-dot="square" title="Square Dot">
+                      <div class="mqr-visual-thumb">
+                        <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                          <rect x="8" y="8" width="16" height="16"/>
+                        </svg>
+                      </div>
+                      <span class="mqr-visual-title">Square</span>
+                    </button>
+                    <button type="button" class="mqr-visual-card" data-corner-dot="dot" title="Circle Dot">
+                      <div class="mqr-visual-thumb">
+                        <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                          <circle cx="16" cy="16" r="8"/>
+                        </svg>
+                      </div>
+                      <span class="mqr-visual-title">Circle</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Color Customization -->
+              <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+                <span class="mqr-card-title" style="margin-bottom: 8px;">Colors &amp; Theme</span>
+                <div class="mqr-palette-row">
+                  <button type="button" class="mqr-palette-btn active" data-fg="#121214" data-bg="#ffffff" title="Classic Monochrome" style="background: linear-gradient(135deg, #121214 50%, #ffffff 50%);"></button>
+                  <button type="button" class="mqr-palette-btn" data-fg="#ff5733" data-bg="#faf8f5" title="FileForge Coral" style="background: linear-gradient(135deg, #ff5733 50%, #faf8f5 50%);"></button>
+                  <button type="button" class="mqr-palette-btn" data-fg="#1d4ed8" data-bg="#f0f7ff" title="Ocean Blue" style="background: linear-gradient(135deg, #1d4ed8 50%, #f0f7ff 50%);"></button>
+                  <button type="button" class="mqr-palette-btn" data-fg="#047857" data-bg="#ecfdf5" title="Forest Emerald" style="background: linear-gradient(135deg, #047857 50%, #ecfdf5 50%);"></button>
+                  <button type="button" class="mqr-palette-btn" data-fg="#6d28d9" data-bg="#f5f3ff" title="Royal Violet" style="background: linear-gradient(135deg, #6d28d9 50%, #f5f3ff 50%);"></button>
+                  <button type="button" class="mqr-palette-btn" data-fg="#d97706" data-bg="#fffbeb" title="Sunset Amber" style="background: linear-gradient(135deg, #d97706 50%, #fffbeb 50%);"></button>
+                  <button type="button" class="mqr-palette-btn" data-fg="#ffffff" data-bg="#111216" title="Dark Inverted" style="background: linear-gradient(135deg, #ffffff 50%, #111216 50%);"></button>
+                </div>
+
+                <div class="mqr-colors-row">
+                  <div class="mqr-color-chip-box">
+                    <span class="mqr-subhead">QR Color</span>
+                    <div class="mqr-color-chip-wrap">
+                      <input type="color" id="mqr-color-fg" class="qr-hidden-picker" value="#121214">
+                      <button type="button" class="mqr-color-swatch" id="mqr-fg-swatch" style="background-color: #121214;" title="Tap to pick color"></button>
+                      <input type="text" id="mqr-color-fg-hex" class="mobile-input mqr-hex-compact" value="#121214" maxlength="7">
+                    </div>
+                  </div>
+                  <div class="mqr-color-chip-box">
+                    <span class="mqr-subhead">Background</span>
+                    <div class="mqr-color-chip-wrap">
+                      <input type="color" id="mqr-color-bg" class="qr-hidden-picker" value="#ffffff">
+                      <button type="button" class="mqr-color-swatch" id="mqr-bg-swatch" style="background-color: #ffffff;" title="Tap to pick color"></button>
+                      <input type="text" id="mqr-color-bg-hex" class="mobile-input mqr-hex-compact" value="#FFFFFF" maxlength="7">
+                    </div>
+                  </div>
+                </div>
+
+                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span class="mqr-subhead" style="margin-bottom: 0;">Corner Eye Color</span>
+                    <label class="mqr-toggle-mini">
+                      <input type="checkbox" id="mqr-eye-custom-check">
+                      <span class="mqr-toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div id="mqr-eye-color-wrap" class="mqr-color-chip-wrap disabled-control">
+                    <input type="color" id="mqr-color-eye" class="qr-hidden-picker" value="#121214">
+                    <button type="button" class="mqr-color-swatch" id="mqr-eye-swatch" style="background-color: #121214;" title="Tap to pick color"></button>
+                    <input type="text" id="mqr-color-eye-hex" class="mobile-input mqr-hex-compact" value="#121214" maxlength="7">
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                <span class="mqr-subhead" style="margin-bottom: 0;">Corner Eye Color</span>
-                <label class="mqr-toggle-mini">
-                  <input type="checkbox" id="mqr-eye-custom-check">
-                  <span class="mqr-toggle-slider"></span>
-                </label>
+            <!-- Mobile Panel 5: Settings -->
+            <div class="mqr-mobile-panel hidden" id="mqr-panel-settings">
+              <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+                <span class="mqr-card-title" style="margin-bottom: 10px;">Output Settings</span>
+                <div style="margin-bottom: 10px;">
+                  <span class="mqr-subhead">Resolution</span>
+                  <div class="mqr-segmented-bar" id="mqr-size-group">
+                    <button type="button" class="mqr-segmented-btn" data-size="240">240px</button>
+                    <button type="button" class="mqr-segmented-btn active" data-size="280">280px</button>
+                    <button type="button" class="mqr-segmented-btn" data-size="480">480px</button>
+                    <button type="button" class="mqr-segmented-btn" data-size="800">800px</button>
+                  </div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                  <span class="mqr-subhead">Margin</span>
+                  <div class="mqr-segmented-bar" id="mqr-margin-group">
+                    <button type="button" class="mqr-segmented-btn" data-margin="0">0px</button>
+                    <button type="button" class="mqr-segmented-btn active" data-margin="8">8px</button>
+                    <button type="button" class="mqr-segmented-btn" data-margin="16">16px</button>
+                  </div>
+                </div>
+                <div style="margin-bottom: 4px;">
+                  <span class="mqr-subhead">Error Correction</span>
+                  <div class="mqr-segmented-bar" id="mqr-ec-group">
+                    <button type="button" class="mqr-segmented-btn" data-ec="L" title="7% error recovery">L (7%)</button>
+                    <button type="button" class="mqr-segmented-btn active" data-ec="M" title="15% error recovery">M (15%)</button>
+                    <button type="button" class="mqr-segmented-btn" data-ec="Q" title="25% error recovery">Q (25%)</button>
+                    <button type="button" class="mqr-segmented-btn" data-ec="H" title="30% error recovery">H (30%)</button>
+                  </div>
+                </div>
               </div>
-              <div id="mqr-eye-color-wrap" class="mqr-color-chip-wrap disabled-control">
-                <input type="color" id="mqr-color-eye" class="qr-hidden-picker" value="#121214">
-                <button type="button" class="mqr-color-swatch" id="mqr-eye-swatch" style="background-color: #121214;" title="Tap to pick color"></button>
-                <input type="text" id="mqr-color-eye-hex" class="mobile-input mqr-hex-compact" value="#121214" maxlength="7">
-              </div>
-            </div>
-          </div>
 
-          <!-- Output Settings -->
-          <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
-            <span class="mqr-card-title" style="margin-bottom: 10px;">Output Settings</span>
-            <div style="margin-bottom: 10px;">
-              <span class="mqr-subhead">Resolution</span>
-              <div class="mqr-segmented-bar" id="mqr-size-group">
-                <button type="button" class="mqr-segmented-btn" data-size="240">240px</button>
-                <button type="button" class="mqr-segmented-btn active" data-size="280">280px</button>
-                <button type="button" class="mqr-segmented-btn" data-size="480">480px</button>
-                <button type="button" class="mqr-segmented-btn" data-size="800">800px</button>
+              <!-- Reset Button -->
+              <div style="margin-bottom: 24px; text-align: center;">
+                <button type="button" id="mqr-reset-btn" class="btn btn-secondary btn-block btn-sm">↺ Reset Settings to Defaults</button>
               </div>
             </div>
-            <div style="margin-bottom: 10px;">
-              <span class="mqr-subhead">Margin</span>
-              <div class="mqr-segmented-bar" id="mqr-margin-group">
-                <button type="button" class="mqr-segmented-btn" data-margin="0">0px</button>
-                <button type="button" class="mqr-segmented-btn active" data-margin="8">8px</button>
-                <button type="button" class="mqr-segmented-btn" data-margin="16">16px</button>
-              </div>
-            </div>
-            <div style="margin-bottom: 4px;">
-              <span class="mqr-subhead">Error Correction</span>
-              <div class="mqr-segmented-bar" id="mqr-ec-group">
-                <button type="button" class="mqr-segmented-btn" data-ec="L" title="7% error recovery">L (7%)</button>
-                <button type="button" class="mqr-segmented-btn active" data-ec="M" title="15% error recovery">M (15%)</button>
-                <button type="button" class="mqr-segmented-btn" data-ec="Q" title="25% error recovery">Q (25%)</button>
-                <button type="button" class="mqr-segmented-btn" data-ec="H" title="30% error recovery">H (30%)</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Reset Button -->
-          <div style="margin-bottom: 24px; text-align: center;">
-            <button type="button" id="mqr-reset-btn" class="btn btn-secondary btn-block btn-sm">↺ Reset Settings to Defaults</button>
           </div>
 </div>
 
@@ -2141,6 +2336,8 @@
   <script src="js/pdf-engine.js"></script>
   <script src="js/image-to-pdf.js"></script>
   <script src="js/zip-engine.js"></script>
+  <script src="js/qr-presets-data.js"></script>
+  <script src="js/qr-frame-renderer.js"></script>
   <script src="js/qr-generator.js"></script>
   <script src="js/app.js"></script>
 

@@ -1153,7 +1153,8 @@ const App = (() => {
     () => window.FileAnalyzer,
     () => window.FilePreviewer,
     () => window.FileRenamer,
-    () => window.BatchProcessor
+    () => window.BatchProcessor,
+    () => window.QRCodeGenerator
   ];
 
   function resetAllToolStates() {
@@ -1367,6 +1368,9 @@ const App = (() => {
     } else if (toolId === 'qr-generator') {
       targetContainerId = 'tool-qr-generator';
       handlerModule = window.QRCodeGenerator;
+      if (handlerModule && typeof handlerModule.reset === 'function') {
+        handlerModule.reset();
+      }
     }
 
     const targetEl = document.getElementById(targetContainerId);

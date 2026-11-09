@@ -4148,225 +4148,445 @@
                   </div>
                 </div>
 
-                <div class="qr-studio-controls">
-                  <!-- Pattern Style Selector -->
-                  <div class="qr-control-section">
-                    <div class="qr-section-header">
-                      <h4 class="qr-control-heading">Body Pattern Style</h4>
-                      <span class="qr-active-pill" id="qr-pattern-label">Square</span>
+                <!-- QR Studio Customizer Section Tabs -->
+                <div class="qr-customizer-tabs" id="qr-studio-tabs">
+                  <button type="button" class="qr-customizer-tab active" data-tab="presets">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 0 0 0 14 7 7 0 0 0 0-14z"/></svg>
+                    <span>Presets (45)</span>
+                  </button>
+                  <button type="button" class="qr-customizer-tab" data-tab="frames">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10"/></svg>
+                    <span>Frames (52)</span>
+                  </button>
+                  <button type="button" class="qr-customizer-tab" data-tab="label">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                    <span>Label Text</span>
+                  </button>
+                  <button type="button" class="qr-customizer-tab" data-tab="custom">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <span>Custom</span>
+                  </button>
+                  <button type="button" class="qr-customizer-tab" data-tab="settings">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>Settings</span>
+                  </button>
+                </div>
+
+                <div class="qr-customizer-panels">
+                  <!-- Panel 1: QR Style Presets (45) -->
+                  <div class="qr-customizer-panel active" id="qr-panel-presets">
+                    <div class="qr-panel-intro">
+                      <span class="qr-control-heading">Style Presets (45 Styles / 9 Themes)</span>
+                      <span class="form-hint" style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                        Click any preset thumbnail to instantly style patterns, corner eyes and colors.
+                      </span>
                     </div>
-                    <div class="qr-visual-grid qr-pattern-grid" id="qr-pattern-group">
-                      <button type="button" class="qr-visual-card active" data-pattern="square" title="Square (Standard)">
-                        <div class="qr-visual-thumb">
-                          <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                            <rect x="3" y="3" width="11" height="11"/>
-                            <rect x="18" y="3" width="11" height="11"/>
-                            <rect x="3" y="18" width="11" height="11"/>
-                            <rect x="18" y="18" width="11" height="11"/>
-                          </svg>
-                        </div>
-                        <span class="qr-visual-title">Square</span>
-                      </button>
-                      <button type="button" class="qr-visual-card" data-pattern="rounded" title="Rounded">
-                        <div class="qr-visual-thumb">
-                          <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                            <rect x="3" y="3" width="11" height="11" rx="3"/>
-                            <rect x="18" y="3" width="11" height="11" rx="3"/>
-                            <rect x="3" y="18" width="11" height="11" rx="3"/>
-                            <rect x="18" y="18" width="11" height="11" rx="3"/>
-                          </svg>
-                        </div>
-                        <span class="qr-visual-title">Rounded</span>
-                      </button>
-                      <button type="button" class="qr-visual-card" data-pattern="dots" title="Dots">
-                        <div class="qr-visual-thumb">
-                          <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                            <circle cx="8" cy="8" r="5.5"/>
-                            <circle cx="24" cy="8" r="5.5"/>
-                            <circle cx="8" cy="24" r="5.5"/>
-                            <circle cx="24" cy="24" r="5.5"/>
-                          </svg>
-                        </div>
-                        <span class="qr-visual-title">Dots</span>
-                      </button>
-                      <button type="button" class="qr-visual-card" data-pattern="extra-rounded" title="Extra Rounded">
-                        <div class="qr-visual-thumb">
-                          <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                            <rect x="3" y="3" width="11" height="11" rx="5.5"/>
-                            <rect x="18" y="3" width="11" height="11" rx="5.5"/>
-                            <rect x="3" y="18" width="11" height="11" rx="5.5"/>
-                            <rect x="18" y="18" width="11" height="11" rx="5.5"/>
-                          </svg>
-                        </div>
-                        <span class="qr-visual-title">Extra Round</span>
-                      </button>
-                      <button type="button" class="qr-visual-card" data-pattern="classy" title="Classy Diamond">
-                        <div class="qr-visual-thumb">
-                          <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                            <polygon points="8,2 14,8 8,14 2,8"/>
-                            <polygon points="24,2 30,8 24,14 18,8"/>
-                            <polygon points="8,18 14,24 8,30 2,24"/>
-                            <polygon points="24,18 30,24 24,30 18,24"/>
-                          </svg>
-                        </div>
-                        <span class="qr-visual-title">Classy</span>
-                      </button>
-                      <button type="button" class="qr-visual-card" data-pattern="classy-rounded" title="Classy Rounded">
-                        <div class="qr-visual-thumb">
-                          <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                            <path d="M3 3 H14 V9 C14 11.8 11.8 14 9 14 H3 Z"/>
-                            <path d="M18 3 H29 V14 H23 C20.2 14 18 11.8 18 9 Z"/>
-                            <path d="M3 18 H9 C11.8 18 14 20.2 14 23 V29 H3 Z"/>
-                            <path d="M29 18 V29 H18 V23 C18 20.2 20.2 18 23 18 Z"/>
-                          </svg>
-                        </div>
-                        <span class="qr-visual-title">Classy Round</span>
-                      </button>
+
+                    <!-- Theme Pills Row -->
+                    <div class="qr-theme-nav" id="qr-style-theme-nav">
+                      <button type="button" class="qr-theme-pill active" data-style-theme="all">All (45)</button>
+                      <button type="button" class="qr-theme-pill" data-style-theme="classic">Classic &amp; Minimal (5)</button>
+                      <button type="button" class="qr-theme-pill" data-style-theme="tech">Corporate &amp; Tech (5)</button>
+                      <button type="button" class="qr-theme-pill" data-style-theme="luxury">Luxury &amp; Elegance (5)</button>
+                      <button type="button" class="qr-theme-pill" data-style-theme="nature">Nature &amp; Eco (5)</button>
+                      <button type="button" class="qr-theme-pill" data-style-theme="sunset">Sunset &amp; Warmth (5)</button>
+                      <button type="button" class="qr-theme-pill" data-style-theme="neon">Neon &amp; Vibrant (5)</button>
+                      <button type="button" class="qr-theme-pill" data-style-theme="dark">Dark Mode (5)</button>
+                      <button type="button" class="qr-theme-pill" data-style-theme="pastel">Pastel &amp; Soft (5)</button>
+                      <button type="button" class="qr-theme-pill" data-style-theme="geometric">Geometric &amp; Bold (5)</button>
                     </div>
+
+                    <!-- Presets Grid Container -->
+                    <div class="qr-gallery-grid" id="qr-style-presets-gallery"></div>
                   </div>
 
-                  <!-- Corner / Eye Customizer -->
-                  <div class="qr-control-section">
-                    <div class="qr-section-header">
-                      <h4 class="qr-control-heading">Corner / Eye Styling</h4>
+                  <!-- Panel 2: QR Frames (52) -->
+                  <div class="qr-customizer-panel hidden" id="qr-panel-frames">
+                    <div class="qr-panel-intro">
+                      <span class="qr-control-heading">QR Frames (52 Frames / 7 Themes)</span>
+                      <span class="form-hint" style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                        Select a frame and customize banner text and colors.
+                      </span>
                     </div>
-                    <div style="margin-bottom: 12px;">
-                      <span class="qr-sublabel">Corner Frame</span>
-                      <div class="qr-visual-grid qr-corner-frame-grid" id="qr-corner-sq-group">
-                        <button type="button" class="qr-visual-card active" data-corner-sq="square" title="Square Frame">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
-                              <rect x="4" y="4" width="24" height="24"/>
-                            </svg>
+
+                    <!-- Frame Text & Colors Sub-Bar -->
+                    <div class="qr-frame-settings-card">
+                      <div class="form-group" style="margin-bottom: 10px;">
+                        <label for="qr-frame-text-input" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Frame CTA Text</label>
+                        <input type="text" id="qr-frame-text-input" class="form-control" placeholder="e.g. SCAN ME, ORDER HERE, VISIT US" value="SCAN ME">
+                      </div>
+                      <div class="qr-frame-colors-row">
+                        <div class="qr-swatch-box" style="flex: 1;">
+                          <label class="qr-sublabel" for="qr-frame-color">Frame Color</label>
+                          <div class="qr-color-trigger-wrap">
+                            <input type="color" id="qr-frame-color" class="qr-hidden-picker" value="#121214">
+                            <button type="button" class="qr-swatch-display" id="qr-frame-swatch" style="background-color: #121214;"></button>
+                            <input type="text" id="qr-frame-color-hex" class="form-control qr-hex-compact" value="#121214" maxlength="7">
                           </div>
-                          <span class="qr-visual-title">Square</span>
-                        </button>
-                        <button type="button" class="qr-visual-card" data-corner-sq="extra-rounded" title="Rounded Frame">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
-                              <rect x="4" y="4" width="24" height="24" rx="7"/>
-                            </svg>
+                        </div>
+                        <div class="qr-swatch-box" style="flex: 1;">
+                          <label class="qr-sublabel" for="qr-frame-text-color">Text Color</label>
+                          <div class="qr-color-trigger-wrap">
+                            <input type="color" id="qr-frame-text-color" class="qr-hidden-picker" value="#ffffff">
+                            <button type="button" class="qr-swatch-display" id="qr-frame-text-swatch" style="background-color: #ffffff;"></button>
+                            <input type="text" id="qr-frame-text-hex" class="form-control qr-hex-compact" value="#FFFFFF" maxlength="7">
                           </div>
-                          <span class="qr-visual-title">Rounded</span>
-                        </button>
-                        <button type="button" class="qr-visual-card" data-corner-sq="dot" title="Circle Frame">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
-                              <circle cx="16" cy="16" r="12"/>
-                            </svg>
+                        </div>
+                        <div class="qr-swatch-box" style="flex: 1;">
+                          <label class="qr-sublabel" for="qr-frame-bg-color">Card Background</label>
+                          <div class="qr-color-trigger-wrap">
+                            <input type="color" id="qr-frame-bg-color" class="qr-hidden-picker" value="#ffffff">
+                            <button type="button" class="qr-swatch-display" id="qr-frame-bg-swatch" style="background-color: #ffffff;"></button>
+                            <input type="text" id="qr-frame-bg-hex" class="form-control qr-hex-compact" value="#FFFFFF" maxlength="7">
                           </div>
-                          <span class="qr-visual-title">Circle</span>
-                        </button>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <span class="qr-sublabel">Corner Inner Dot</span>
-                      <div class="qr-visual-grid qr-corner-dot-grid" id="qr-corner-dot-group">
-                        <button type="button" class="qr-visual-card active" data-corner-dot="square" title="Square Dot">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                              <rect x="8" y="8" width="16" height="16"/>
-                            </svg>
-                          </div>
-                          <span class="qr-visual-title">Square</span>
-                        </button>
-                        <button type="button" class="qr-visual-card" data-corner-dot="dot" title="Circle Dot">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                              <circle cx="16" cy="16" r="8"/>
-                            </svg>
-                          </div>
-                          <span class="qr-visual-title">Circle</span>
-                        </button>
-                      </div>
+
+                    <!-- Frame Themes Nav -->
+                    <div class="qr-theme-nav" id="qr-frame-theme-nav">
+                      <button type="button" class="qr-theme-pill active" data-frame-theme="all">All (52)</button>
+                      <button type="button" class="qr-theme-pill" data-frame-theme="standard">Standard &amp; Clean (8)</button>
+                      <button type="button" class="qr-theme-pill" data-frame-theme="badges">Badges &amp; Tags (8)</button>
+                      <button type="button" class="qr-theme-pill" data-frame-theme="devices">Devices &amp; Tech (7)</button>
+                      <button type="button" class="qr-theme-pill" data-frame-theme="marketing">Action &amp; Marketing (8)</button>
+                      <button type="button" class="qr-theme-pill" data-frame-theme="artistic">Artistic &amp; Shapes (7)</button>
+                      <button type="button" class="qr-theme-pill" data-frame-theme="events">Events &amp; Passes (7)</button>
+                      <button type="button" class="qr-theme-pill" data-frame-theme="borders">Borders &amp; Cards (7)</button>
                     </div>
+
+                    <!-- Frames Grid Container -->
+                    <div class="qr-gallery-grid qr-frames-gallery-grid" id="qr-frames-gallery"></div>
                   </div>
 
-                  <!-- Color Customization -->
-                  <div class="qr-control-section">
-                    <div class="qr-section-header">
-                      <h4 class="qr-control-heading">Color Customization</h4>
+                  <!-- Panel 3: Label Text -->
+                  <div class="qr-customizer-panel hidden" id="qr-panel-label">
+                    <div class="qr-panel-intro">
+                      <span class="qr-control-heading">Dedicated Label Text Customizer</span>
+                      <span class="form-hint" style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                        Add customized text labels above, below or beside the QR design with custom typography.
+                      </span>
                     </div>
-                    <div class="qr-palette-row">
-                      <span class="qr-sublabel" style="margin-bottom: 0; margin-right: 4px;">Presets:</span>
-                      <button type="button" class="qr-palette-btn active" data-fg="#121214" data-bg="#ffffff" title="Classic Monochrome" style="background: linear-gradient(135deg, #121214 50%, #ffffff 50%);"></button>
-                      <button type="button" class="qr-palette-btn" data-fg="#ff5733" data-bg="#faf8f5" title="FileForge Coral" style="background: linear-gradient(135deg, #ff5733 50%, #faf8f5 50%);"></button>
-                      <button type="button" class="qr-palette-btn" data-fg="#1d4ed8" data-bg="#f0f7ff" title="Ocean Blue" style="background: linear-gradient(135deg, #1d4ed8 50%, #f0f7ff 50%);"></button>
-                      <button type="button" class="qr-palette-btn" data-fg="#047857" data-bg="#ecfdf5" title="Forest Emerald" style="background: linear-gradient(135deg, #047857 50%, #ecfdf5 50%);"></button>
-                      <button type="button" class="qr-palette-btn" data-fg="#6d28d9" data-bg="#f5f3ff" title="Royal Violet" style="background: linear-gradient(135deg, #6d28d9 50%, #f5f3ff 50%);"></button>
-                      <button type="button" class="qr-palette-btn" data-fg="#d97706" data-bg="#fffbeb" title="Sunset Amber" style="background: linear-gradient(135deg, #d97706 50%, #fffbeb 50%);"></button>
-                      <button type="button" class="qr-palette-btn" data-fg="#ffffff" data-bg="#111216" title="Dark Inverted" style="background: linear-gradient(135deg, #ffffff 50%, #111216 50%);"></button>
+
+                    <div class="form-group" style="margin-bottom: 12px;">
+                      <label for="qr-label-text-input" class="form-label">Label Text</label>
+                      <input type="text" id="qr-label-text-input" class="form-control" placeholder="e.g. Scan with Camera or Visit Our Website">
+                    </div>
+
+                    <div class="qr-segmented-field" style="margin-bottom: 12px;">
+                      <span class="qr-sublabel">Label Position</span>
+                      <div class="qr-segmented-bar" id="qr-label-pos-group">
+                        <button type="button" class="qr-segmented-btn" data-pos="top">Top</button>
+                        <button type="button" class="qr-segmented-btn active" data-pos="bottom">Bottom</button>
+                        <button type="button" class="qr-segmented-btn" data-pos="left">Left</button>
+                        <button type="button" class="qr-segmented-btn" data-pos="right">Right</button>
+                      </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                      <div>
+                        <label for="qr-label-font" class="qr-sublabel" style="display: block;">Font Family</label>
+                        <select id="qr-label-font" class="form-control" style="font-size: 0.85rem; padding: 6px 10px;">
+                          <option value="Inter, sans-serif" selected>Inter (Clean Modern)</option>
+                          <option value="Roboto, sans-serif">Roboto (Neutral)</option>
+                          <option value="Poppins, sans-serif">Poppins (Geometric)</option>
+                          <option value="Georgia, serif">Georgia (Classic Serif)</option>
+                          <option value="'Courier New', monospace">Courier (Monospace)</option>
+                          <option value="Impact, sans-serif">Impact (Bold Condensed)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <span class="qr-sublabel">Font Weight</span>
+                        <div class="qr-segmented-bar" id="qr-label-weight-group">
+                          <button type="button" class="qr-segmented-btn" data-weight="400">Regular</button>
+                          <button type="button" class="qr-segmented-btn active" data-weight="600">Medium</button>
+                          <button type="button" class="qr-segmented-btn" data-weight="800">Bold</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                      <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                          <span class="qr-sublabel" style="margin-bottom: 0;">Font Size</span>
+                          <span id="qr-label-size-val" style="font-size: 0.78rem; font-weight: 700; color: var(--color-primary);">16px</span>
+                        </div>
+                        <input type="range" id="qr-label-size" class="form-range" min="10" max="36" value="16" step="1" style="width: 100%;">
+                      </div>
+                      <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                          <span class="qr-sublabel" style="margin-bottom: 0;">Label Padding</span>
+                          <span id="qr-label-pad-val" style="font-size: 0.78rem; font-weight: 700; color: var(--color-primary);">12px</span>
+                        </div>
+                        <input type="range" id="qr-label-pad" class="form-range" min="0" max="36" value="12" step="2" style="width: 100%;">
+                      </div>
+                    </div>
+
+                    <div class="qr-segmented-field" style="margin-bottom: 14px;">
+                      <span class="qr-sublabel">Text Alignment</span>
+                      <div class="qr-segmented-bar" id="qr-label-align-group">
+                        <button type="button" class="qr-segmented-btn" data-align="left">Left</button>
+                        <button type="button" class="qr-segmented-btn active" data-align="center">Center</button>
+                        <button type="button" class="qr-segmented-btn" data-align="right">Right</button>
+                      </div>
                     </div>
 
                     <div class="qr-color-swatches-grid">
                       <div class="qr-swatch-box">
-                        <label class="qr-sublabel" for="qr-color-fg">QR Color</label>
+                        <label class="qr-sublabel" for="qr-label-color">Text Color</label>
                         <div class="qr-color-trigger-wrap">
-                          <input type="color" id="qr-color-fg" class="qr-hidden-picker" value="#121214">
-                          <button type="button" class="qr-swatch-display" id="qr-fg-swatch" style="background-color: #121214;" title="Click to pick color"></button>
-                          <input type="text" id="qr-color-fg-hex" class="form-control qr-hex-compact" value="#121214" maxlength="7">
+                          <input type="color" id="qr-label-color" class="qr-hidden-picker" value="#121214">
+                          <button type="button" class="qr-swatch-display" id="qr-label-color-swatch" style="background-color: #121214;"></button>
+                          <input type="text" id="qr-label-color-hex" class="form-control qr-hex-compact" value="#121214" maxlength="7">
                         </div>
                       </div>
                       <div class="qr-swatch-box">
-                        <label class="qr-sublabel" for="qr-color-bg">Background</label>
-                        <div class="qr-color-trigger-wrap">
-                          <input type="color" id="qr-color-bg" class="qr-hidden-picker" value="#ffffff">
-                          <button type="button" class="qr-swatch-display" id="qr-bg-swatch" style="background-color: #ffffff;" title="Click to pick color"></button>
-                          <input type="text" id="qr-color-bg-hex" class="form-control qr-hex-compact" value="#FFFFFF" maxlength="7">
-                        </div>
-                      </div>
-                      <div class="qr-swatch-box">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                          <label class="qr-sublabel" style="margin-bottom: 0;" for="qr-color-eye">Corner Eye</label>
-                          <label class="qr-toggle-mini" title="Enable custom corner eye color">
-                            <input type="checkbox" id="qr-eye-custom-check">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                          <label class="qr-sublabel" style="margin-bottom: 0;" for="qr-label-bg">Background</label>
+                          <label class="qr-toggle-mini" title="Transparent background">
+                            <input type="checkbox" id="qr-label-bg-trans-check" checked>
                             <span class="qr-toggle-slider"></span>
                           </label>
                         </div>
-                        <div id="qr-eye-color-wrap" class="qr-color-trigger-wrap disabled-control">
-                          <input type="color" id="qr-color-eye" class="qr-hidden-picker" value="#121214">
-                          <button type="button" class="qr-swatch-display" id="qr-eye-swatch" style="background-color: #121214;" title="Click to pick color"></button>
-                          <input type="text" id="qr-color-eye-hex" class="form-control qr-hex-compact" value="#121214" maxlength="7">
+                        <div id="qr-label-bg-wrap" class="qr-color-trigger-wrap disabled-control">
+                          <input type="color" id="qr-label-bg" class="qr-hidden-picker" value="#ffffff">
+                          <button type="button" class="qr-swatch-display" id="qr-label-bg-swatch" style="background-color: #ffffff;"></button>
+                          <input type="text" id="qr-label-bg-hex" class="form-control qr-hex-compact" value="#FFFFFF" maxlength="7">
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Compact Settings -->
-                  <div class="qr-control-section">
-                    <div class="qr-segmented-row">
-                      <div class="qr-segmented-field">
-                        <span class="qr-sublabel">Resolution</span>
-                        <div class="qr-segmented-bar" id="qr-size-group">
-                          <button type="button" class="qr-segmented-btn" data-size="240">240px</button>
-                          <button type="button" class="qr-segmented-btn active" data-size="320">320px</button>
-                          <button type="button" class="qr-segmented-btn" data-size="480">480px</button>
-                          <button type="button" class="qr-segmented-btn" data-size="800">800px</button>
+                  <!-- Panel 4: Custom Style -->
+                  <div class="qr-customizer-panel hidden" id="qr-panel-custom">
+                    <!-- Pattern Style Selector -->
+                    <div class="qr-control-section">
+                      <div class="qr-section-header">
+                        <h4 class="qr-control-heading">Body Pattern Style</h4>
+                        <span class="qr-active-pill" id="qr-pattern-label">Square</span>
+                      </div>
+                      <div class="qr-visual-grid qr-pattern-grid" id="qr-pattern-group">
+                        <button type="button" class="qr-visual-card active" data-pattern="square" title="Square (Standard)">
+                          <div class="qr-visual-thumb">
+                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
+                              <rect x="3" y="3" width="11" height="11"/>
+                              <rect x="18" y="3" width="11" height="11"/>
+                              <rect x="3" y="18" width="11" height="11"/>
+                              <rect x="18" y="18" width="11" height="11"/>
+                            </svg>
+                          </div>
+                          <span class="qr-visual-title">Square</span>
+                        </button>
+                        <button type="button" class="qr-visual-card" data-pattern="rounded" title="Rounded">
+                          <div class="qr-visual-thumb">
+                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
+                              <rect x="3" y="3" width="11" height="11" rx="3"/>
+                              <rect x="18" y="3" width="11" height="11" rx="3"/>
+                              <rect x="3" y="18" width="11" height="11" rx="3"/>
+                              <rect x="18" y="18" width="11" height="11" rx="3"/>
+                            </svg>
+                          </div>
+                          <span class="qr-visual-title">Rounded</span>
+                        </button>
+                        <button type="button" class="qr-visual-card" data-pattern="dots" title="Dots">
+                          <div class="qr-visual-thumb">
+                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
+                              <circle cx="8" cy="8" r="5.5"/>
+                              <circle cx="24" cy="8" r="5.5"/>
+                              <circle cx="8" cy="24" r="5.5"/>
+                              <circle cx="24" cy="24" r="5.5"/>
+                            </svg>
+                          </div>
+                          <span class="qr-visual-title">Dots</span>
+                        </button>
+                        <button type="button" class="qr-visual-card" data-pattern="extra-rounded" title="Extra Rounded">
+                          <div class="qr-visual-thumb">
+                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
+                              <rect x="3" y="3" width="11" height="11" rx="5.5"/>
+                              <rect x="18" y="3" width="11" height="11" rx="5.5"/>
+                              <rect x="3" y="18" width="11" height="11" rx="5.5"/>
+                              <rect x="18" y="18" width="11" height="11" rx="5.5"/>
+                            </svg>
+                          </div>
+                          <span class="qr-visual-title">Extra Round</span>
+                        </button>
+                        <button type="button" class="qr-visual-card" data-pattern="classy" title="Classy Diamond">
+                          <div class="qr-visual-thumb">
+                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
+                              <polygon points="8,2 14,8 8,14 2,8"/>
+                              <polygon points="24,2 30,8 24,14 18,8"/>
+                              <polygon points="8,18 14,24 8,30 2,24"/>
+                              <polygon points="24,18 30,24 24,30 18,24"/>
+                            </svg>
+                          </div>
+                          <span class="qr-visual-title">Classy</span>
+                        </button>
+                        <button type="button" class="qr-visual-card" data-pattern="classy-rounded" title="Classy Rounded">
+                          <div class="qr-visual-thumb">
+                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
+                              <path d="M3 3 H14 V9 C14 11.8 11.8 14 9 14 H3 Z"/>
+                              <path d="M18 3 H29 V14 H23 C20.2 14 18 11.8 18 9 Z"/>
+                              <path d="M3 18 H9 C11.8 18 14 20.2 14 23 V29 H3 Z"/>
+                              <path d="M29 18 V29 H18 V23 C18 20.2 20.2 18 23 18 Z"/>
+                            </svg>
+                          </div>
+                          <span class="qr-visual-title">Classy Round</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Corner / Eye Customizer -->
+                    <div class="qr-control-section">
+                      <div class="qr-section-header">
+                        <h4 class="qr-control-heading">Corner / Eye Styling</h4>
+                      </div>
+                      <div style="margin-bottom: 12px;">
+                        <span class="qr-sublabel">Corner Frame</span>
+                        <div class="qr-visual-grid qr-corner-frame-grid" id="qr-corner-sq-group">
+                          <button type="button" class="qr-visual-card active" data-corner-sq="square" title="Square Frame">
+                            <div class="qr-visual-thumb">
+                              <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
+                                <rect x="4" y="4" width="24" height="24"/>
+                              </svg>
+                            </div>
+                            <span class="qr-visual-title">Square</span>
+                          </button>
+                          <button type="button" class="qr-visual-card" data-corner-sq="extra-rounded" title="Rounded Frame">
+                            <div class="qr-visual-thumb">
+                              <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
+                                <rect x="4" y="4" width="24" height="24" rx="7"/>
+                              </svg>
+                            </div>
+                            <span class="qr-visual-title">Rounded</span>
+                          </button>
+                          <button type="button" class="qr-visual-card" data-corner-sq="dot" title="Circle Frame">
+                            <div class="qr-visual-thumb">
+                              <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
+                                <circle cx="16" cy="16" r="12"/>
+                              </svg>
+                            </div>
+                            <span class="qr-visual-title">Circle</span>
+                          </button>
                         </div>
                       </div>
-                      <div class="qr-segmented-field">
-                        <span class="qr-sublabel">Margin</span>
-                        <div class="qr-segmented-bar" id="qr-margin-group">
-                          <button type="button" class="qr-segmented-btn" data-margin="0">0</button>
-                          <button type="button" class="qr-segmented-btn active" data-margin="10">10px</button>
-                          <button type="button" class="qr-segmented-btn" data-margin="20">20px</button>
+                      <div>
+                        <span class="qr-sublabel">Corner Inner Dot</span>
+                        <div class="qr-visual-grid qr-corner-dot-grid" id="qr-corner-dot-group">
+                          <button type="button" class="qr-visual-card active" data-corner-dot="square" title="Square Dot">
+                            <div class="qr-visual-thumb">
+                              <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
+                                <rect x="8" y="8" width="16" height="16"/>
+                              </svg>
+                            </div>
+                            <span class="qr-visual-title">Square</span>
+                          </button>
+                          <button type="button" class="qr-visual-card" data-corner-dot="dot" title="Circle Dot">
+                            <div class="qr-visual-thumb">
+                              <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
+                                <circle cx="16" cy="16" r="8"/>
+                              </svg>
+                            </div>
+                            <span class="qr-visual-title">Circle</span>
+                          </button>
                         </div>
                       </div>
-                      <div class="qr-segmented-field">
-                        <span class="qr-sublabel">Error Correction</span>
-                        <div class="qr-segmented-bar" id="qr-ec-group">
-                          <button type="button" class="qr-segmented-btn" data-ec="L" title="7% error recovery">L</button>
-                          <button type="button" class="qr-segmented-btn active" data-ec="M" title="15% error recovery">M</button>
-                          <button type="button" class="qr-segmented-btn" data-ec="Q" title="25% error recovery">Q</button>
-                          <button type="button" class="qr-segmented-btn" data-ec="H" title="30% error recovery">H</button>
+                    </div>
+
+                    <!-- Color Customization -->
+                    <div class="qr-control-section">
+                      <div class="qr-section-header">
+                        <h4 class="qr-control-heading">Color Customization</h4>
+                      </div>
+                      <div class="qr-palette-row">
+                        <span class="qr-sublabel" style="margin-bottom: 0; margin-right: 4px;">Presets:</span>
+                        <button type="button" class="qr-palette-btn active" data-fg="#121214" data-bg="#ffffff" title="Classic Monochrome" style="background: linear-gradient(135deg, #121214 50%, #ffffff 50%);"></button>
+                        <button type="button" class="qr-palette-btn" data-fg="#ff5733" data-bg="#faf8f5" title="FileForge Coral" style="background: linear-gradient(135deg, #ff5733 50%, #faf8f5 50%);"></button>
+                        <button type="button" class="qr-palette-btn" data-fg="#1d4ed8" data-bg="#f0f7ff" title="Ocean Blue" style="background: linear-gradient(135deg, #1d4ed8 50%, #f0f7ff 50%);"></button>
+                        <button type="button" class="qr-palette-btn" data-fg="#047857" data-bg="#ecfdf5" title="Forest Emerald" style="background: linear-gradient(135deg, #047857 50%, #ecfdf5 50%);"></button>
+                        <button type="button" class="qr-palette-btn" data-fg="#6d28d9" data-bg="#f5f3ff" title="Royal Violet" style="background: linear-gradient(135deg, #6d28d9 50%, #f5f3ff 50%);"></button>
+                        <button type="button" class="qr-palette-btn" data-fg="#d97706" data-bg="#fffbeb" title="Sunset Amber" style="background: linear-gradient(135deg, #d97706 50%, #fffbeb 50%);"></button>
+                        <button type="button" class="qr-palette-btn" data-fg="#ffffff" data-bg="#111216" title="Dark Inverted" style="background: linear-gradient(135deg, #ffffff 50%, #111216 50%);"></button>
+                      </div>
+
+                      <div class="qr-color-swatches-grid">
+                        <div class="qr-swatch-box">
+                          <label class="qr-sublabel" for="qr-color-fg">QR Color</label>
+                          <div class="qr-color-trigger-wrap">
+                            <input type="color" id="qr-color-fg" class="qr-hidden-picker" value="#121214">
+                            <button type="button" class="qr-swatch-display" id="qr-fg-swatch" style="background-color: #121214;" title="Click to pick color"></button>
+                            <input type="text" id="qr-color-fg-hex" class="form-control qr-hex-compact" value="#121214" maxlength="7">
+                          </div>
+                        </div>
+                        <div class="qr-swatch-box">
+                          <label class="qr-sublabel" for="qr-color-bg">Background</label>
+                          <div class="qr-color-trigger-wrap">
+                            <input type="color" id="qr-color-bg" class="qr-hidden-picker" value="#ffffff">
+                            <button type="button" class="qr-swatch-display" id="qr-bg-swatch" style="background-color: #ffffff;" title="Click to pick color"></button>
+                            <input type="text" id="qr-color-bg-hex" class="form-control qr-hex-compact" value="#FFFFFF" maxlength="7">
+                          </div>
+                        </div>
+                        <div class="qr-swatch-box">
+                          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                            <label class="qr-sublabel" style="margin-bottom: 0;" for="qr-color-eye">Corner Eye</label>
+                            <label class="qr-toggle-mini" title="Enable custom corner eye color">
+                              <input type="checkbox" id="qr-eye-custom-check">
+                              <span class="qr-toggle-slider"></span>
+                            </label>
+                          </div>
+                          <div id="qr-eye-color-wrap" class="qr-color-trigger-wrap disabled-control">
+                            <input type="color" id="qr-color-eye" class="qr-hidden-picker" value="#121214">
+                            <button type="button" class="qr-swatch-display" id="qr-eye-swatch" style="background-color: #121214;" title="Click to pick color"></button>
+                            <input type="text" id="qr-color-eye-hex" class="form-control qr-hex-compact" value="#121214" maxlength="7">
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
-                  <button type="button" id="qr-reset-btn" class="btn btn-ghost btn-sm">↺ Reset to Defaults</button>
+                  <!-- Panel 5: Settings -->
+                  <div class="qr-customizer-panel hidden" id="qr-panel-settings">
+                    <div class="qr-panel-intro">
+                      <span class="qr-control-heading">QR Generation Settings</span>
+                      <span class="form-hint" style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                        Configure resolution, quiet zone margin, and Reed-Solomon error recovery.
+                      </span>
+                    </div>
+
+                    <div class="qr-control-section">
+                      <div class="qr-segmented-row">
+                        <div class="qr-segmented-field">
+                          <span class="qr-sublabel">Resolution</span>
+                          <div class="qr-segmented-bar" id="qr-size-group">
+                            <button type="button" class="qr-segmented-btn" data-size="240">240px</button>
+                            <button type="button" class="qr-segmented-btn active" data-size="320">320px</button>
+                            <button type="button" class="qr-segmented-btn" data-size="480">480px</button>
+                            <button type="button" class="qr-segmented-btn" data-size="800">800px</button>
+                          </div>
+                        </div>
+                        <div class="qr-segmented-field">
+                          <span class="qr-sublabel">Margin</span>
+                          <div class="qr-segmented-bar" id="qr-margin-group">
+                            <button type="button" class="qr-segmented-btn" data-margin="0">0</button>
+                            <button type="button" class="qr-segmented-btn active" data-margin="10">10px</button>
+                            <button type="button" class="qr-segmented-btn" data-margin="20">20px</button>
+                          </div>
+                        </div>
+                        <div class="qr-segmented-field">
+                          <span class="qr-sublabel">Error Correction</span>
+                          <div class="qr-segmented-bar" id="qr-ec-group">
+                            <button type="button" class="qr-segmented-btn" data-ec="L" title="7% error recovery">L</button>
+                            <button type="button" class="qr-segmented-btn active" data-ec="M" title="15% error recovery">M</button>
+                            <button type="button" class="qr-segmented-btn" data-ec="Q" title="25% error recovery">Q</button>
+                            <button type="button" class="qr-segmented-btn" data-ec="H" title="30% error recovery">H</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
+                      <button type="button" id="qr-reset-btn" class="btn btn-ghost btn-sm">↺ Reset to Defaults</button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -5325,6 +5545,8 @@
   <script src="js/file-previewer.js"></script>
   <script src="js/file-renamer.js"></script>
   <script src="js/batch-processor.js"></script>
+  <script src="js/qr-presets-data.js"></script>
+  <script src="js/qr-frame-renderer.js"></script>
   <script src="js/qr-generator.js"></script>
   <script src="js/tool-guides.js"></script>
   <script src="js/app.js?v=1.0.5"></script>

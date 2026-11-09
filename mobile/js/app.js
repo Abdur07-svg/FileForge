@@ -401,7 +401,9 @@ const MobileApp = (() => {
   }
 
   function showToolView(toolId) {
-    if (isAndroidApp() || currentToolId !== toolId) {
+    if (toolId === 'qr-generator') {
+      resetToolState('qr-generator');
+    } else if (isAndroidApp() || currentToolId !== toolId) {
       resetState(toolId);
     }
     currentToolId = toolId;
@@ -3667,8 +3669,8 @@ const MobileApp = (() => {
       window.MobileQRCodeGenerator.init();
     }
     registerToolReset('qr-generator', () => {
-      if (window.MobileQRCodeGenerator && typeof window.MobileQRCodeGenerator.scheduleUpdate === 'function') {
-        window.MobileQRCodeGenerator.scheduleUpdate();
+      if (window.MobileQRCodeGenerator && typeof window.MobileQRCodeGenerator.reset === 'function') {
+        window.MobileQRCodeGenerator.reset();
       }
     });
   }
