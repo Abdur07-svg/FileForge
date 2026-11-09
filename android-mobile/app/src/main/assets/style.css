@@ -3362,3 +3362,91 @@ body.in-subview #mobile-top-header,
   font-weight: 700;
 }
 
+
+
+/* ==========================================================================
+   FileForge Visual QR Customizer — Style & Eye Selectors (2-Column Grid)
+   ========================================================================== */
+.qr-section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.qr-style-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.qr-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.qr-pill-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #f6f8fb;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  color: #1e2029;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.qr-pill-btn svg {
+  flex-shrink: 0;
+  color: inherit;
+  fill: currentColor;
+}
+
+.qr-pill-btn:hover {
+  background: #ebeef5;
+  color: #0f172a;
+}
+
+.qr-pill-btn.active {
+  background: #4f46e5 !important;
+  color: #ffffff !important;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  font-weight: 600;
+}
+
+.qr-pill-btn.active svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+[data-theme="dark"] .qr-pill-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .qr-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .qr-pill-btn.active {
+  background: #4f46e5 !important;
+  color: #ffffff !important;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.45);
+}

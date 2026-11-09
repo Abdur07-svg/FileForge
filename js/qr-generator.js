@@ -26,6 +26,7 @@ const QRCodeGenerator = (() => {
     activePresetId: 'classic-pure',
     activeFrameId: 'frame-none',
     frameText: 'SCAN ME',
+    userHasEditedCtaText: false,
     frameColor: '#121214',
     frameTextColor: '#ffffff',
     frameBg: '#ffffff',
@@ -376,11 +377,28 @@ const QRCodeGenerator = (() => {
   function applyFramePreset(frame, targetContext = 'desktop') {
     state.activeFrameId = frame.id;
 
-    // Set default frame text if input is empty or matches another default
+    const renderer = getFrameRenderer();
+    const supportsCta = (renderer && typeof renderer.isFrameCtaSupported === 'function')
+      ? renderer.isFrameCtaSupported(frame.type)
+      : (frame.type !== 'none');
+
     const frameTextInput = document.getElementById(targetContext === 'mobile' ? 'mqr-frame-text-input' : 'qr-frame-text-input');
-    if (frameTextInput && (!state.frameText || state.frameText === 'SCAN ME' || state.frameText === 'SCAN')) {
-      state.frameText = frame.defaultText || 'SCAN ME';
-      frameTextInput.value = state.frameText;
+    if (frameTextInput) {
+      if (!supportsCta) {
+        frameTextInput.disabled = true;
+        frameTextInput.placeholder = 'Selected frame has no text banner';
+        frameTextInput.title = 'This frame design does not include a CTA text banner';
+      } else {
+        frameTextInput.disabled = false;
+        frameTextInput.placeholder = 'e.g. SCAN ME, ORDER HERE, VISIT US';
+        frameTextInput.title = '';
+        if (!state.userHasEditedCtaText) {
+          state.frameText = (frame.defaultText !== undefined) ? frame.defaultText : 'SCAN ME';
+          frameTextInput.value = state.frameText;
+        } else {
+          frameTextInput.value = state.frameText;
+        }
+      }
     }
 
     // Update active highlight
@@ -414,16 +432,16 @@ const QRCodeGenerator = (() => {
     if (eyeRow) eyeRow.classList.toggle('disabled-control', !state.customEyeColor);
 
     // Visual cards
-    document.querySelectorAll(`#${prefix}pattern-group .qr-visual-card`).forEach(c => {
+    document.querySelectorAll(`#${prefix}pattern-group [data-pattern]`).forEach(c => {
       c.classList.toggle('active', c.getAttribute('data-pattern') === state.patternStyle);
     });
     const patLbl = document.getElementById(`${prefix}pattern-label`);
     if (patLbl) patLbl.textContent = state.patternStyle.toUpperCase();
 
-    document.querySelectorAll(`#${prefix}corner-sq-group .qr-visual-card`).forEach(c => {
+    document.querySelectorAll(`#${prefix}corner-sq-group [data-corner-sq]`).forEach(c => {
       c.classList.toggle('active', c.getAttribute('data-corner-sq') === state.cornerSquareStyle);
     });
-    document.querySelectorAll(`#${prefix}corner-dot-group .qr-visual-card`).forEach(c => {
+    document.querySelectorAll(`#${prefix}corner-dot-group [data-corner-dot]`).forEach(c => {
       c.classList.toggle('active', c.getAttribute('data-corner-dot') === state.cornerDotStyle);
     });
   }
@@ -502,6 +520,7 @@ const QRCodeGenerator = (() => {
     const frameTextInput = document.getElementById('qr-frame-text-input');
     if (frameTextInput) {
       frameTextInput.addEventListener('input', () => {
+        state.userHasEditedCtaText = true;
         state.frameText = frameTextInput.value;
         updateCompositePreview('desktop');
       });
@@ -693,7 +712,7 @@ const QRCodeGenerator = (() => {
     });
 
     // Pattern style selector
-    const patternCards = document.querySelectorAll('#qr-pattern-group .qr-visual-card');
+    const patternCards = document.querySelectorAll('#qr-pattern-group [data-pattern]');
     const patternLabel = document.getElementById('qr-pattern-label');
     patternCards.forEach(card => {
       card.addEventListener('click', () => {
@@ -707,7 +726,7 @@ const QRCodeGenerator = (() => {
     });
 
     // Corner square selector
-    const cornerSqCards = document.querySelectorAll('#qr-corner-sq-group .qr-visual-card');
+    const cornerSqCards = document.querySelectorAll('#qr-corner-sq-group [data-corner-sq]');
     cornerSqCards.forEach(card => {
       card.addEventListener('click', () => {
         cornerSqCards.forEach(c => c.classList.remove('active'));
@@ -718,7 +737,7 @@ const QRCodeGenerator = (() => {
     });
 
     // Corner dot selector
-    const cornerDotCards = document.querySelectorAll('#qr-corner-dot-group .qr-visual-card');
+    const cornerDotCards = document.querySelectorAll('#qr-corner-dot-group [data-corner-dot]');
     cornerDotCards.forEach(card => {
       card.addEventListener('click', () => {
         cornerDotCards.forEach(c => c.classList.remove('active'));
@@ -854,11 +873,16 @@ const QRCodeGenerator = (() => {
       const filename = `FileForge-QR-Code.${ext}`;
 
       if (format === 'svg') {
-        const dataUrl = finalCanvas.toDataURL('image/png');
-        const svgContent = `<?xml version="1.0" encoding="utf-8"?>
+        let svgContent = '';
+        if (renderer && typeof renderer.getCompositeSvg === 'function' && framePreset && framePreset.type !== 'none') {
+          svgContent = renderer.getCompositeSvg(exportCanvas, framePreset, frameOptions, labelOptions);
+        } else {
+          const dataUrl = finalCanvas.toDataURL('image/png');
+          svgContent = `<?xml version="1.0" encoding="utf-8"?>
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${finalCanvas.width}" height="${finalCanvas.height}" viewBox="0 0 ${finalCanvas.width} ${finalCanvas.height}">
   <image width="${finalCanvas.width}" height="${finalCanvas.height}" xlink:href="${dataUrl}"/>
 </svg>`;
+        }
         const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
         saveExportBlob(blob, filename, 'image/svg+xml', targetContext);
       } else {
@@ -1004,7 +1028,12 @@ const QRCodeGenerator = (() => {
 
     // Frame CTA text & colors
     const frameTextInput = document.getElementById('qr-frame-text-input');
-    if (frameTextInput) frameTextInput.value = DEFAULT_OPTIONS.frameText;
+    if (frameTextInput) {
+      frameTextInput.value = DEFAULT_OPTIONS.frameText;
+      frameTextInput.disabled = true;
+      frameTextInput.placeholder = 'Selected frame has no text banner';
+      frameTextInput.title = 'This frame design does not include a CTA text banner';
+    }
 
     syncColorPair('qr-frame-color', 'qr-frame-color-hex', DEFAULT_OPTIONS.frameColor);
     updateSwatchDisplay('qr-frame-swatch', DEFAULT_OPTIONS.frameColor);

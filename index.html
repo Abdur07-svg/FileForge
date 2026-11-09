@@ -4357,138 +4357,109 @@
                     </div>
                   </div>
 
-                  <!-- Panel 4: Custom Style -->
+                                    <!-- Panel 4: Custom Style -->
                   <div class="qr-customizer-panel hidden" id="qr-panel-custom">
-                    <!-- Pattern Style Selector -->
+                    <!-- Style (Body Pattern) -->
                     <div class="qr-control-section">
-                      <div class="qr-section-header">
-                        <h4 class="qr-control-heading">Body Pattern Style</h4>
-                        <span class="qr-active-pill" id="qr-pattern-label">Square</span>
+                      <div class="qr-section-title-row">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                        </svg>
+                        <h4 class="qr-style-section-title">Style</h4>
                       </div>
-                      <div class="qr-visual-grid qr-pattern-grid" id="qr-pattern-group">
-                        <button type="button" class="qr-visual-card active" data-pattern="square" title="Square (Standard)">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                              <rect x="3" y="3" width="11" height="11"/>
-                              <rect x="18" y="3" width="11" height="11"/>
-                              <rect x="3" y="18" width="11" height="11"/>
-                              <rect x="18" y="18" width="11" height="11"/>
-                            </svg>
-                          </div>
-                          <span class="qr-visual-title">Square</span>
+                      <div class="qr-pill-grid qr-grid-2col" id="qr-pattern-group">
+                        <button type="button" class="qr-pill-btn active" data-pattern="square">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="4" y="4" width="16" height="16"/></svg>
+                          <span>Square</span>
                         </button>
-                        <button type="button" class="qr-visual-card" data-pattern="rounded" title="Rounded">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                              <rect x="3" y="3" width="11" height="11" rx="3"/>
-                              <rect x="18" y="3" width="11" height="11" rx="3"/>
-                              <rect x="3" y="18" width="11" height="11" rx="3"/>
-                              <rect x="18" y="18" width="11" height="11" rx="3"/>
-                            </svg>
-                          </div>
-                          <span class="qr-visual-title">Rounded</span>
+                        <button type="button" class="qr-pill-btn" data-pattern="dots">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>
+                          <span>Dots</span>
                         </button>
-                        <button type="button" class="qr-visual-card" data-pattern="dots" title="Dots">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                              <circle cx="8" cy="8" r="5.5"/>
-                              <circle cx="24" cy="8" r="5.5"/>
-                              <circle cx="8" cy="24" r="5.5"/>
-                              <circle cx="24" cy="24" r="5.5"/>
-                            </svg>
-                          </div>
-                          <span class="qr-visual-title">Dots</span>
+                        <button type="button" class="qr-pill-btn" data-pattern="rounded">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>
+                          <span>Round</span>
                         </button>
-                        <button type="button" class="qr-visual-card" data-pattern="extra-rounded" title="Extra Rounded">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                              <rect x="3" y="3" width="11" height="11" rx="5.5"/>
-                              <rect x="18" y="3" width="11" height="11" rx="5.5"/>
-                              <rect x="3" y="18" width="11" height="11" rx="5.5"/>
-                              <rect x="18" y="18" width="11" height="11" rx="5.5"/>
-                            </svg>
-                          </div>
-                          <span class="qr-visual-title">Extra Round</span>
+                        <button type="button" class="qr-pill-btn" data-pattern="heart">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                          <span>Heart</span>
                         </button>
-                        <button type="button" class="qr-visual-card" data-pattern="classy" title="Classy Diamond">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                              <polygon points="8,2 14,8 8,14 2,8"/>
-                              <polygon points="24,2 30,8 24,14 18,8"/>
-                              <polygon points="8,18 14,24 8,30 2,24"/>
-                              <polygon points="24,18 30,24 24,30 18,24"/>
-                            </svg>
-                          </div>
-                          <span class="qr-visual-title">Classy</span>
-                        </button>
-                        <button type="button" class="qr-visual-card" data-pattern="classy-rounded" title="Classy Rounded">
-                          <div class="qr-visual-thumb">
-                            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                              <path d="M3 3 H14 V9 C14 11.8 11.8 14 9 14 H3 Z"/>
-                              <path d="M18 3 H29 V14 H23 C20.2 14 18 11.8 18 9 Z"/>
-                              <path d="M3 18 H9 C11.8 18 14 20.2 14 23 V29 H3 Z"/>
-                              <path d="M29 18 V29 H18 V23 C18 20.2 20.2 18 23 18 Z"/>
-                            </svg>
-                          </div>
-                          <span class="qr-visual-title">Classy Round</span>
+                        <button type="button" class="qr-pill-btn" data-pattern="diamond">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 3h12l4 6-10 12L2 9l4-6zm2.2 2L5 8.5h14L15.8 5H8.2z"/></svg>
+                          <span>Diamond</span>
                         </button>
                       </div>
                     </div>
 
-                    <!-- Corner / Eye Customizer -->
+                    <!-- Inner eye style -->
                     <div class="qr-control-section">
-                      <div class="qr-section-header">
-                        <h4 class="qr-control-heading">Corner / Eye Styling</h4>
+                      <div class="qr-section-title-row">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                          <circle cx="12" cy="12" r="7"/>
+                        </svg>
+                        <h4 class="qr-style-section-title">Inner eye style</h4>
                       </div>
-                      <div style="margin-bottom: 12px;">
-                        <span class="qr-sublabel">Corner Frame</span>
-                        <div class="qr-visual-grid qr-corner-frame-grid" id="qr-corner-sq-group">
-                          <button type="button" class="qr-visual-card active" data-corner-sq="square" title="Square Frame">
-                            <div class="qr-visual-thumb">
-                              <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
-                                <rect x="4" y="4" width="24" height="24"/>
-                              </svg>
-                            </div>
-                            <span class="qr-visual-title">Square</span>
-                          </button>
-                          <button type="button" class="qr-visual-card" data-corner-sq="extra-rounded" title="Rounded Frame">
-                            <div class="qr-visual-thumb">
-                              <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
-                                <rect x="4" y="4" width="24" height="24" rx="7"/>
-                              </svg>
-                            </div>
-                            <span class="qr-visual-title">Rounded</span>
-                          </button>
-                          <button type="button" class="qr-visual-card" data-corner-sq="dot" title="Circle Frame">
-                            <div class="qr-visual-thumb">
-                              <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3.5">
-                                <circle cx="16" cy="16" r="12"/>
-                              </svg>
-                            </div>
-                            <span class="qr-visual-title">Circle</span>
-                          </button>
-                        </div>
+                      <div class="qr-pill-grid qr-grid-2col" id="qr-corner-dot-group">
+                        <button type="button" class="qr-pill-btn active" data-corner-dot="square">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="4" y="4" width="16" height="16"/></svg>
+                          <span>Square</span>
+                        </button>
+                        <button type="button" class="qr-pill-btn" data-corner-dot="dot">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>
+                          <span>Dots</span>
+                        </button>
+                        <button type="button" class="qr-pill-btn" data-corner-dot="rounded">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>
+                          <span>Rounded</span>
+                        </button>
+                        <button type="button" class="qr-pill-btn" data-corner-dot="diamond">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 3h12l4 6-10 12L2 9l4-6zm2.2 2L5 8.5h14L15.8 5H8.2z"/></svg>
+                          <span>Diamond</span>
+                        </button>
+                        <button type="button" class="qr-pill-btn" data-corner-dot="flower">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2a4 4 0 0 0-4 4 4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0 4-4 4 4 0 0 0-4-4 4 4 0 0 0-4-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+                          <span>Flower</span>
+                        </button>
+                        <button type="button" class="qr-pill-btn" data-corner-dot="leaf">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17 3h-2C9.5 3 5 7.5 5 13c0 2.5 1 4.5 2.5 6L6 21l2-1.5c1.5 1.5 3.5 2.5 6 2.5 5.5 0 10-4.5 10-10V5l-7-2zm-2.5 14c-1.8 0-3.4-.6-4.7-1.7 1.8-2.6 4.3-4.5 7.2-5.3-.8 4.3-4.2 7-2.5 7z"/></svg>
+                          <span>Leaf</span>
+                        </button>
                       </div>
-                      <div>
-                        <span class="qr-sublabel">Corner Inner Dot</span>
-                        <div class="qr-visual-grid qr-corner-dot-grid" id="qr-corner-dot-group">
-                          <button type="button" class="qr-visual-card active" data-corner-dot="square" title="Square Dot">
-                            <div class="qr-visual-thumb">
-                              <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                                <rect x="8" y="8" width="16" height="16"/>
-                              </svg>
-                            </div>
-                            <span class="qr-visual-title">Square</span>
-                          </button>
-                          <button type="button" class="qr-visual-card" data-corner-dot="dot" title="Circle Dot">
-                            <div class="qr-visual-thumb">
-                              <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
-                                <circle cx="16" cy="16" r="8"/>
-                              </svg>
-                            </div>
-                            <span class="qr-visual-title">Circle</span>
-                          </button>
-                        </div>
+                    </div>
+
+                    <!-- Outer eye style -->
+                    <div class="qr-control-section">
+                      <div class="qr-section-title-row">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <circle cx="12" cy="12" r="8"/>
+                          <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+                        </svg>
+                        <h4 class="qr-style-section-title">Outer eye style</h4>
+                      </div>
+                      <div class="qr-pill-grid qr-grid-2col" id="qr-corner-sq-group">
+                        <button type="button" class="qr-pill-btn active" data-corner-sq="square">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="4" y="4" width="16" height="16"/></svg>
+                          <span>Square</span>
+                        </button>
+                        <button type="button" class="qr-pill-btn" data-corner-sq="dot">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+                          <span>Circle</span>
+                        </button>
+                        <button type="button" class="qr-pill-btn" data-corner-sq="extra-rounded">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="5"/></svg>
+                          <span>Rounded</span>
+                        </button>
+                        <button type="button" class="qr-pill-btn" data-corner-sq="flower">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2a4 4 0 0 0-4 4 4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0 4-4 4 4 0 0 0-4-4 4 4 0 0 0-4-4zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+                          <span>Flower</span>
+                        </button>
+                        <button type="button" class="qr-pill-btn" data-corner-sq="leaf">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17 3h-2C9.5 3 5 7.5 5 13c0 2.5 1 4.5 2.5 6L6 21l2-1.5c1.5 1.5 3.5 2.5 6 2.5 5.5 0 10-4.5 10-10V5l-7-2zm-2.5 14c-1.8 0-3.4-.6-4.7-1.7 1.8-2.6 4.3-4.5 7.2-5.3-.8 4.3-4.2 7-2.5 7z"/></svg>
+                          <span>Leaf</span>
+                        </button>
                       </div>
                     </div>
 

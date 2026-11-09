@@ -26,6 +26,7 @@ const MobileQRCodeGenerator = (() => {
     activePresetId: 'classic-pure',
     activeFrameId: 'frame-none',
     frameText: 'SCAN ME',
+    userHasEditedCtaText: false,
     frameColor: '#121214',
     frameTextColor: '#ffffff',
     frameBg: '#ffffff',
@@ -345,10 +346,28 @@ const MobileQRCodeGenerator = (() => {
   function applyFramePreset(frame) {
     state.activeFrameId = frame.id;
 
+    const renderer = getFrameRenderer();
+    const supportsCta = (renderer && typeof renderer.isFrameCtaSupported === 'function')
+      ? renderer.isFrameCtaSupported(frame.type)
+      : (frame.type !== 'none');
+
     const frameTextInput = document.getElementById('mqr-frame-text-input');
-    if (frameTextInput && (!state.frameText || state.frameText === 'SCAN ME' || state.frameText === 'SCAN')) {
-      state.frameText = frame.defaultText || 'SCAN ME';
-      frameTextInput.value = state.frameText;
+    if (frameTextInput) {
+      if (!supportsCta) {
+        frameTextInput.disabled = true;
+        frameTextInput.placeholder = 'Selected frame has no text banner';
+        frameTextInput.title = 'This frame design does not include a CTA text banner';
+      } else {
+        frameTextInput.disabled = false;
+        frameTextInput.placeholder = 'e.g. SCAN ME, ORDER HERE, VISIT US';
+        frameTextInput.title = '';
+        if (!state.userHasEditedCtaText) {
+          state.frameText = (frame.defaultText !== undefined) ? frame.defaultText : 'SCAN ME';
+          frameTextInput.value = state.frameText;
+        } else {
+          frameTextInput.value = state.frameText;
+        }
+      }
     }
 
     const container = document.getElementById('mqr-frames-gallery');
@@ -374,16 +393,16 @@ const MobileQRCodeGenerator = (() => {
     if (eyeCheck) eyeCheck.checked = state.customEyeColor;
     if (eyeRow) eyeRow.classList.toggle('disabled-control', !state.customEyeColor);
 
-    document.querySelectorAll('#mqr-pattern-group .mqr-visual-card').forEach(c => {
+    document.querySelectorAll('#mqr-pattern-group [data-pattern]').forEach(c => {
       c.classList.toggle('active', c.getAttribute('data-pattern') === state.patternStyle);
     });
     const patLbl = document.getElementById('mqr-pattern-label');
     if (patLbl) patLbl.textContent = state.patternStyle.toUpperCase();
 
-    document.querySelectorAll('#mqr-corner-sq-group .mqr-visual-card').forEach(c => {
+    document.querySelectorAll('#mqr-corner-sq-group [data-corner-sq]').forEach(c => {
       c.classList.toggle('active', c.getAttribute('data-corner-sq') === state.cornerSquareStyle);
     });
-    document.querySelectorAll('#mqr-corner-dot-group .mqr-visual-card').forEach(c => {
+    document.querySelectorAll('#mqr-corner-dot-group [data-corner-dot]').forEach(c => {
       c.classList.toggle('active', c.getAttribute('data-corner-dot') === state.cornerDotStyle);
     });
   }
@@ -459,6 +478,7 @@ const MobileQRCodeGenerator = (() => {
     const frameTextInput = document.getElementById('mqr-frame-text-input');
     if (frameTextInput) {
       frameTextInput.addEventListener('input', () => {
+        state.userHasEditedCtaText = true;
         state.frameText = frameTextInput.value;
         updateCompositePreview();
       });
@@ -648,7 +668,7 @@ const MobileQRCodeGenerator = (() => {
       });
     });
 
-    const patternCards = document.querySelectorAll('#mqr-pattern-group .mqr-visual-card');
+    const patternCards = document.querySelectorAll('#mqr-pattern-group [data-pattern]');
     const patternLabel = document.getElementById('mqr-pattern-label');
     patternCards.forEach(card => {
       card.addEventListener('click', () => {
@@ -661,7 +681,7 @@ const MobileQRCodeGenerator = (() => {
       });
     });
 
-    const cornerSqCards = document.querySelectorAll('#mqr-corner-sq-group .mqr-visual-card');
+    const cornerSqCards = document.querySelectorAll('#mqr-corner-sq-group [data-corner-sq]');
     cornerSqCards.forEach(card => {
       card.addEventListener('click', () => {
         cornerSqCards.forEach(c => c.classList.remove('active'));
@@ -671,7 +691,7 @@ const MobileQRCodeGenerator = (() => {
       });
     });
 
-    const cornerDotCards = document.querySelectorAll('#mqr-corner-dot-group .mqr-visual-card');
+    const cornerDotCards = document.querySelectorAll('#mqr-corner-dot-group [data-corner-dot]');
     cornerDotCards.forEach(card => {
       card.addEventListener('click', () => {
         cornerDotCards.forEach(c => c.classList.remove('active'));
@@ -786,11 +806,16 @@ const MobileQRCodeGenerator = (() => {
       const filename = `FileForge-QR-Code.${ext}`;
 
       if (format === 'svg') {
-        const dataUrl = finalCanvas.toDataURL('image/png');
-        const svgContent = `<?xml version="1.0" encoding="utf-8"?>
+        let svgContent = '';
+        if (renderer && typeof renderer.getCompositeSvg === 'function' && framePreset && framePreset.type !== 'none') {
+          svgContent = renderer.getCompositeSvg(exportCanvas, framePreset, frameOptions, labelOptions);
+        } else {
+          const dataUrl = finalCanvas.toDataURL('image/png');
+          svgContent = `<?xml version="1.0" encoding="utf-8"?>
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${finalCanvas.width}" height="${finalCanvas.height}" viewBox="0 0 ${finalCanvas.width} ${finalCanvas.height}">
   <image width="${finalCanvas.width}" height="${finalCanvas.height}" xlink:href="${dataUrl}"/>
 </svg>`;
+        }
         const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
         saveExportBlob(blob, filename, 'image/svg+xml');
       } else {
@@ -931,7 +956,12 @@ const MobileQRCodeGenerator = (() => {
 
     // Reset frame text & colors
     const frameTextInput = document.getElementById('mqr-frame-text-input');
-    if (frameTextInput) frameTextInput.value = DEFAULT_OPTIONS.frameText;
+    if (frameTextInput) {
+      frameTextInput.value = DEFAULT_OPTIONS.frameText;
+      frameTextInput.disabled = true;
+      frameTextInput.placeholder = 'Selected frame has no text banner';
+      frameTextInput.title = 'This frame design does not include a CTA text banner';
+    }
 
     syncColorPair('mqr-frame-color', 'mqr-frame-color-hex', DEFAULT_OPTIONS.frameColor);
     updateSwatchDisplay('mqr-frame-swatch', DEFAULT_OPTIONS.frameColor);
