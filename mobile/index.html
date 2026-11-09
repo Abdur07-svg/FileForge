@@ -323,7 +323,6 @@
           <div>Version 1.0.0 (Release Build) • Developed by Abdur</div>
           <div style="margin-top: 4px; font-size: 0.76rem; color: var(--text-muted);">&copy; 2026 FileForge • 100% Client-Side Privacy</div>
         </div>
-        <div class="settings-footer-text">FileForge Mobile • 100% Client-Side Privacy</div>
       </div>
 
       <div id="mobile-about-view" class="mobile-view-enter hidden">
@@ -417,7 +416,7 @@
             FileForge is designed so that many file-processing operations can be performed directly in your browser or on your device.
           </p>
           <p>For tools that support local processing:</p>
-          <ul>
+          <ul class="info-doc-list">
             <li>Files selected through the Android system file picker are processed directly on your device.</li>
             <li>Files are not intentionally uploaded to a FileForge server for processing.</li>
             <li>Temporary processing data exists only in temporary device memory (RAM) while the tool is being used.</li>
@@ -438,7 +437,7 @@
           <p>
             FileForge may store basic UI preferences locally in device storage, such as:
           </p>
-          <ul>
+          <ul class="info-doc-list">
             <li>Dark Mode preference</li>
             <li>Haptic Feedback preference</li>
             <li>Confirm Before Exit preference</li>
@@ -1496,10 +1495,6 @@
 
     </main>
 
-    <footer class="mobile-footer">
-      <div>FileForge Mobile • 100% Client-Side Privacy</div>
-    </footer>
-
     <div id="mobile-i2p-editor-modal" class="mobile-modal-overlay hidden" role="dialog" aria-modal="true">
       <div class="mobile-modal-dialog">
         <div class="mobile-modal-header">
@@ -2066,13 +2061,21 @@
       function setScreen(screenName) {
         const homeScreen = document.getElementById('ff-screen-home');
         const dashScreen = document.getElementById('ff-screen-dashboard');
+        const fabSearch = document.getElementById('ff-fab-search');
+        const tabRecent = document.getElementById('ff-tab-recent');
 
         currentScreen = screenName;
 
         if (screenName === 'dashboard') {
+          document.body.classList.remove('home-locked');
           if (homeScreen) { homeScreen.classList.add('hidden'); homeScreen.classList.remove('active'); }
           if (dashScreen) { dashScreen.classList.remove('hidden'); dashScreen.classList.add('active'); }
+          const isRecent = tabRecent && tabRecent.classList.contains('active');
+          if (fabSearch) fabSearch.classList.toggle('hidden', isRecent);
         } else {
+          if (!document.body.classList.contains('in-subview')) {
+            document.body.classList.add('home-locked');
+          }
           if (dashScreen) { dashScreen.classList.add('hidden'); dashScreen.classList.remove('active'); }
           if (homeScreen) { homeScreen.classList.remove('hidden'); homeScreen.classList.add('active'); }
         }
@@ -2238,10 +2241,12 @@
           });
         });
 
+        document.body.classList.add('modal-open');
         modal.classList.remove('hidden');
       }
 
       function closeCategorySheet() {
+        document.body.classList.remove('modal-open');
         const modal = document.getElementById('ff-category-sheet-modal');
         if (modal) modal.classList.add('hidden');
       }
@@ -2256,6 +2261,7 @@
         const listEl = document.getElementById('ff-upload-tools-list');
 
         if (!modal || !titleEl || !metaEl || !listEl) return;
+        document.body.classList.add('modal-open');
 
         const fname = file.name || 'file';
         const ext = fname.split('.').pop().toLowerCase();
@@ -2330,6 +2336,7 @@
       }
 
       function closeUploadSheet() {
+        document.body.classList.remove('modal-open');
         const modal = document.getElementById('ff-upload-sheet-modal');
         if (modal) modal.classList.add('hidden');
       }
@@ -2348,6 +2355,25 @@
         const fabSearch = document.getElementById('ff-fab-search');
         const searchBox = document.getElementById('ff-search-container');
         const searchInput = document.getElementById('mobile-search-input');
+        const tabRecent = document.getElementById('ff-tab-recent');
+        const tabAll = document.getElementById('ff-tab-all');
+        const recentSec = document.getElementById('ff-recent-section');
+        const catGrid = document.getElementById('ff-category-grid');
+
+        function restoreDashboardTabs() {
+          const isRecentActive = tabRecent && tabRecent.classList.contains('active');
+          if (isRecentActive) {
+            if (catGrid) catGrid.classList.add('hidden');
+            if (recentSec) recentSec.classList.remove('hidden');
+            if (fabSearch) fabSearch.classList.add('hidden');
+            renderRecentSection();
+          } else {
+            if (recentSec) recentSec.classList.add('hidden');
+            if (catGrid) catGrid.classList.remove('hidden');
+            if (fabSearch) fabSearch.classList.remove('hidden');
+          }
+        }
+
         if (fabSearch) {
           fabSearch.addEventListener('click', (e) => {
             e.preventDefault();
@@ -2356,9 +2382,17 @@
               const isHidden = searchBox.classList.contains('hidden');
               if (isHidden) {
                 searchBox.classList.remove('hidden');
-                if (searchInput) searchInput.focus();
+                setTimeout(() => {
+                  if (searchInput) searchInput.focus({ preventScroll: true });
+                }, 80);
               } else {
                 searchBox.classList.add('hidden');
+                if (searchInput) searchInput.value = '';
+                if (resultsList) {
+                  resultsList.classList.add('hidden');
+                  resultsList.innerHTML = '';
+                }
+                restoreDashboardTabs();
               }
             }
           });
@@ -2381,6 +2415,8 @@
           headerSettingsBtn.addEventListener('click', () => {
             haptic('light');
             screenBeforeSettings = currentScreen;
+            document.body.classList.remove('home-locked');
+            document.body.classList.add('in-subview');
             window.location.hash = '#settings';
           });
         }
@@ -2414,11 +2450,6 @@
           }, true);
         });
 
-        const tabRecent = document.getElementById('ff-tab-recent');
-        const tabAll = document.getElementById('ff-tab-all');
-        const recentSec = document.getElementById('ff-recent-section');
-        const catGrid = document.getElementById('ff-category-grid');
-
         if (tabRecent) {
           tabRecent.addEventListener('click', () => {
             haptic('light');
@@ -2428,8 +2459,15 @@
               tabAll.classList.remove('active');
               tabAll.setAttribute('aria-selected', 'false');
             }
+            if (searchBox) searchBox.classList.add('hidden');
+            if (searchInput) searchInput.value = '';
+            if (resultsList) {
+              resultsList.classList.add('hidden');
+              resultsList.innerHTML = '';
+            }
             if (catGrid) catGrid.classList.add('hidden');
             if (recentSec) recentSec.classList.remove('hidden');
+            if (fabSearch) fabSearch.classList.add('hidden');
             renderRecentSection();
           });
         }
@@ -2445,6 +2483,7 @@
             }
             if (recentSec) recentSec.classList.add('hidden');
             if (catGrid) catGrid.classList.remove('hidden');
+            if (fabSearch) fabSearch.classList.remove('hidden');
           });
         }
 
@@ -2466,6 +2505,7 @@
           bd.addEventListener('click', (e) => {
             if (e.target === bd) {
               bd.classList.add('hidden');
+              document.body.classList.remove('modal-open');
             }
           });
         });
@@ -2499,8 +2539,7 @@
             if (q.length === 0) {
               resultsList.classList.add('hidden');
               resultsList.innerHTML = '';
-              if (catGrid) catGrid.classList.remove('hidden');
-              if (recentSec) recentSec.classList.remove('hidden');
+              restoreDashboardTabs();
               return;
             }
 
@@ -2561,8 +2600,7 @@
               clearSearchBtn.classList.add('hidden');
               resultsList.classList.add('hidden');
               resultsList.innerHTML = '';
-              if (catGrid) catGrid.classList.remove('hidden');
-              if (recentSec) recentSec.classList.remove('hidden');
+              restoreDashboardTabs();
             });
           }
         }
@@ -2576,9 +2614,15 @@
 
           if (isHomeVisible) {
             document.body.classList.remove('in-subview');
+            if (currentScreen === 'home') {
+              document.body.classList.add('home-locked');
+            } else {
+              document.body.classList.remove('home-locked');
+            }
             if (topHeader) topHeader.classList.remove('hidden');
           } else {
             document.body.classList.add('in-subview');
+            document.body.classList.remove('home-locked');
             if (topHeader) topHeader.classList.add('hidden');
           }
         }

@@ -242,9 +242,20 @@ button, input, select, textarea {
 
 .ff-screen.active {
   display: block;
-  animation: mobileFadeSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: ffFadeIn 0.18s ease;
 }
 
+body.home-locked:not(.in-subview) {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
+
+#ff-screen-home {
+  height: calc(100vh - var(--header-height));
+  max-height: calc(100vh - var(--header-height));
+  overflow: hidden;
+  touch-action: pan-x;
+}
 
 .ff-home-hero {
   min-height: calc(100vh - 190px);
@@ -256,6 +267,13 @@ button, input, select, textarea {
   padding: 20px 16px 60px;
   position: relative;
   z-index: 2;
+}
+
+#ff-screen-home .ff-home-hero {
+  height: 100%;
+  min-height: unset;
+  overflow: hidden;
+  padding: 10px 16px 20px;
 }
 
 .ff-hero-heading {
@@ -617,7 +635,7 @@ button, input, select, textarea {
   letter-spacing: -0.01em;
 }
 
-/* FLOATING ACTION BUTTONS (FAB)                             */
+
 
 .ff-floating-circle-btn {
   position: fixed;
@@ -636,8 +654,10 @@ button, input, select, textarea {
   justify-content: center;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
   z-index: 45;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+  transition: opacity 0.15s ease, background-color 0.2s ease;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transform: none !important;
 }
 
 :root[data-theme="dark"] .ff-floating-circle-btn {
@@ -647,7 +667,8 @@ button, input, select, textarea {
 }
 
 .ff-floating-circle-btn:active {
-  transform: scale(0.92);
+  opacity: 0.82;
+  transform: none !important;
 }
 
 .ff-floating-circle-btn svg {
@@ -676,7 +697,12 @@ button, input, select, textarea {
   font-size: 0.92rem;
 }
 
-/* BOTTOM SHEET MODALS                                       */
+
+
+body.modal-open {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
 
 .ff-sheet-backdrop {
   position: fixed;
@@ -689,6 +715,7 @@ button, input, select, textarea {
   align-items: flex-end;
   justify-content: center;
   animation: ffFadeIn 0.2s ease;
+  touch-action: none !important;
 }
 
 .ff-sheet-dialog {
@@ -704,6 +731,7 @@ button, input, select, textarea {
   animation: ffSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   border-top: 1px solid var(--border-color);
+  overscroll-behavior: contain !important;
 }
 
 .ff-sheet-handle {
@@ -782,6 +810,8 @@ button, input, select, textarea {
   gap: 10px;
   padding-right: 2px;
   scrollbar-width: thin;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ff-tool-item {
@@ -876,7 +906,7 @@ button, input, select, textarea {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* GENERAL CONTROLS & MODERNIZED TOOL VIEWS                  */
+
 
 .mobile-search-wrap {
   position: relative;
@@ -1876,6 +1906,33 @@ body.in-subview #mobile-top-header,
   font-weight: 800;
   color: var(--text-primary);
   margin-top: 8px;
+}
+
+.info-doc-body ul,
+.info-doc-body ol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 24px;
+  margin: 6px 0 10px 0;
+  list-style-type: disc;
+  list-style-position: outside;
+}
+
+.info-doc-body ol {
+  list-style-type: decimal;
+}
+
+.info-doc-body li {
+  padding-left: 6px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+}
+
+.info-doc-body li::marker {
+  color: var(--color-primary);
+  font-size: 0.9em;
 }
 
 .info-card-callout {
