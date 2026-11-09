@@ -448,6 +448,16 @@ const ToolGuides = (() => {
         { label: 'Create PDF', desc: 'Tap **Create PDF Document** to build the final file.' },
         { label: 'Download', desc: 'Tap **Download PDF** to save your document.' }
       ]
+    },
+    'qr-generator': {
+      title: 'How to use QR Code Generator',
+      steps: [
+        { label: 'Choose Content Type', desc: 'Select **URL**, **Plain Text**, **Image Link**, or **PDF Document Link**.' },
+        { label: 'Enter Information', desc: 'Type your website link or message with live character counter.' },
+        { label: 'Customize Style', desc: 'Pick foreground/background colors, dot patterns, corner eye shapes, and quiet margin.' },
+        { label: 'Add Center Logo (Optional)', desc: 'Upload your company or brand logo. High error correction is applied automatically.' },
+        { label: 'Download & Export', desc: 'Download as high-res **PNG** or true vector **SVG**, or copy directly to clipboard.' }
+      ]
     }
   };
 

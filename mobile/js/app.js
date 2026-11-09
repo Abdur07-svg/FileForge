@@ -130,6 +130,13 @@ const MobileApp = (() => {
       category: 'archive',
       desc: 'Pack multiple files to a ZIP',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
+    },
+    {
+      id: 'qr-generator',
+      name: 'QR Code Generator',
+      category: 'utilities',
+      desc: 'Create custom styled scannable QR codes',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'
     }
   ];
 
@@ -497,6 +504,7 @@ const MobileApp = (() => {
     initZipCreator();
     initZipExtractor();
     initDownloadAllZip();
+    initQrGenerator();
 
     document.querySelectorAll('.mobile-accordion-header').forEach(header => {
       header.addEventListener('click', () => {
@@ -3652,6 +3660,17 @@ const MobileApp = (() => {
     }
 
     registerToolReset('download-all-zip', resetDownloadAllZip);
+  }
+
+  function initQrGenerator() {
+    if (window.MobileQRCodeGenerator && typeof window.MobileQRCodeGenerator.init === 'function') {
+      window.MobileQRCodeGenerator.init();
+    }
+    registerToolReset('qr-generator', () => {
+      if (window.MobileQRCodeGenerator && typeof window.MobileQRCodeGenerator.scheduleUpdate === 'function') {
+        window.MobileQRCodeGenerator.scheduleUpdate();
+      }
+    });
   }
 
   function handleAndroidBack() {

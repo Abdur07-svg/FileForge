@@ -17,6 +17,7 @@
   <script src="vendor/pdf-lib.min.js"></script>
   <script src="vendor/pdf.min.js"></script>
   <script src="vendor/jszip.min.js"></script>
+  <script src="vendor/qr-code-styling.js"></script>
 </head>
 <body>
 
@@ -89,7 +90,7 @@
 
           <div class="ff-segmented-nav" role="tablist" aria-label="Tools Navigation">
             <button type="button" id="ff-tab-recent" class="ff-segment-tab" role="tab" aria-selected="false">Recent</button>
-            <button type="button" id="ff-tab-all" class="ff-segment-tab active" role="tab" aria-selected="true">All (51)</button>
+            <button type="button" id="ff-tab-all" class="ff-segment-tab active" role="tab" aria-selected="true">All (52)</button>
           </div>
 
           <div id="ff-recent-section" class="ff-recent-section hidden">
@@ -104,7 +105,7 @@
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <input type="text" id="mobile-search-input" class="mobile-search-input" placeholder="Search all 51 tools..." aria-label="Search tools">
+              <input type="text" id="mobile-search-input" class="mobile-search-input" placeholder="Search all 52 tools..." aria-label="Search tools">
               <button type="button" id="mobile-search-clear" class="mobile-search-clear hidden" aria-label="Clear search">✕</button>
             </div>
             <div id="ff-search-results-list" class="ff-search-results-list hidden"></div>
@@ -149,7 +150,7 @@
                   <text x="41" y="39" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">UTIL</text>
                 </svg>
               </div>
-              <div class="ff-folder-title">File Utilities (7)</div>
+              <div class="ff-folder-title">File Utilities (8)</div>
             </div>
 
             <div class="ff-folder-card" data-category="compression" role="button" tabindex="0">
@@ -1491,6 +1492,281 @@
           </div>
         </div>
 
+        <div id="tool-view-qr-generator" class="mobile-tool-view hidden">
+          <div class="mobile-tool-nav">
+            <button type="button" class="mobile-back-btn" aria-label="Back to Tools">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <h2 class="mobile-tool-header-title">QR Code Generator</h2>
+          </div>
+
+          
+          <!-- Sticky Compact Live QR Preview Header -->
+          <div class="mqr-sticky-stage">
+            <div class="mqr-sticky-inner">
+              <div class="mqr-sticky-mount-wrap">
+                <div id="mobile-qr-preview-mount" class="mqr-sticky-mount"></div>
+              </div>
+              <div class="mqr-sticky-meta">
+                <div class="mqr-sticky-badges">
+                  <span class="mqr-badge" id="mobile-qr-info-type">URL</span>
+                  <span class="mqr-badge muted" id="mobile-qr-info-bytes">37 chars</span>
+                </div>
+                <div class="mqr-sticky-actions">
+                  <button type="button" id="mqr-dl-png" class="btn btn-primary mqr-compact-btn">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Save PNG</span>
+                  </button>
+                  <button type="button" id="mqr-dl-svg" class="btn btn-secondary mqr-compact-btn">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>SVG</span>
+                  </button>
+                  <button type="button" id="mqr-copy-content" class="btn btn-ghost mqr-compact-btn" title="Copy Content">📋</button>
+                </div>
+                <div id="mobile-qr-contrast-warn" class="mqr-warning-pill hidden"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input Card -->
+          <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+            <div class="mqr-tab-bar" id="mobile-qr-tabs">
+              <button type="button" class="mqr-tab-btn active" data-type="url">URL</button>
+              <button type="button" class="mqr-tab-btn" data-type="text">Text</button>
+            </div>
+
+            <div id="mqr-pane-url" class="mqr-tab-pane" style="margin-top: 10px;">
+              <label for="mqr-url-input" class="mobile-form-label">Destination Web Address (URL)</label>
+              <input type="url" id="mqr-url-input" class="mobile-input" placeholder="https://example.com" value="https://abdur07-svg.github.io/FileForge/">
+              <div class="mobile-field-hint">Scans instantly with any phone camera or lens.</div>
+            </div>
+
+            <div id="mqr-pane-text" class="mqr-tab-pane hidden" style="margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label for="mqr-text-input" class="mobile-form-label" style="margin-bottom: 0;">Plain Text or Message</label>
+                <span id="mqr-text-counter" style="font-size: 0.74rem; color: var(--text-muted);">29 chars</span>
+              </div>
+              <textarea id="mqr-text-input" class="mobile-input" rows="3" placeholder="Enter any text, Unicode or Bengali...">Welcome to FileForge Mobile!</textarea>
+              <div class="mobile-field-hint">Supports full Unicode, international &amp; Bengali characters.</div>
+            </div>
+          </div>
+
+          <!-- Visual Pattern Selector -->
+          <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+            <div class="mqr-card-head">
+              <span class="mqr-card-title">Body Pattern</span>
+              <span class="mqr-active-badge" id="mqr-pattern-label">Square</span>
+            </div>
+            <div class="mqr-visual-grid mqr-grid-3col" id="mqr-pattern-group">
+              <button type="button" class="mqr-visual-card active" data-pattern="square" title="Square (Standard)">
+                <div class="mqr-visual-thumb">
+                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                    <rect x="3" y="3" width="11" height="11"/>
+                    <rect x="18" y="3" width="11" height="11"/>
+                    <rect x="3" y="18" width="11" height="11"/>
+                    <rect x="18" y="18" width="11" height="11"/>
+                  </svg>
+                </div>
+                <span class="mqr-visual-title">Square</span>
+              </button>
+              <button type="button" class="mqr-visual-card" data-pattern="rounded" title="Rounded">
+                <div class="mqr-visual-thumb">
+                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                    <rect x="3" y="3" width="11" height="11" rx="3"/>
+                    <rect x="18" y="3" width="11" height="11" rx="3"/>
+                    <rect x="3" y="18" width="11" height="11" rx="3"/>
+                    <rect x="18" y="18" width="11" height="11" rx="3"/>
+                  </svg>
+                </div>
+                <span class="mqr-visual-title">Rounded</span>
+              </button>
+              <button type="button" class="mqr-visual-card" data-pattern="dots" title="Dots">
+                <div class="mqr-visual-thumb">
+                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                    <circle cx="8" cy="8" r="5.5"/>
+                    <circle cx="24" cy="8" r="5.5"/>
+                    <circle cx="8" cy="24" r="5.5"/>
+                    <circle cx="24" cy="24" r="5.5"/>
+                  </svg>
+                </div>
+                <span class="mqr-visual-title">Dots</span>
+              </button>
+              <button type="button" class="mqr-visual-card" data-pattern="extra-rounded" title="Extra Rounded">
+                <div class="mqr-visual-thumb">
+                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                    <rect x="3" y="3" width="11" height="11" rx="5.5"/>
+                    <rect x="18" y="3" width="11" height="11" rx="5.5"/>
+                    <rect x="3" y="18" width="11" height="11" rx="5.5"/>
+                    <rect x="18" y="18" width="11" height="11" rx="5.5"/>
+                  </svg>
+                </div>
+                <span class="mqr-visual-title">Extra Round</span>
+              </button>
+              <button type="button" class="mqr-visual-card" data-pattern="classy" title="Classy Diamond">
+                <div class="mqr-visual-thumb">
+                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                    <polygon points="8,2 14,8 8,14 2,8"/>
+                    <polygon points="24,2 30,8 24,14 18,8"/>
+                    <polygon points="8,18 14,24 8,30 2,24"/>
+                    <polygon points="24,18 30,24 24,30 18,24"/>
+                  </svg>
+                </div>
+                <span class="mqr-visual-title">Classy</span>
+              </button>
+              <button type="button" class="mqr-visual-card" data-pattern="classy-rounded" title="Classy Rounded">
+                <div class="mqr-visual-thumb">
+                  <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                    <path d="M3 3 H14 V9 C14 11.8 11.8 14 9 14 H3 Z"/>
+                    <path d="M18 3 H29 V14 H23 C20.2 14 18 11.8 18 9 Z"/>
+                    <path d="M3 18 H9 C11.8 18 14 20.2 14 23 V29 H3 Z"/>
+                    <path d="M29 18 V29 H18 V23 C18 20.2 20.2 18 23 18 Z"/>
+                  </svg>
+                </div>
+                <span class="mqr-visual-title">Classy Round</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Visual Corner Eyes -->
+          <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+            <span class="mqr-card-title" style="margin-bottom: 8px;">Corner Eye Style</span>
+            <div style="margin-bottom: 10px;">
+              <span class="mqr-subhead">Corner Frame</span>
+              <div class="mqr-visual-grid mqr-grid-3col" id="mqr-corner-sq-group">
+                <button type="button" class="mqr-visual-card active" data-corner-sq="square" title="Square Frame">
+                  <div class="mqr-visual-thumb">
+                    <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.5">
+                      <rect x="4" y="4" width="24" height="24"/>
+                    </svg>
+                  </div>
+                  <span class="mqr-visual-title">Square</span>
+                </button>
+                <button type="button" class="mqr-visual-card" data-corner-sq="extra-rounded" title="Rounded Frame">
+                  <div class="mqr-visual-thumb">
+                    <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.5">
+                      <rect x="4" y="4" width="24" height="24" rx="7"/>
+                    </svg>
+                  </div>
+                  <span class="mqr-visual-title">Rounded</span>
+                </button>
+                <button type="button" class="mqr-visual-card" data-corner-sq="dot" title="Circle Frame">
+                  <div class="mqr-visual-thumb">
+                    <svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.5">
+                      <circle cx="16" cy="16" r="12"/>
+                    </svg>
+                  </div>
+                  <span class="mqr-visual-title">Circle</span>
+                </button>
+              </div>
+            </div>
+            <div>
+              <span class="mqr-subhead">Inner Dot</span>
+              <div class="mqr-visual-grid mqr-grid-2col" id="mqr-corner-dot-group">
+                <button type="button" class="mqr-visual-card active" data-corner-dot="square" title="Square Dot">
+                  <div class="mqr-visual-thumb">
+                    <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                      <rect x="8" y="8" width="16" height="16"/>
+                    </svg>
+                  </div>
+                  <span class="mqr-visual-title">Square</span>
+                </button>
+                <button type="button" class="mqr-visual-card" data-corner-dot="dot" title="Circle Dot">
+                  <div class="mqr-visual-thumb">
+                    <svg viewBox="0 0 32 32" width="26" height="26" fill="currentColor">
+                      <circle cx="16" cy="16" r="8"/>
+                    </svg>
+                  </div>
+                  <span class="mqr-visual-title">Circle</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Color Customization -->
+          <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+            <span class="mqr-card-title" style="margin-bottom: 8px;">Colors &amp; Theme</span>
+            <div class="mqr-palette-row">
+              <button type="button" class="mqr-palette-btn active" data-fg="#121214" data-bg="#ffffff" title="Classic Monochrome" style="background: linear-gradient(135deg, #121214 50%, #ffffff 50%);"></button>
+              <button type="button" class="mqr-palette-btn" data-fg="#ff5733" data-bg="#faf8f5" title="FileForge Coral" style="background: linear-gradient(135deg, #ff5733 50%, #faf8f5 50%);"></button>
+              <button type="button" class="mqr-palette-btn" data-fg="#1d4ed8" data-bg="#f0f7ff" title="Ocean Blue" style="background: linear-gradient(135deg, #1d4ed8 50%, #f0f7ff 50%);"></button>
+              <button type="button" class="mqr-palette-btn" data-fg="#047857" data-bg="#ecfdf5" title="Forest Emerald" style="background: linear-gradient(135deg, #047857 50%, #ecfdf5 50%);"></button>
+              <button type="button" class="mqr-palette-btn" data-fg="#6d28d9" data-bg="#f5f3ff" title="Royal Violet" style="background: linear-gradient(135deg, #6d28d9 50%, #f5f3ff 50%);"></button>
+              <button type="button" class="mqr-palette-btn" data-fg="#d97706" data-bg="#fffbeb" title="Sunset Amber" style="background: linear-gradient(135deg, #d97706 50%, #fffbeb 50%);"></button>
+              <button type="button" class="mqr-palette-btn" data-fg="#ffffff" data-bg="#111216" title="Dark Inverted" style="background: linear-gradient(135deg, #ffffff 50%, #111216 50%);"></button>
+            </div>
+
+            <div class="mqr-colors-row">
+              <div class="mqr-color-chip-box">
+                <span class="mqr-subhead">QR Color</span>
+                <div class="mqr-color-chip-wrap">
+                  <input type="color" id="mqr-color-fg" class="qr-hidden-picker" value="#121214">
+                  <button type="button" class="mqr-color-swatch" id="mqr-fg-swatch" style="background-color: #121214;" title="Tap to pick color"></button>
+                  <input type="text" id="mqr-color-fg-hex" class="mobile-input mqr-hex-compact" value="#121214" maxlength="7">
+                </div>
+              </div>
+              <div class="mqr-color-chip-box">
+                <span class="mqr-subhead">Background</span>
+                <div class="mqr-color-chip-wrap">
+                  <input type="color" id="mqr-color-bg" class="qr-hidden-picker" value="#ffffff">
+                  <button type="button" class="mqr-color-swatch" id="mqr-bg-swatch" style="background-color: #ffffff;" title="Tap to pick color"></button>
+                  <input type="text" id="mqr-color-bg-hex" class="mobile-input mqr-hex-compact" value="#FFFFFF" maxlength="7">
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span class="mqr-subhead" style="margin-bottom: 0;">Corner Eye Color</span>
+                <label class="mqr-toggle-mini">
+                  <input type="checkbox" id="mqr-eye-custom-check">
+                  <span class="mqr-toggle-slider"></span>
+                </label>
+              </div>
+              <div id="mqr-eye-color-wrap" class="mqr-color-chip-wrap disabled-control">
+                <input type="color" id="mqr-color-eye" class="qr-hidden-picker" value="#121214">
+                <button type="button" class="mqr-color-swatch" id="mqr-eye-swatch" style="background-color: #121214;" title="Tap to pick color"></button>
+                <input type="text" id="mqr-color-eye-hex" class="mobile-input mqr-hex-compact" value="#121214" maxlength="7">
+              </div>
+            </div>
+          </div>
+
+          <!-- Output Settings -->
+          <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
+            <span class="mqr-card-title" style="margin-bottom: 10px;">Output Settings</span>
+            <div style="margin-bottom: 10px;">
+              <span class="mqr-subhead">Resolution</span>
+              <div class="mqr-segmented-bar" id="mqr-size-group">
+                <button type="button" class="mqr-segmented-btn" data-size="240">240px</button>
+                <button type="button" class="mqr-segmented-btn active" data-size="280">280px</button>
+                <button type="button" class="mqr-segmented-btn" data-size="480">480px</button>
+                <button type="button" class="mqr-segmented-btn" data-size="800">800px</button>
+              </div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <span class="mqr-subhead">Margin</span>
+              <div class="mqr-segmented-bar" id="mqr-margin-group">
+                <button type="button" class="mqr-segmented-btn" data-margin="0">0px</button>
+                <button type="button" class="mqr-segmented-btn active" data-margin="8">8px</button>
+                <button type="button" class="mqr-segmented-btn" data-margin="16">16px</button>
+              </div>
+            </div>
+            <div style="margin-bottom: 4px;">
+              <span class="mqr-subhead">Error Correction</span>
+              <div class="mqr-segmented-bar" id="mqr-ec-group">
+                <button type="button" class="mqr-segmented-btn" data-ec="L" title="7% error recovery">L (7%)</button>
+                <button type="button" class="mqr-segmented-btn active" data-ec="M" title="15% error recovery">M (15%)</button>
+                <button type="button" class="mqr-segmented-btn" data-ec="Q" title="25% error recovery">Q (25%)</button>
+                <button type="button" class="mqr-segmented-btn" data-ec="H" title="30% error recovery">H (30%)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reset Button -->
+          <div style="margin-bottom: 24px; text-align: center;">
+            <button type="button" id="mqr-reset-btn" class="btn btn-secondary btn-block btn-sm">↺ Reset Settings to Defaults</button>
+          </div>
+</div>
+
       </div>
 
     </main>
@@ -1865,6 +2141,7 @@
   <script src="js/pdf-engine.js"></script>
   <script src="js/image-to-pdf.js"></script>
   <script src="js/zip-engine.js"></script>
+  <script src="js/qr-generator.js"></script>
   <script src="js/app.js"></script>
 
   <script>
@@ -1940,11 +2217,12 @@
           name: 'File Utilities',
           tag: 'UTIL',
           color: '#00bfa5',
-          count: 7,
+          count: 8,
           tools: [
             { id: 'zip-creator', name: 'ZIP File Creator', desc: 'Create ZIP archive with files & folders', implemented: true },
             { id: 'zip-extractor', name: 'ZIP File Extractor', desc: 'Unzip archive and inspect files', implemented: true },
             { id: 'download-all-zip', name: 'Download All as ZIP', desc: 'Pack multiple files to a ZIP', implemented: true },
+            { id: 'qr-generator', name: 'QR Code Generator', desc: 'Create custom styled scannable QR codes', implemented: true },
             { id: 'file-analyzer', name: 'File Size Analyzer', desc: 'Detailed file metrics and hashing', implemented: false },
             { id: 'file-previewer', name: 'Universal File Previewer', desc: 'Preview any file format instantly', implemented: false },
             { id: 'file-renamer', name: 'Batch File Renamer', desc: 'Custom patterns, numbering & prefix', implemented: false },

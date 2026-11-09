@@ -452,6 +452,15 @@ const App = (() => {
       accepts: ['*/*']
     },
     {
+      id: 'qr-generator',
+      name: 'QR Code Generator',
+      category: ['file', 'edit'],
+      desc: 'Generate customized scannable QR codes for URLs, text, images & PDFs with colors, patterns, and center logo.',
+      icon: 'qr-generator',
+      badge: 'Studio',
+      accepts: ['*/*']
+    },
+    {
       id: 'image-to-pdf',
       name: 'Image to PDF',
       category: ['image', 'pdf', 'convert'],
@@ -1355,6 +1364,9 @@ const App = (() => {
       handlerModule = window.FileRenamer;
     } else if (toolId === 'batch-processor') {
       handlerModule = window.BatchProcessor;
+    } else if (toolId === 'qr-generator') {
+      targetContainerId = 'tool-qr-generator';
+      handlerModule = window.QRCodeGenerator;
     }
 
     const targetEl = document.getElementById(targetContainerId);
