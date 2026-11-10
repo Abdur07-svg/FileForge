@@ -94,7 +94,15 @@
           </div>
 
           <div id="ff-recent-section" class="ff-recent-section hidden">
-            <div class="ff-section-title">RECENT EDITS</div>
+            <div class="ff-recent-header">
+              <div class="ff-section-title">RECENT EDITS</div>
+              <button type="button" id="ff-recent-clear-btn" class="ff-recent-clear-btn hidden" aria-label="Clear recent tools">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
+                <span>Clear</span>
+              </button>
+            </div>
             <div id="ff-recent-list" class="ff-recent-list">
             </div>
           </div>
@@ -2676,6 +2684,7 @@
 
       function renderRecentSection() {
         const listEl = document.getElementById('ff-recent-list');
+        const clearBtn = document.getElementById('ff-recent-clear-btn');
         if (!listEl) return;
 
         let recents = [];
@@ -2690,6 +2699,7 @@
         } catch (e) {}
 
         if (Array.isArray(recents) && recents.length > 0) {
+          if (clearBtn) clearBtn.classList.remove('hidden');
           listEl.innerHTML = recents.map(item => `
             <div class="ff-recent-card" data-tool-id="${item.toolId}" role="button" tabindex="0">
               <div class="ff-recent-icon-wrap">
@@ -2722,6 +2732,7 @@
             });
           });
         } else {
+          if (clearBtn) clearBtn.classList.add('hidden');
           listEl.innerHTML = `
             <div class="ff-recent-empty">
               <div class="ff-recent-empty-icon">
@@ -3050,6 +3061,20 @@
             if (recentSec) recentSec.classList.add('hidden');
             if (catGrid) catGrid.classList.remove('hidden');
             if (fabSearch) fabSearch.classList.remove('hidden');
+          });
+        }
+
+        const recentClearBtn = document.getElementById('ff-recent-clear-btn');
+        if (recentClearBtn) {
+          recentClearBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            haptic('medium');
+            try {
+              localStorage.removeItem('fileforge_mobile_recent_list');
+              localStorage.removeItem('fileforge_mobile_recent');
+            } catch (err) {}
+            renderRecentSection();
+            showToast('Recent edits cleared', 'info');
           });
         }
 

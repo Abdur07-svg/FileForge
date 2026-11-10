@@ -439,6 +439,14 @@ body.home-locked:not(.in-subview) {
   margin-bottom: 20px;
 }
 
+.ff-recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+  padding: 0 4px;
+}
+
 .ff-section-title {
   font-size: 0.72rem;
   font-weight: 800;
@@ -447,6 +455,65 @@ body.home-locked:not(.in-subview) {
   color: var(--text-muted);
   margin-bottom: 9px;
   padding-left: 4px;
+}
+
+.ff-recent-header .ff-section-title {
+  margin-bottom: 0;
+  padding-left: 0;
+}
+
+.ff-recent-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 87, 51, 0.06);
+  border: 1px solid rgba(255, 87, 51, 0.25);
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ff-recent-clear-btn:hover {
+  background: rgba(255, 87, 51, 0.12);
+  border-color: var(--color-primary);
+  color: var(--color-primary-hover);
+}
+
+.ff-recent-clear-btn:active {
+  transform: scale(0.95);
+  background: rgba(255, 87, 51, 0.18);
+  border-color: var(--color-primary);
+}
+
+.ff-recent-clear-btn svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+:root[data-theme="dark"] .ff-recent-clear-btn {
+  background: rgba(255, 87, 51, 0.12);
+  border-color: rgba(255, 87, 51, 0.35);
+  color: var(--color-primary);
+}
+
+:root[data-theme="dark"] .ff-recent-clear-btn:hover {
+  background: rgba(255, 87, 51, 0.2);
+  border-color: var(--color-primary);
+}
+
+:root[data-theme="dark"] .ff-recent-clear-btn:active {
+  background: rgba(255, 87, 51, 0.28);
 }
 
 .ff-recent-card {
