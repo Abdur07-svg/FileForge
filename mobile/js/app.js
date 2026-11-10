@@ -809,7 +809,6 @@ const MobileApp = (() => {
     const editorFlipV = document.getElementById('btn-i2p-flip-v');
     const editorCropPanel = document.getElementById('panel-i2p-crop');
     const editorRatioBtns = document.querySelectorAll('.mobile-crop-ratio-btn');
-    const editorApplyCropBtn = document.getElementById('btn-i2p-apply-crop');
     const editorResetCropBtn = document.getElementById('btn-i2p-reset-crop');
     const editorCancelCropBtn = document.getElementById('btn-i2p-cancel-crop');
     const editorFilterCardsRow = document.getElementById('row-i2p-filter-cards');

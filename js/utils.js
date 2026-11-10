@@ -1,5 +1,32 @@
 const Utils = (() => {
 
+  const activeObjectUrls = new Set();
+
+  function trackUrl(url) {
+    if (url && typeof url === 'string' && url.startsWith('blob:')) {
+      activeObjectUrls.add(url);
+    }
+    return url;
+  }
+
+  function revokeUrl(url) {
+    if (url && activeObjectUrls.has(url)) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {}
+      activeObjectUrls.delete(url);
+    }
+  }
+
+  function resetAllUrls() {
+    activeObjectUrls.forEach((url) => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {}
+    });
+    activeObjectUrls.clear();
+  }
+
   let activeProcessesCount = 0;
 
   window.addEventListener('beforeunload', (e) => {
@@ -392,7 +419,10 @@ const Utils = (() => {
     setupDropZone,
     getBaseName,
     getExtension,
-    setProcessing
+    setProcessing,
+    trackUrl,
+    revokeUrl,
+    resetAllUrls
   };
 })();
 

@@ -19,6 +19,8 @@ const QRCodeGenerator = (() => {
   let updateDebounceTimer = null;
   let cachedBaseQRCanvas = null;
   let currentCompositeCanvas = null;
+  const styleThumbnailSvgCache = new Map();
+  const frameThumbnailSvgCache = new Map();
 
   const DEFAULT_OPTIONS = {
     qrType: 'url',
@@ -615,12 +617,15 @@ const QRCodeGenerator = (() => {
       card.setAttribute('data-preset-id', preset.id);
       card.setAttribute('title', `${preset.name} (${preset.theme})`);
 
-      let thumbSvg = '';
-      if (renderer && typeof renderer.generateStyleThumbnailSvg === 'function') {
-        thumbSvg = renderer.generateStyleThumbnailSvg(preset);
-      }
+      let thumbSvg = styleThumbnailSvgCache.get(preset.id);
       if (!thumbSvg) {
-        thumbSvg = generatePresetThumbnailFallback(preset);
+        if (renderer && typeof renderer.generateStyleThumbnailSvg === 'function') {
+          thumbSvg = renderer.generateStyleThumbnailSvg(preset);
+        }
+        if (!thumbSvg) {
+          thumbSvg = generatePresetThumbnailFallback(preset);
+        }
+        if (thumbSvg) styleThumbnailSvgCache.set(preset.id, thumbSvg);
       }
 
       card.innerHTML = `
@@ -691,12 +696,15 @@ const QRCodeGenerator = (() => {
       card.setAttribute('data-frame-id', frame.id);
       card.setAttribute('title', `${frame.name} (${frame.theme})`);
 
-      let thumbSvg = '';
-      if (renderer && typeof renderer.generateFrameThumbnailSvg === 'function') {
-        thumbSvg = renderer.generateFrameThumbnailSvg(frame);
-      }
+      let thumbSvg = frameThumbnailSvgCache.get(frame.id);
       if (!thumbSvg) {
-        thumbSvg = generateFrameThumbnailFallback(frame);
+        if (renderer && typeof renderer.generateFrameThumbnailSvg === 'function') {
+          thumbSvg = renderer.generateFrameThumbnailSvg(frame);
+        }
+        if (!thumbSvg) {
+          thumbSvg = generateFrameThumbnailFallback(frame);
+        }
+        if (thumbSvg) frameThumbnailSvgCache.set(frame.id, thumbSvg);
       }
 
       card.innerHTML = `
@@ -1207,7 +1215,7 @@ const QRCodeGenerator = (() => {
       });
     }
 
-    // 8. Downloads & Copy
+    // 8. Downloads
     const dlPngBtn = document.getElementById('qr-dl-png');
     if (dlPngBtn) {
       dlPngBtn.addEventListener('click', () => downloadExport('png', 'desktop'));
@@ -1216,48 +1224,6 @@ const QRCodeGenerator = (() => {
     const dlSvgBtn = document.getElementById('qr-dl-svg');
     if (dlSvgBtn) {
       dlSvgBtn.addEventListener('click', () => downloadExport('svg', 'desktop'));
-    }
-
-    const dlPdfBtn = document.getElementById('qr-dl-pdf');
-    if (dlPdfBtn) {
-      dlPdfBtn.addEventListener('click', () => downloadExport('pdf', 'desktop'));
-    }
-
-    const printBtn = document.getElementById('qr-btn-print');
-    if (printBtn) {
-      printBtn.addEventListener('click', () => printCurrentQR(currentCompositeCanvas));
-    }
-
-    const copyImgBtn = document.getElementById('qr-copy-img');
-    if (copyImgBtn) {
-      copyImgBtn.addEventListener('click', async () => {
-        if (!currentCompositeCanvas) return;
-        try {
-          currentCompositeCanvas.toBlob(async (blob) => {
-            if (blob && navigator.clipboard && window.ClipboardItem) {
-              await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-              showToast('Customized QR Code copied to clipboard!', 'success');
-            } else {
-              showToast('Direct image clipboard copy not supported in this browser', 'info');
-            }
-          });
-        } catch (e) {
-          console.error('Clipboard copy error:', e);
-          showToast('Failed to copy image', 'error');
-        }
-      });
-    }
-
-    const copyContentBtn = document.getElementById('qr-copy-content');
-    if (copyContentBtn) {
-      copyContentBtn.addEventListener('click', () => {
-        const data = getEffectiveData();
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(data).then(() => {
-            showToast('Encoded content copied to clipboard!', 'success');
-          });
-        }
-      });
     }
   }
 
@@ -1333,52 +1299,6 @@ const QRCodeGenerator = (() => {
     } catch (e) {
       console.error('PDF Export Error:', e);
       showToast('Failed to generate PDF: ' + e.message, 'error');
-    }
-  }
-
-  /**
-   * Print current QR Code
-   */
-  function printCurrentQR(finalCanvas) {
-    if (!finalCanvas) return;
-    try {
-      const dataUrl = finalCanvas.toDataURL('image/png');
-      const win = window.open('', '_blank');
-      if (!win) {
-        showToast('Popup blocked by browser. Please allow popups to print.', 'warning');
-        return;
-      }
-      win.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Print QR Code - FileForge</title>
-          <style>
-            body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; background: #fff; }
-            img { max-width: 480px; height: auto; display: block; margin: 0 auto; }
-            .print-footer { margin-top: 16px; font-size: 12px; color: #64748b; }
-            @media print {
-              body { min-height: auto; padding: 20px 0; }
-              @page { margin: 15mm; }
-            }
-          </style>
-        </head>
-        <body>
-          <img src="${dataUrl}" alt="FileForge QR Code">
-          <div class="print-footer">Generated by FileForge QR Code Studio</div>
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
-        </body>
-        </html>
-      `);
-      win.document.close();
-    } catch (e) {
-      console.error('Print Error:', e);
-      showToast('Print failed: ' + e.message, 'error');
     }
   }
 
@@ -1531,6 +1451,10 @@ const QRCodeGenerator = (() => {
    * Reset QR Tool completely to fresh default state
    */
   function reset() {
+    if (updateDebounceTimer) {
+      clearTimeout(updateDebounceTimer);
+      updateDebounceTimer = null;
+    }
     state = JSON.parse(JSON.stringify(DEFAULT_OPTIONS));
     cachedBaseQRCanvas = null;
     currentCompositeCanvas = null;

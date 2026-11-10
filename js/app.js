@@ -1182,6 +1182,10 @@ const App = (() => {
     if (window.Utils && typeof window.Utils.setProcessing === 'function') {
       window.Utils.setProcessing(false);
     }
+
+    if (window.Utils && typeof window.Utils.resetAllUrls === 'function') {
+      window.Utils.resetAllUrls();
+    }
   }
 
   function resetToolState(toolId) {
