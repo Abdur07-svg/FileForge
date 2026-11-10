@@ -4118,29 +4118,112 @@
                   </p>
                 </div>
 
-                <div class="qr-input-tabs">
-                  <button type="button" class="qr-input-tab active" data-type="url">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                    <span>Website URL</span>
-                  </button>
-                  <button type="button" class="qr-input-tab" data-type="text">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    <span>Plain Text</span>
-                  </button>
+                <div class="qr-type-section-header">
+                  <div class="qr-type-section-title">Choose QR Type</div>
                 </div>
 
-                <div id="qr-tab-url" class="qr-tab-content">
-                  <div class="form-group">
-                    <label for="qr-url-input" class="form-label">Destination URL</label>
-                    <input type="url" id="qr-url-input" class="form-control" placeholder="https://example.com" value="https://abdur07-svg.github.io/FileForge/">
-                    <span class="form-hint" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; display: block;">Web address opens immediately when scanned with standard smartphone camera.</span>
+                <div class="qr-type-cards-grid" id="qr-type-selector">
+                  <div class="qr-type-card active" data-type="url" title="Website URL">
+                    <svg class="qr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <span class="qr-type-name">Website URL</span>
+                  </div>
+                  <div class="qr-type-card" data-type="upi" title="UPI Payment">
+                    <svg class="qr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 15h2"/><path d="M12 15h6"/></svg>
+                    <span class="qr-type-name">UPI Payment</span>
+                  </div>
+                  <div class="qr-type-card" data-type="wifi" title="Wi-Fi Network">
+                    <svg class="qr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20" stroke-width="3"/></svg>
+                    <span class="qr-type-name">Wi-Fi</span>
+                  </div>
+                  <div class="qr-type-card" data-type="text" title="Plain Text">
+                    <svg class="qr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span class="qr-type-name">Text</span>
+                  </div>
+                  <div class="qr-type-card" data-type="email" title="Email Message">
+                    <svg class="qr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <span class="qr-type-name">Email</span>
+                  </div>
+                  <div class="qr-type-card" data-type="phone" title="Phone Call">
+                    <svg class="qr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <span class="qr-type-name">Phone</span>
                   </div>
                 </div>
 
+                <!-- Form 1: Website URL -->
+                <div id="qr-tab-url" class="qr-tab-content">
+                  <div class="form-group">
+                    <label for="qr-url-input" class="form-label">Destination URL <span style="color: var(--color-primary); font-weight: bold;">*</span></label>
+                    <input type="url" id="qr-url-input" class="form-control" placeholder="https://example.com" value="https://abdur07-svg.github.io/FileForge/">
+                    <span class="form-hint" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; display: block;">Web address opens immediately when scanned with standard smartphone camera. Protocol-less domains automatically default to HTTPS.</span>
+                  </div>
+                </div>
+
+                <!-- Form 2: UPI Payment -->
+                <div id="qr-tab-upi" class="qr-tab-content hidden">
+                  <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; margin-bottom: 10px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <label for="qr-upi-pa" class="form-label" style="margin-bottom: 0;">UPI ID (VPA) <span style="color: var(--color-primary); font-weight: bold;">*</span></label>
+                        <span id="qr-upi-validation-badge" class="qr-syntax-badge">Format check</span>
+                      </div>
+                      <input type="text" id="qr-upi-pa" class="form-control" placeholder="e.g. merchant@upi or yourname@okaxis" autocomplete="off" spellcheck="false">
+                      <span class="form-hint" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; display: block;">Accepts any valid UPI handle (e.g. name@bank, phone@paytm).</span>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label for="qr-upi-pn" class="form-label" style="margin-bottom: 4px;">Payee Name <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Optional)</span></label>
+                      <input type="text" id="qr-upi-pn" class="form-control" placeholder="e.g. FileForge Store">
+                      <span class="form-hint" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; display: block;">Recipient name displayed in banking apps.</span>
+                    </div>
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label for="qr-upi-am" class="form-label" style="margin-bottom: 4px;">Amount (INR ₹) <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Optional)</span></label>
+                      <input type="number" id="qr-upi-am" class="form-control" placeholder="e.g. 500.00" min="0" step="0.01">
+                      <span class="form-hint" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; display: block;">Leave empty for payer-chosen amount.</span>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label for="qr-upi-tn" class="form-label" style="margin-bottom: 4px;">Transaction Note <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Optional)</span></label>
+                      <input type="text" id="qr-upi-tn" class="form-control" placeholder="e.g. Invoice #1024 or Coffee">
+                      <span class="form-hint" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; display: block;">Message attached to the transaction.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Form 3: Wi-Fi -->
+                <div id="qr-tab-wifi" class="qr-tab-content hidden">
+                  <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; margin-bottom: 10px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label for="qr-wifi-ssid" class="form-label">Network Name (SSID) <span style="color: var(--color-primary); font-weight: bold;">*</span></label>
+                      <input type="text" id="qr-wifi-ssid" class="form-control" placeholder="e.g. Home_WiFi_5G" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label for="qr-wifi-auth" class="form-label">Security Type</label>
+                      <select id="qr-wifi-auth" class="form-control" style="cursor: pointer;">
+                        <option value="WPA" selected>WPA / WPA2 / WPA3</option>
+                        <option value="WEP">WEP</option>
+                        <option value="nopass">No Password (Open)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 12px; align-items: center;">
+                    <div class="form-group" id="qr-wifi-pass-group" style="margin-bottom: 0;">
+                      <label for="qr-wifi-pass" class="form-label">Wi-Fi Password</label>
+                      <input type="text" id="qr-wifi-pass" class="form-control" placeholder="Enter network password" autocomplete="off">
+                    </div>
+                    <div style="padding-top: 20px;">
+                      <label class="qr-toggle-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.8rem; user-select: none;">
+                        <input type="checkbox" id="qr-wifi-hidden">
+                        <span>Hidden Network</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Form 4: Plain Text -->
                 <div id="qr-tab-text" class="qr-tab-content hidden">
                   <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                      <label for="qr-text-input" class="form-label" style="margin-bottom: 0;">Message or Text Content</label>
+                      <label for="qr-text-input" class="form-label" style="margin-bottom: 0;">Message or Text Content <span style="color: var(--color-primary); font-weight: bold;">*</span></label>
                       <span id="qr-text-counter" style="font-size: 0.78rem; color: var(--text-muted);">22 characters</span>
                     </div>
                     <textarea id="qr-text-input" class="form-control" rows="4" placeholder="Enter notes, message, phone number, or Unicode text...">Welcome to FileForge!</textarea>
@@ -4148,7 +4231,32 @@
                   </div>
                 </div>
 
-                <!-- QR Studio Customizer Section Tabs -->
+                <!-- Form 5: Email -->
+                <div id="qr-tab-email" class="qr-tab-content hidden">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="qr-email-addr" class="form-label">Email Address <span style="color: var(--color-primary); font-weight: bold;">*</span></label>
+                    <input type="email" id="qr-email-addr" class="form-control" placeholder="e.g. contact@example.com">
+                  </div>
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="qr-email-sub" class="form-label">Subject Line <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Optional)</span></label>
+                    <input type="text" id="qr-email-sub" class="form-control" placeholder="e.g. Feedback on FileForge">
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="qr-email-body" class="form-label">Message Body <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Optional)</span></label>
+                    <textarea id="qr-email-body" class="form-control" rows="3" placeholder="Enter pre-filled email body..."></textarea>
+                  </div>
+                </div>
+
+                <!-- Form 6: Phone -->
+                <div id="qr-tab-phone" class="qr-tab-content hidden">
+                  <div class="form-group">
+                    <label for="qr-phone-number" class="form-label">Phone Number <span style="color: var(--color-primary); font-weight: bold;">*</span></label>
+                    <input type="tel" id="qr-phone-number" class="form-control" placeholder="e.g. +91 98765 43210 or 1-800-555-0199">
+                    <span class="form-hint" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; display: block;">Supports international country code (e.g. +91, +1, +44) or local format. Dialing app opens directly on phone.</span>
+                  </div>
+                </div>
+
+
                 <div class="qr-customizer-tabs" id="qr-studio-tabs">
                   <button type="button" class="qr-customizer-tab active" data-tab="presets">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 0 0 0 14 7 7 0 0 0 0-14z"/></svg>
@@ -4164,7 +4272,8 @@
                   </button>
                   <button type="button" class="qr-customizer-tab" data-tab="custom">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                    <span>Custom</span>
+                    <span>Fine-tune Design</span>
+                    <span id="qr-custom-modified-badge" class="qr-custom-modified-badge hidden">Modified</span>
                   </button>
                   <button type="button" class="qr-customizer-tab" data-tab="settings">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -4173,7 +4282,7 @@
                 </div>
 
                 <div class="qr-customizer-panels">
-                  <!-- Panel 1: QR Style Presets (45) -->
+
                   <div class="qr-customizer-panel active" id="qr-panel-presets">
                     <div class="qr-panel-intro">
                       <span class="qr-control-heading">Style Presets (45 Styles / 9 Themes)</span>
@@ -4182,7 +4291,7 @@
                       </span>
                     </div>
 
-                    <!-- Theme Pills Row -->
+
                     <div class="qr-theme-nav" id="qr-style-theme-nav">
                       <button type="button" class="qr-theme-pill active" data-style-theme="all">All (45)</button>
                       <button type="button" class="qr-theme-pill" data-style-theme="classic">Classic &amp; Minimal (5)</button>
@@ -4196,11 +4305,11 @@
                       <button type="button" class="qr-theme-pill" data-style-theme="geometric">Geometric &amp; Bold (5)</button>
                     </div>
 
-                    <!-- Presets Grid Container -->
+
                     <div class="qr-gallery-grid" id="qr-style-presets-gallery"></div>
                   </div>
 
-                  <!-- Panel 2: QR Frames (52) -->
+
                   <div class="qr-customizer-panel hidden" id="qr-panel-frames">
                     <div class="qr-panel-intro">
                       <span class="qr-control-heading">QR Frames (52 Frames / 7 Themes)</span>
@@ -4209,7 +4318,7 @@
                       </span>
                     </div>
 
-                    <!-- Frame Text & Colors Sub-Bar -->
+
                     <div class="qr-frame-settings-card">
                       <div class="form-group" style="margin-bottom: 10px;">
                         <label for="qr-frame-text-input" class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Frame CTA Text</label>
@@ -4243,7 +4352,7 @@
                       </div>
                     </div>
 
-                    <!-- Frame Themes Nav -->
+
                     <div class="qr-theme-nav" id="qr-frame-theme-nav">
                       <button type="button" class="qr-theme-pill active" data-frame-theme="all">All (52)</button>
                       <button type="button" class="qr-theme-pill" data-frame-theme="standard">Standard &amp; Clean (8)</button>
@@ -4255,11 +4364,11 @@
                       <button type="button" class="qr-theme-pill" data-frame-theme="borders">Borders &amp; Cards (7)</button>
                     </div>
 
-                    <!-- Frames Grid Container -->
+
                     <div class="qr-gallery-grid qr-frames-gallery-grid" id="qr-frames-gallery"></div>
                   </div>
 
-                  <!-- Panel 3: Label Text -->
+
                   <div class="qr-customizer-panel hidden" id="qr-panel-label">
                     <div class="qr-panel-intro">
                       <span class="qr-control-heading">Dedicated Label Text Customizer</span>
@@ -4357,9 +4466,17 @@
                     </div>
                   </div>
 
-                                    <!-- Panel 4: Custom Style -->
+
                   <div class="qr-customizer-panel hidden" id="qr-panel-custom">
-                    <!-- Style (Body Pattern) -->
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle);">
+                      <div>
+                        <span class="qr-control-heading" style="margin-bottom: 0;">Fine-tune Preset Design</span>
+                        <span class="form-hint" style="font-size: 0.76rem; color: var(--text-muted); display: block;">Adjust colors, shapes or gradient. Modified presets can be reset anytime.</span>
+                      </div>
+                      <button type="button" id="qr-reset-preset-btn" class="btn btn-ghost btn-sm" title="Revert any manual customizations back to the active preset">↺ Reset to Preset</button>
+                    </div>
+
                     <div class="qr-control-section">
                       <div class="qr-section-title-row">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -4394,7 +4511,7 @@
                       </div>
                     </div>
 
-                    <!-- Inner eye style -->
+
                     <div class="qr-control-section">
                       <div class="qr-section-title-row">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -4430,7 +4547,6 @@
                       </div>
                     </div>
 
-                    <!-- Outer eye style -->
                     <div class="qr-control-section">
                       <div class="qr-section-title-row">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -4463,7 +4579,6 @@
                       </div>
                     </div>
 
-                    <!-- Color Customization -->
                     <div class="qr-control-section">
                       <div class="qr-section-header">
                         <h4 class="qr-control-heading">Color Customization</h4>
@@ -4479,7 +4594,7 @@
                         <button type="button" class="qr-palette-btn" data-fg="#ffffff" data-bg="#111216" title="Dark Inverted" style="background: linear-gradient(135deg, #ffffff 50%, #111216 50%);"></button>
                       </div>
 
-                      <div class="qr-color-swatches-grid">
+                      <div class="qr-color-swatches-grid" style="grid-template-columns: repeat(4, 1fr);">
                         <div class="qr-swatch-box">
                           <label class="qr-sublabel" for="qr-color-fg">QR Color</label>
                           <div class="qr-color-trigger-wrap">
@@ -4489,8 +4604,28 @@
                           </div>
                         </div>
                         <div class="qr-swatch-box">
-                          <label class="qr-sublabel" for="qr-color-bg">Background</label>
-                          <div class="qr-color-trigger-wrap">
+                          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                            <label class="qr-sublabel" style="margin-bottom: 0;" for="qr-color-fg2">Gradient</label>
+                            <label class="qr-toggle-mini" title="Enable linear gradient on dots">
+                              <input type="checkbox" id="qr-gradient-check">
+                              <span class="qr-toggle-slider"></span>
+                            </label>
+                          </div>
+                          <div id="qr-gradient-color-wrap" class="qr-color-trigger-wrap disabled-control">
+                            <input type="color" id="qr-color-fg2" class="qr-hidden-picker" value="#9333ea">
+                            <button type="button" class="qr-swatch-display" id="qr-fg2-swatch" style="background-color: #9333ea;" title="Click to pick gradient color"></button>
+                            <input type="text" id="qr-color-fg2-hex" class="form-control qr-hex-compact" value="#9333EA" maxlength="7">
+                          </div>
+                        </div>
+                        <div class="qr-swatch-box">
+                          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                            <label class="qr-sublabel" style="margin-bottom: 0;" for="qr-color-bg">Background</label>
+                            <label class="qr-toggle-mini" title="Transparent background">
+                              <input type="checkbox" id="qr-bg-trans-check">
+                              <span class="qr-toggle-slider"></span>
+                            </label>
+                          </div>
+                          <div id="qr-bg-color-wrap" class="qr-color-trigger-wrap">
                             <input type="color" id="qr-color-bg" class="qr-hidden-picker" value="#ffffff">
                             <button type="button" class="qr-swatch-display" id="qr-bg-swatch" style="background-color: #ffffff;" title="Click to pick color"></button>
                             <input type="text" id="qr-color-bg-hex" class="form-control qr-hex-compact" value="#FFFFFF" maxlength="7">
@@ -4514,7 +4649,7 @@
                     </div>
                   </div>
 
-                  <!-- Panel 5: Settings -->
+
                   <div class="qr-customizer-panel hidden" id="qr-panel-settings">
                     <div class="qr-panel-intro">
                       <span class="qr-control-heading">QR Generation Settings</span>
@@ -4585,18 +4720,23 @@
                 </div>
 
                 <div class="qr-actions-row">
-                  <button type="button" id="qr-dl-png" class="btn btn-primary btn-action-primary" style="flex: 1;">
+                  <button type="button" id="qr-dl-png" class="btn btn-primary btn-action-primary" style="flex: 1.2;">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <span>Download PNG</span>
                   </button>
-                  <button type="button" id="qr-dl-svg" class="btn btn-secondary">
+                  <button type="button" id="qr-dl-svg" class="btn btn-secondary" style="flex: 1;">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <span>Vector SVG</span>
+                  </button>
+                  <button type="button" id="qr-dl-pdf" class="btn btn-secondary" style="flex: 1;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>PDF</span>
                   </button>
                 </div>
                 <div class="qr-actions-subrow" style="display: flex; gap: 8px; margin-top: 10px;">
                   <button type="button" id="qr-copy-img" class="btn btn-ghost btn-sm" style="flex: 1;">📋 Copy Image</button>
-                  <button type="button" id="qr-copy-content" class="btn btn-ghost btn-sm" style="flex: 1;">🔗 Copy Link/Text</button>
+                  <button type="button" id="qr-copy-content" class="btn btn-ghost btn-sm" style="flex: 1;">🔗 Copy Content</button>
+                  <button type="button" id="qr-btn-print" class="btn btn-ghost btn-sm" style="flex: 0.8;">🖨️ Print</button>
                 </div>
               </div>
             </div>

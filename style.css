@@ -5146,9 +5146,7 @@ input.form-control.input-success {
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
 }
 
-/* ==========================================================================
-   QR CODE GENERATOR STUDIO STYLES (DESKTOP)
-   ========================================================================== */
+
 .qr-studio-grid {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
@@ -5441,7 +5439,7 @@ input.form-control.input-success {
 }
 
 
-/* Visual QR Customizer Studio (Desktop) */
+
 .qr-preview-card {
   position: -webkit-sticky;
   position: sticky;
@@ -5705,7 +5703,7 @@ input.form-control.input-success {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
-/* QR Studio Sub-Navigation Tabs */
+
 .qr-customizer-tabs {
   display: flex;
   background: var(--bg-tertiary);
@@ -5768,7 +5766,7 @@ input.form-control.input-success {
   margin-bottom: 4px;
 }
 
-/* Theme Navigation Pills */
+
 .qr-theme-nav {
   display: flex;
   gap: 6px;
@@ -5803,7 +5801,7 @@ input.form-control.input-success {
   font-weight: 700;
 }
 
-/* Presets & Frames Gallery Grid */
+
 .qr-gallery-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -5862,6 +5860,9 @@ input.form-control.input-success {
 .qr-gallery-thumb {
   width: 48px;
   height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5873,6 +5874,8 @@ input.form-control.input-success {
 .qr-gallery-thumb svg {
   width: 100%;
   height: 100%;
+  max-width: 48px;
+  max-height: 48px;
   object-fit: contain;
   display: block;
 }
@@ -5894,7 +5897,7 @@ input.form-control.input-success {
   font-weight: 750;
 }
 
-/* Frame settings sub-card */
+
 .qr-frame-settings-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
@@ -5914,10 +5917,6 @@ input.form-control.input-success {
 }
 
 
-
-/* ==========================================================================
-   FileForge Visual QR Customizer — Style & Eye Selectors (2-Column Grid)
-   ========================================================================== */
 .qr-section-title-row {
   display: flex;
   align-items: center;
@@ -6001,3 +6000,117 @@ input.form-control.input-success {
   border-color: #4f46e5 !important;
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.45);
 }
+
+
+
+.qr-type-section-header {
+  margin-bottom: 8px;
+}
+
+.qr-type-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.qr-type-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .qr-type-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.qr-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 6px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+  user-select: none;
+}
+
+.qr-type-card:hover {
+  border-color: var(--color-primary);
+  background: var(--bg-tertiary);
+  transform: translateY(-1px);
+}
+
+.qr-type-card.active {
+  border-color: var(--color-primary);
+  background: rgba(79, 70, 229, 0.08);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+[data-theme="dark"] .qr-type-card.active {
+  background: rgba(79, 70, 229, 0.16);
+}
+
+.qr-type-card .qr-type-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.qr-type-card.active .qr-type-icon {
+  color: var(--color-primary);
+  transform: scale(1.1);
+}
+
+.qr-type-card .qr-type-name {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.qr-type-card.active .qr-type-name {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.qr-syntax-badge {
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.qr-syntax-badge.valid {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.qr-syntax-badge.invalid {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.qr-custom-modified-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #f59e0b;
+  color: #ffffff;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+

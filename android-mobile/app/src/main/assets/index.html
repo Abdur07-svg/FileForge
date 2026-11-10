@@ -1513,7 +1513,7 @@
                   <span class="mqr-badge muted" id="mobile-qr-info-bytes">37 chars</span>
                 </div>
                 <div class="mqr-sticky-actions">
-                  <button type="button" id="mqr-dl-png" class="btn btn-primary mqr-compact-btn">
+                  <button type="button" id="mqr-dl-png" class="btn btn-primary mqr-compact-btn" style="flex: 1.2;">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <span>Save PNG</span>
                   </button>
@@ -1521,6 +1521,10 @@
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <span>SVG</span>
                   </button>
+                  <button type="button" id="mqr-dl-pdf" class="btn btn-secondary mqr-compact-btn">
+                    <span>PDF</span>
+                  </button>
+                  <button type="button" id="mqr-btn-print" class="btn btn-ghost mqr-compact-btn" title="Print QR">🖨️</button>
                   <button type="button" id="mqr-copy-content" class="btn btn-ghost mqr-compact-btn" title="Copy Content">📋</button>
                 </div>
                 <div id="mobile-qr-contrast-warn" class="mqr-warning-pill hidden"></div>
@@ -1528,26 +1532,119 @@
             </div>
           </div>
 
-          <!-- Input Card -->
+          <!-- Choose QR Type (6 Options) -->
           <div class="mobile-card" style="padding: 12px 14px; margin-bottom: 12px;">
-            <div class="mqr-tab-bar" id="mobile-qr-tabs">
-              <button type="button" class="mqr-tab-btn active" data-type="url">URL</button>
-              <button type="button" class="mqr-tab-btn" data-type="text">Text</button>
+            <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 8px;">
+              Choose QR Type
             </div>
 
+            <div class="mqr-type-cards-grid" id="mqr-type-selector">
+              <div class="mqr-type-card active" data-type="url">
+                <svg class="mqr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                <span class="mqr-type-name">URL</span>
+              </div>
+              <div class="mqr-type-card" data-type="upi">
+                <svg class="mqr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 15h2"/><path d="M12 15h6"/></svg>
+                <span class="mqr-type-name">UPI Pay</span>
+              </div>
+              <div class="mqr-type-card" data-type="wifi">
+                <svg class="mqr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20" stroke-width="3"/></svg>
+                <span class="mqr-type-name">Wi-Fi</span>
+              </div>
+              <div class="mqr-type-card" data-type="text">
+                <svg class="mqr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span class="mqr-type-name">Text</span>
+              </div>
+              <div class="mqr-type-card" data-type="email">
+                <svg class="mqr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span class="mqr-type-name">Email</span>
+              </div>
+              <div class="mqr-type-card" data-type="phone">
+                <svg class="mqr-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <span class="mqr-type-name">Phone</span>
+              </div>
+            </div>
+
+            <!-- Mobile Form 1: URL -->
             <div id="mqr-pane-url" class="mqr-tab-pane" style="margin-top: 10px;">
-              <label for="mqr-url-input" class="mobile-form-label">Destination Web Address (URL)</label>
+              <label for="mqr-url-input" class="mobile-form-label">Destination Web Address (URL) *</label>
               <input type="url" id="mqr-url-input" class="mobile-input" placeholder="https://example.com" value="https://abdur07-svg.github.io/FileForge/">
-              <div class="mobile-field-hint">Scans instantly with any phone camera or lens.</div>
+              <div class="mobile-field-hint">Scans instantly with any phone camera or Google Lens.</div>
             </div>
 
+            <!-- Mobile Form 2: UPI Payment -->
+            <div id="mqr-pane-upi" class="mqr-tab-pane hidden" style="margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label for="mqr-upi-pa" class="mobile-form-label" style="margin-bottom: 0;">UPI ID (VPA) *</label>
+                <span id="mqr-upi-validation-badge" class="qr-syntax-badge">Format check</span>
+              </div>
+              <input type="text" id="mqr-upi-pa" class="mobile-input" placeholder="e.g. merchant@upi or user@okaxis" autocomplete="off" spellcheck="false" style="margin-bottom: 8px;">
+              
+              <label for="mqr-upi-pn" class="mobile-form-label" style="margin-bottom: 4px;">Payee Name (Optional)</label>
+              <input type="text" id="mqr-upi-pn" class="mobile-input" placeholder="e.g. FileForge Store" style="margin-bottom: 8px;">
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                  <label for="mqr-upi-am" class="mobile-form-label" style="margin-bottom: 4px;">Amount (INR ₹)</label>
+                  <input type="number" id="mqr-upi-am" class="mobile-input" placeholder="e.g. 250" min="0" step="0.01">
+                </div>
+                <div>
+                  <label for="mqr-upi-tn" class="mobile-form-label" style="margin-bottom: 4px;">Note</label>
+                  <input type="text" id="mqr-upi-tn" class="mobile-input" placeholder="e.g. Coffee">
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile Form 3: Wi-Fi -->
+            <div id="mqr-pane-wifi" class="mqr-tab-pane hidden" style="margin-top: 10px;">
+              <label for="mqr-wifi-ssid" class="mobile-form-label">Network Name (SSID) *</label>
+              <input type="text" id="mqr-wifi-ssid" class="mobile-input" placeholder="e.g. MyHome_WiFi" autocomplete="off" style="margin-bottom: 8px;">
+
+              <label for="mqr-wifi-auth" class="mobile-form-label">Security</label>
+              <select id="mqr-wifi-auth" class="mobile-input" style="margin-bottom: 8px; cursor: pointer;">
+                <option value="WPA" selected>WPA / WPA2 / WPA3</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">No Password (Open)</option>
+              </select>
+
+              <div id="mqr-wifi-pass-group" style="margin-bottom: 8px;">
+                <label for="mqr-wifi-pass" class="mobile-form-label">Password</label>
+                <input type="text" id="mqr-wifi-pass" class="mobile-input" placeholder="Network password" autocomplete="off">
+              </div>
+
+              <label class="mqr-toggle-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.8rem; user-select: none;">
+                <input type="checkbox" id="mqr-wifi-hidden">
+                <span>Hidden Network</span>
+              </label>
+            </div>
+
+            <!-- Mobile Form 4: Text -->
             <div id="mqr-pane-text" class="mqr-tab-pane hidden" style="margin-top: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <label for="mqr-text-input" class="mobile-form-label" style="margin-bottom: 0;">Plain Text or Message</label>
+                <label for="mqr-text-input" class="mobile-form-label" style="margin-bottom: 0;">Plain Text or Message *</label>
                 <span id="mqr-text-counter" style="font-size: 0.74rem; color: var(--text-muted);">29 chars</span>
               </div>
               <textarea id="mqr-text-input" class="mobile-input" rows="3" placeholder="Enter any text, Unicode or Bengali...">Welcome to FileForge Mobile!</textarea>
               <div class="mobile-field-hint">Supports full Unicode, international &amp; Bengali characters.</div>
+            </div>
+
+            <!-- Mobile Form 5: Email -->
+            <div id="mqr-pane-email" class="mqr-tab-pane hidden" style="margin-top: 10px;">
+              <label for="mqr-email-addr" class="mobile-form-label">Email Address *</label>
+              <input type="email" id="mqr-email-addr" class="mobile-input" placeholder="e.g. contact@example.com" style="margin-bottom: 8px;">
+
+              <label for="mqr-email-sub" class="mobile-form-label">Subject</label>
+              <input type="text" id="mqr-email-sub" class="mobile-input" placeholder="e.g. Inquiry" style="margin-bottom: 8px;">
+
+              <label for="mqr-email-body" class="mobile-form-label">Message</label>
+              <textarea id="mqr-email-body" class="mobile-input" rows="2" placeholder="Pre-filled email message..."></textarea>
+            </div>
+
+            <!-- Mobile Form 6: Phone -->
+            <div id="mqr-pane-phone" class="mqr-tab-pane hidden" style="margin-top: 10px;">
+              <label for="mqr-phone-number" class="mobile-form-label">Phone Number *</label>
+              <input type="tel" id="mqr-phone-number" class="mobile-input" placeholder="e.g. +91 98765 43210">
+              <div class="mobile-field-hint">Dialer opens directly when scanned with smartphone camera.</div>
             </div>
           </div>
 
@@ -1557,7 +1654,7 @@
               <button type="button" class="mqr-tab-btn active" data-tab="presets" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">🎨 Presets (45)</button>
               <button type="button" class="mqr-tab-btn" data-tab="frames" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">🖼️ Frames (52)</button>
               <button type="button" class="mqr-tab-btn" data-tab="label" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">🏷️ Label Text</button>
-              <button type="button" class="mqr-tab-btn" data-tab="custom" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">✨ Custom</button>
+              <button type="button" class="mqr-tab-btn" data-tab="custom" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">✨ Fine-tune</button>
               <button type="button" class="mqr-tab-btn" data-tab="settings" style="flex: 1; padding: 7px 8px; font-size: 0.76rem; white-space: nowrap;">⚙️ Settings</button>
             </div>
           </div>
@@ -1740,8 +1837,12 @@
               </div>
             </div>
 
-            <!-- Mobile Panel 4: Custom -->
-                        <div class="mqr-mobile-panel hidden" id="mqr-panel-custom">
+            <!-- Mobile Panel 4: Custom / Fine-tune -->
+            <div class="mqr-mobile-panel hidden" id="mqr-panel-custom">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span class="mqr-card-title" style="margin-bottom: 0;">Fine-tune Preset Design</span>
+                <button type="button" id="mqr-reset-preset-btn" class="btn btn-ghost btn-sm" style="font-size: 0.72rem; padding: 4px 8px;">↺ Reset to Preset</button>
+              </div>
               <!-- Style (Body Pattern) -->
               <div class="mobile-card" style="padding: 14px; margin-bottom: 12px;">
                 <div class="qr-section-title-row">
@@ -1869,27 +1970,49 @@
                     </div>
                   </div>
                   <div class="mqr-color-chip-box">
-                    <span class="mqr-subhead">Background</span>
-                    <div class="mqr-color-chip-wrap">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                      <span class="mqr-subhead" style="margin-bottom: 0;">Gradient</span>
+                      <label class="mqr-toggle-mini">
+                        <input type="checkbox" id="mqr-gradient-check">
+                        <span class="mqr-toggle-slider"></span>
+                      </label>
+                    </div>
+                    <div id="mqr-gradient-color-wrap" class="mqr-color-chip-wrap disabled-control">
+                      <input type="color" id="mqr-color-fg2" class="qr-hidden-picker" value="#9333ea">
+                      <button type="button" class="mqr-color-swatch" id="mqr-fg2-swatch" style="background-color: #9333ea;" title="Tap to pick color"></button>
+                      <input type="text" id="mqr-color-fg2-hex" class="mobile-input mqr-hex-compact" value="#9333EA" maxlength="7">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mqr-colors-row" style="margin-top: 8px;">
+                  <div class="mqr-color-chip-box">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                      <span class="mqr-subhead" style="margin-bottom: 0;">Background</span>
+                      <label class="mqr-toggle-mini" title="Transparent background">
+                        <input type="checkbox" id="mqr-bg-trans-check">
+                        <span class="mqr-toggle-slider"></span>
+                      </label>
+                    </div>
+                    <div id="mqr-bg-color-wrap" class="mqr-color-chip-wrap">
                       <input type="color" id="mqr-color-bg" class="qr-hidden-picker" value="#ffffff">
                       <button type="button" class="mqr-color-swatch" id="mqr-bg-swatch" style="background-color: #ffffff;" title="Tap to pick color"></button>
                       <input type="text" id="mqr-color-bg-hex" class="mobile-input mqr-hex-compact" value="#FFFFFF" maxlength="7">
                     </div>
                   </div>
-                </div>
-
-                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
-                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                    <span class="mqr-subhead" style="margin-bottom: 0;">Corner Eye Color</span>
-                    <label class="mqr-toggle-mini">
-                      <input type="checkbox" id="mqr-eye-custom-check">
-                      <span class="mqr-toggle-slider"></span>
-                    </label>
-                  </div>
-                  <div id="mqr-eye-color-wrap" class="mqr-color-chip-wrap disabled-control">
-                    <input type="color" id="mqr-color-eye" class="qr-hidden-picker" value="#121214">
-                    <button type="button" class="mqr-color-swatch" id="mqr-eye-swatch" style="background-color: #121214;" title="Tap to pick color"></button>
-                    <input type="text" id="mqr-color-eye-hex" class="mobile-input mqr-hex-compact" value="#121214" maxlength="7">
+                  <div class="mqr-color-chip-box">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                      <span class="mqr-subhead" style="margin-bottom: 0;">Corner Eye</span>
+                      <label class="mqr-toggle-mini">
+                        <input type="checkbox" id="mqr-eye-custom-check">
+                        <span class="mqr-toggle-slider"></span>
+                      </label>
+                    </div>
+                    <div id="mqr-eye-color-wrap" class="mqr-color-chip-wrap disabled-control">
+                      <input type="color" id="mqr-color-eye" class="qr-hidden-picker" value="#121214">
+                      <button type="button" class="mqr-color-swatch" id="mqr-eye-swatch" style="background-color: #121214;" title="Tap to pick color"></button>
+                      <input type="text" id="mqr-color-eye-hex" class="mobile-input mqr-hex-compact" value="#121214" maxlength="7">
+                    </div>
                   </div>
                 </div>
               </div>

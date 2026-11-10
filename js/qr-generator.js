@@ -1,29 +1,51 @@
 /**
- * FileForge - Advanced QR Code Generator Studio
- * Fully client-side, privacy-first QR Code generation and customization
- * Features 45 Style Presets (9 Themes), 52 Frames (7 Themes), Label Typography & Live Preview
+ * FileForge - Advanced Unified Multi-Purpose QR Code Generator Studio
+ * Fully client-side, privacy-first QR Code generation, customization & export
+ * 
+ * Features:
+ *  - 6 QR Types: Website URL, UPI Payment, Wi-Fi Network, Plain Text, Email, Phone
+ *  - Dynamic Input Forms with Real-time Validation (UPI VPA format, Wi-Fi security toggle)
+ *  - Unified Customization Engine (Preserves styles & frames across all QR types)
+ *  - 45 Style Presets across 9 Themes with visual QR thumbnails
+ *  - 52 Frame Presets across 7 Themes with visual preview thumbnails
+ *  - Fine-tune Design Studio with "Custom Modified" indicator & "Reset to Preset" option
+ *  - Dedicated Label Text Customizer (position, typography, padding, colors)
+ *  - Real-time Preview with contrast & quiet-zone warnings
+ *  - Comprehensive Exports: High-res PNG, Vector SVG, Client-side A4 PDF (PDFLib), Print, Copy Image & Text
  */
+
 const QRCodeGenerator = (() => {
   let qrInstance = null;
   let updateDebounceTimer = null;
+  let cachedBaseQRCanvas = null;
   let currentCompositeCanvas = null;
 
   const DEFAULT_OPTIONS = {
-    inputType: 'url',
-    data: 'https://abdur07-svg.github.io/FileForge/',
+    qrType: 'url',
+    typeData: {
+      url: { url: 'https://abdur07-svg.github.io/FileForge/' },
+      upi: { pa: '', pn: '', am: '', tn: '' },
+      wifi: { ssid: '', auth: 'WPA', pass: '', hidden: false },
+      text: { text: 'Welcome to FileForge!' },
+      email: { addr: '', sub: '', body: '' },
+      phone: { number: '' }
+    },
+
+    // Style presets & fine-tune
+    activePresetId: 'classic-pure',
+    patternStyle: 'square',
+    cornerSquareStyle: 'square',
+    cornerDotStyle: 'square',
     colorFg: '#121214',
     colorBg: '#ffffff',
     colorEye: '#121214',
     customEyeColor: false,
-    patternStyle: 'square',
-    cornerSquareStyle: 'square',
-    cornerDotStyle: 'square',
-    size: 320,
-    margin: 10,
-    errorCorrection: 'M',
+    gradientEnabled: false,
+    colorFg2: '#9333ea',
+    bgTransparent: false,
+    isFineTuneModified: false,
 
-    // Presets & Frames state
-    activePresetId: 'classic-pure',
+    // Frames & CTA
     activeFrameId: 'frame-none',
     frameText: 'SCAN ME',
     userHasEditedCtaText: false,
@@ -31,7 +53,12 @@ const QRCodeGenerator = (() => {
     frameTextColor: '#ffffff',
     frameBg: '#ffffff',
 
-    // Label Typography state
+    // Output Settings
+    size: 320,
+    margin: 10,
+    errorCorrection: 'M',
+
+    // Label Typography
     labelText: '',
     labelPosition: 'bottom',
     labelFontSize: 16,
@@ -43,7 +70,7 @@ const QRCodeGenerator = (() => {
     labelPadding: 12
   };
 
-  let state = { ...DEFAULT_OPTIONS };
+  let state = JSON.parse(JSON.stringify(DEFAULT_OPTIONS));
 
   function init() {
     initDesktop();
@@ -53,36 +80,306 @@ const QRCodeGenerator = (() => {
     const container = document.getElementById('tool-qr-generator');
     if (!container) return;
 
-    renderStylePresetsGallery('desktop');
-    renderFramesGallery('desktop');
+    renderStylePresetsGallery('desktop', 'all');
+    renderFramesGallery('desktop', 'all');
     bindDesktopEvents();
     renderLiveQR('desktop');
   }
 
-  function getEffectiveData() {
-    let raw = '';
-    if (state.inputType === 'url') {
-      const urlInput = document.getElementById('qr-url-input');
-      raw = urlInput ? urlInput.value.trim() : '';
-      if (!raw) raw = 'https://abdur07-svg.github.io/FileForge/';
-      else if (!/^https?:\/\//i.test(raw) && !/^mailto:/i.test(raw) && !/^tel:/i.test(raw)) {
-        raw = 'https://' + raw;
-      }
-    } else if (state.inputType === 'text') {
-      const textInput = document.getElementById('qr-text-input');
-      raw = textInput ? textInput.value : '';
-      if (!raw) raw = 'Welcome to FileForge!';
-    }
-    return raw;
+  function getFrameRenderer() {
+    return window.QRFrameRenderer || (typeof QRFrameRenderer !== 'undefined' ? QRFrameRenderer : null);
   }
 
+  function getPresetsData() {
+    return window.QR_PRESETS_DATA || (typeof QR_PRESETS_DATA !== 'undefined' ? QR_PRESETS_DATA : null);
+  }
+
+  /**
+   * Generates effective string payload based on active QR Type
+   */
+  function getEffectiveData() {
+    const type = state.qrType || 'url';
+    const td = state.typeData || {};
+
+    if (type === 'url') {
+      const urlInput = document.getElementById('qr-url-input');
+      let raw = urlInput ? urlInput.value.trim() : (td.url ? td.url.url : '');
+      if (!raw) return 'https://abdur07-svg.github.io/FileForge/';
+      if (!/^https?:\/\//i.test(raw) && !/^mailto:/i.test(raw) && !/^tel:/i.test(raw)) {
+        return 'https://' + raw;
+      }
+      return raw;
+    }
+
+    if (type === 'upi') {
+      const paInput = document.getElementById('qr-upi-pa');
+      const pnInput = document.getElementById('qr-upi-pn');
+      const amInput = document.getElementById('qr-upi-am');
+      const tnInput = document.getElementById('qr-upi-tn');
+
+      const pa = paInput ? paInput.value.trim() : (td.upi ? td.upi.pa : '');
+      const pn = pnInput ? pnInput.value.trim() : (td.upi ? td.upi.pn : '');
+      const am = amInput ? amInput.value.trim() : (td.upi ? td.upi.am : '');
+      const tn = tnInput ? tnInput.value.trim() : (td.upi ? td.upi.tn : '');
+
+      if (!pa) return 'upi://pay?pa=merchant@upi&cu=INR';
+
+      let upi = `upi://pay?pa=${encodeURIComponent(pa)}&cu=INR`;
+      if (pn) upi += `&pn=${encodeURIComponent(pn)}`;
+      if (am && !isNaN(Number(am)) && Number(am) > 0) {
+        upi += `&am=${encodeURIComponent(Number(am).toFixed(2))}`;
+      }
+      if (tn) upi += `&tn=${encodeURIComponent(tn)}`;
+      return upi;
+    }
+
+    if (type === 'wifi') {
+      const ssidInput = document.getElementById('qr-wifi-ssid');
+      const authInput = document.getElementById('qr-wifi-auth');
+      const passInput = document.getElementById('qr-wifi-pass');
+      const hiddenInput = document.getElementById('qr-wifi-hidden');
+
+      const ssid = ssidInput ? ssidInput.value : (td.wifi ? td.wifi.ssid : '');
+      const auth = authInput ? authInput.value : (td.wifi ? td.wifi.auth : 'WPA');
+      const pass = passInput ? passInput.value : (td.wifi ? td.wifi.pass : '');
+      const hidden = hiddenInput ? hiddenInput.checked : (td.wifi ? td.wifi.hidden : false);
+
+      const escapeWifi = (str) => (str || '').replace(/([\\;,":])/g, '\\$1');
+
+      if (!ssid) return 'WIFI:S:MyWiFi;T:WPA;P:password;;';
+
+      if (auth === 'nopass') {
+        return `WIFI:S:${escapeWifi(ssid)};T:nopass;${hidden ? 'H:true;' : ''};`;
+      }
+      return `WIFI:S:${escapeWifi(ssid)};T:${auth};P:${escapeWifi(pass)};${hidden ? 'H:true;' : ''};`;
+    }
+
+    if (type === 'text') {
+      const textInput = document.getElementById('qr-text-input');
+      const raw = textInput ? textInput.value : (td.text ? td.text.text : '');
+      return raw || 'Welcome to FileForge!';
+    }
+
+    if (type === 'email') {
+      const addrInput = document.getElementById('qr-email-addr');
+      const subInput = document.getElementById('qr-email-sub');
+      const bodyInput = document.getElementById('qr-email-body');
+
+      const addr = addrInput ? addrInput.value.trim() : (td.email ? td.email.addr : '');
+      const sub = subInput ? subInput.value.trim() : (td.email ? td.email.sub : '');
+      const body = bodyInput ? bodyInput.value : (td.email ? td.email.body : '');
+
+      if (!addr) return 'mailto:contact@example.com';
+
+      const params = [];
+      if (sub) params.push(`subject=${encodeURIComponent(sub)}`);
+      if (body) params.push(`body=${encodeURIComponent(body)}`);
+
+      return `mailto:${addr}${params.length ? '?' + params.join('&') : ''}`;
+    }
+
+    if (type === 'phone') {
+      const phoneInput = document.getElementById('qr-phone-number');
+      const num = phoneInput ? phoneInput.value.trim() : (td.phone ? td.phone.number : '');
+      if (!num) return 'tel:+18005550199';
+      return `tel:${num.replace(/[^0-9+]/g, '')}`;
+    }
+
+    return 'https://abdur07-svg.github.io/FileForge/';
+  }
+
+  /**
+   * Validate UPI VPA syntax (without claiming external bank check)
+   */
+  function validateUpiId(pa) {
+    if (!pa) return { valid: false, message: 'Format check' };
+    const valid = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(pa);
+    return {
+      valid,
+      message: valid ? 'Valid format' : 'Invalid format (e.g. name@bank)'
+    };
+  }
+
+  function updateUpiValidationUI(targetContext = 'desktop') {
+    const paInput = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-pa' : 'qr-upi-pa');
+    const badge = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-validation-badge' : 'qr-upi-validation-badge');
+    if (!badge) return;
+
+    const pa = paInput ? paInput.value.trim() : '';
+    if (!pa) {
+      badge.textContent = 'Format check';
+      badge.className = 'qr-syntax-badge';
+      return;
+    }
+    const res = validateUpiId(pa);
+    badge.textContent = res.message;
+    badge.className = `qr-syntax-badge ${res.valid ? 'valid' : 'invalid'}`;
+  }
+
+  /**
+   * Cache current inputs to preserve state when switching types
+   */
+  function cacheInputs(targetContext = 'desktop') {
+    if (!state.typeData) state.typeData = {};
+    const type = state.qrType || 'url';
+
+    if (type === 'url') {
+      const el = document.getElementById(targetContext === 'mobile' ? 'mqr-url-input' : 'qr-url-input');
+      if (el) state.typeData.url = { url: el.value };
+    } else if (type === 'upi') {
+      const pa = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-pa' : 'qr-upi-pa');
+      const pn = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-pn' : 'qr-upi-pn');
+      const am = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-am' : 'qr-upi-am');
+      const tn = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-tn' : 'qr-upi-tn');
+      state.typeData.upi = {
+        pa: pa ? pa.value : '',
+        pn: pn ? pn.value : '',
+        am: am ? am.value : '',
+        tn: tn ? tn.value : ''
+      };
+    } else if (type === 'wifi') {
+      const ssid = document.getElementById(targetContext === 'mobile' ? 'mqr-wifi-ssid' : 'qr-wifi-ssid');
+      const auth = document.getElementById(targetContext === 'mobile' ? 'mqr-wifi-auth' : 'qr-wifi-auth');
+      const pass = document.getElementById(targetContext === 'mobile' ? 'mqr-wifi-pass' : 'qr-wifi-pass');
+      const hidden = document.getElementById(targetContext === 'mobile' ? 'mqr-wifi-hidden' : 'qr-wifi-hidden');
+      state.typeData.wifi = {
+        ssid: ssid ? ssid.value : '',
+        auth: auth ? auth.value : 'WPA',
+        pass: pass ? pass.value : '',
+        hidden: hidden ? hidden.checked : false
+      };
+    } else if (type === 'text') {
+      const el = document.getElementById(targetContext === 'mobile' ? 'mqr-text-input' : 'qr-text-input');
+      if (el) state.typeData.text = { text: el.value };
+    } else if (type === 'email') {
+      const addr = document.getElementById(targetContext === 'mobile' ? 'mqr-email-addr' : 'qr-email-addr');
+      const sub = document.getElementById(targetContext === 'mobile' ? 'mqr-email-sub' : 'qr-email-sub');
+      const body = document.getElementById(targetContext === 'mobile' ? 'mqr-email-body' : 'qr-email-body');
+      state.typeData.email = {
+        addr: addr ? addr.value : '',
+        sub: sub ? sub.value : '',
+        body: body ? body.value : ''
+      };
+    } else if (type === 'phone') {
+      const el = document.getElementById(targetContext === 'mobile' ? 'mqr-phone-number' : 'qr-phone-number');
+      if (el) state.typeData.phone = { number: el.value };
+    }
+  }
+
+  /**
+   * Restore cached inputs into form fields
+   */
+  function restoreInputs(type, targetContext = 'desktop') {
+    if (!state.typeData) return;
+    const td = state.typeData;
+
+    if (type === 'url' && td.url) {
+      const el = document.getElementById(targetContext === 'mobile' ? 'mqr-url-input' : 'qr-url-input');
+      if (el && td.url.url !== undefined) el.value = td.url.url;
+    } else if (type === 'upi' && td.upi) {
+      const pa = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-pa' : 'qr-upi-pa');
+      const pn = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-pn' : 'qr-upi-pn');
+      const am = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-am' : 'qr-upi-am');
+      const tn = document.getElementById(targetContext === 'mobile' ? 'mqr-upi-tn' : 'qr-upi-tn');
+      if (pa && td.upi.pa !== undefined) pa.value = td.upi.pa;
+      if (pn && td.upi.pn !== undefined) pn.value = td.upi.pn;
+      if (am && td.upi.am !== undefined) am.value = td.upi.am;
+      if (tn && td.upi.tn !== undefined) tn.value = td.upi.tn;
+      updateUpiValidationUI(targetContext);
+    } else if (type === 'wifi' && td.wifi) {
+      const ssid = document.getElementById(targetContext === 'mobile' ? 'mqr-wifi-ssid' : 'qr-wifi-ssid');
+      const auth = document.getElementById(targetContext === 'mobile' ? 'mqr-wifi-auth' : 'qr-wifi-auth');
+      const pass = document.getElementById(targetContext === 'mobile' ? 'mqr-wifi-pass' : 'qr-wifi-pass');
+      const hidden = document.getElementById(targetContext === 'mobile' ? 'mqr-wifi-hidden' : 'qr-wifi-hidden');
+      if (ssid && td.wifi.ssid !== undefined) ssid.value = td.wifi.ssid;
+      if (auth && td.wifi.auth !== undefined) auth.value = td.wifi.auth;
+      if (pass && td.wifi.pass !== undefined) pass.value = td.wifi.pass;
+      if (hidden && td.wifi.hidden !== undefined) hidden.checked = td.wifi.hidden;
+
+      const passGroup = document.getElementById(targetContext === 'mobile' ? 'mqr-wifi-pass-group' : 'qr-wifi-pass-group');
+      if (passGroup) {
+        passGroup.style.display = (auth && auth.value === 'nopass') ? 'none' : '';
+      }
+    } else if (type === 'text' && td.text) {
+      const el = document.getElementById(targetContext === 'mobile' ? 'mqr-text-input' : 'qr-text-input');
+      const counter = document.getElementById(targetContext === 'mobile' ? 'mqr-text-counter' : 'qr-text-counter');
+      if (el && td.text.text !== undefined) {
+        el.value = td.text.text;
+        if (counter) counter.textContent = `${el.value.length} characters`;
+      }
+    } else if (type === 'email' && td.email) {
+      const addr = document.getElementById(targetContext === 'mobile' ? 'mqr-email-addr' : 'qr-email-addr');
+      const sub = document.getElementById(targetContext === 'mobile' ? 'mqr-email-sub' : 'qr-email-sub');
+      const body = document.getElementById(targetContext === 'mobile' ? 'mqr-email-body' : 'qr-email-body');
+      if (addr && td.email.addr !== undefined) addr.value = td.email.addr;
+      if (sub && td.email.sub !== undefined) sub.value = td.email.sub;
+      if (body && td.email.body !== undefined) body.value = td.email.body;
+    } else if (type === 'phone' && td.phone) {
+      const el = document.getElementById(targetContext === 'mobile' ? 'mqr-phone-number' : 'qr-phone-number');
+      if (el && td.phone.number !== undefined) el.value = td.phone.number;
+    }
+  }
+
+  /**
+   * Switch active QR Type
+   */
+  function switchQRType(type, targetContext = 'desktop') {
+    if (state.qrType === type) return;
+
+    cacheInputs(targetContext);
+    state.qrType = type;
+
+    // Update active card highlight
+    const selectorId = targetContext === 'mobile' ? 'mqr-type-selector' : 'qr-type-selector';
+    const grid = document.getElementById(selectorId);
+    if (grid) {
+      const cardClass = targetContext === 'mobile' ? '.mqr-type-card' : '.qr-type-card';
+      grid.querySelectorAll(cardClass).forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-type') === type);
+      });
+    }
+
+    // Toggle dynamic form display
+    const types = ['url', 'upi', 'wifi', 'text', 'email', 'phone'];
+    types.forEach(t => {
+      const paneId = targetContext === 'mobile' ? `mqr-pane-${t}` : `qr-tab-${t}`;
+      const pane = document.getElementById(paneId);
+      if (pane) {
+        pane.classList.toggle('hidden', t !== type);
+      }
+    });
+
+    restoreInputs(type, targetContext);
+    renderLiveQR(targetContext);
+  }
+
+  /**
+   * Build QRCodeStyling configuration
+   */
   function buildQRConfig(pixelSize) {
     const size = pixelSize || state.size || 320;
     const data = getEffectiveData();
-    const ecLevel = state.errorCorrection;
+    const ecLevel = state.errorCorrection || 'M';
 
     const cornerSquareColor = state.customEyeColor ? state.colorEye : state.colorFg;
     const cornerDotColor = state.customEyeColor ? state.colorEye : state.colorFg;
+
+    const dotsOptions = {
+      type: state.patternStyle
+    };
+
+    if (state.gradientEnabled) {
+      dotsOptions.gradient = {
+        type: 'linear',
+        rotation: 0,
+        colorStops: [
+          { offset: 0, color: state.colorFg },
+          { offset: 1, color: state.colorFg2 || '#9333ea' }
+        ]
+      };
+    } else {
+      dotsOptions.color = state.colorFg;
+    }
 
     const config = {
       width: size,
@@ -95,10 +392,7 @@ const QRCodeGenerator = (() => {
         mode: 'Byte',
         errorCorrectionLevel: ecLevel
       },
-      dotsOptions: {
-        type: state.patternStyle,
-        color: state.colorFg
-      },
+      dotsOptions: dotsOptions,
       cornersSquareOptions: {
         type: state.cornerSquareStyle,
         color: cornerSquareColor
@@ -108,30 +402,17 @@ const QRCodeGenerator = (() => {
         color: cornerDotColor
       },
       backgroundOptions: {
-        color: state.colorBg
+        color: state.bgTransparent ? 'transparent' : state.colorBg
       }
     };
 
     return config;
   }
 
-  function getFrameRenderer() {
-    return window.QRFrameRenderer || (typeof QRFrameRenderer !== 'undefined' ? QRFrameRenderer : null);
-  }
-
-  function getPresetsData() {
-    return window.QR_PRESETS_DATA || (typeof QR_PRESETS_DATA !== 'undefined' ? QR_PRESETS_DATA : null);
-  }
-
-  let cachedBaseQRCanvas = null;
-
+  /**
+   * Re-composite preview using cached base QR
+   */
   function updateCompositePreview(targetContext = 'desktop') {
-    const previewContainer = targetContext === 'mobile'
-      ? document.getElementById('mobile-qr-preview-mount')
-      : document.getElementById('qr-preview-mount');
-
-    if (!previewContainer) return;
-
     if (!cachedBaseQRCanvas) {
       renderLiveQR(targetContext);
       return;
@@ -168,50 +449,51 @@ const QRCodeGenerator = (() => {
       composite = renderer.renderComposite(cachedBaseQRCanvas, framePreset, frameOptions, labelOptions);
     }
 
-    previewContainer.innerHTML = '';
-    previewContainer.appendChild(composite);
     currentCompositeCanvas = composite;
+
+    const mountId = targetContext === 'mobile' ? 'mobile-qr-preview-mount' : 'qr-preview-mount';
+    const mount = document.getElementById(mountId);
+    if (mount) {
+      mount.innerHTML = '';
+      mount.appendChild(composite);
+    }
 
     updateInfoSection(targetContext);
   }
 
+  /**
+   * Render Live QR code from scratch
+   */
   async function renderLiveQR(targetContext = 'desktop') {
+    const mountId = targetContext === 'mobile' ? 'mobile-qr-preview-mount' : 'qr-preview-mount';
+    const mount = document.getElementById(mountId);
+    if (!mount) return;
+
     if (typeof window.QRCodeStyling === 'undefined') {
-      console.warn('QRCodeStyling library not loaded');
+      mount.innerHTML = '<div style="padding:20px; color:#ef4444; text-align:center;">QR Engine loading...</div>';
       return;
     }
 
-    const previewContainer = targetContext === 'mobile'
-      ? document.getElementById('mobile-qr-preview-mount')
-      : document.getElementById('qr-preview-mount');
-
-    if (!previewContainer) return;
-
-    const baseQRSize = targetContext === 'mobile' ? 240 : 320;
-    const config = buildQRConfig(baseQRSize);
-
     try {
-      if (!qrInstance) {
-        qrInstance = new window.QRCodeStyling(config);
-      } else {
-        qrInstance.update(config);
-      }
+      const config = buildQRConfig(state.size);
+      qrInstance = new window.QRCodeStyling(config);
 
-      const qrCanvas = await qrInstance._getElement('png');
-      if (!qrCanvas) return;
+      const rawCanvas = await qrInstance._getElement('png');
+      if (!rawCanvas) return;
 
-      cachedBaseQRCanvas = qrCanvas;
+      cachedBaseQRCanvas = rawCanvas;
       updateCompositePreview(targetContext);
     } catch (e) {
-      console.error('Failed to render styled QR code:', e);
+      console.error('Error generating QR Code:', e);
+      mount.innerHTML = `<div style="padding:20px; color:#ef4444; font-size:0.8rem; text-align:center;">Generation error: ${e.message}</div>`;
     }
   }
 
   function scheduleUpdate(targetContext = 'desktop') {
-    clearTimeout(updateDebounceTimer);
+    if (updateDebounceTimer) clearTimeout(updateDebounceTimer);
     updateDebounceTimer = setTimeout(() => {
       renderLiveQR(targetContext);
-    }, 80);
+    }, 120);
   }
 
   function updateInfoSection(targetContext) {
@@ -220,7 +502,11 @@ const QRCodeGenerator = (() => {
 
     const typeLabels = {
       url: 'Website URL',
-      text: 'Plain Text'
+      upi: 'UPI Payment',
+      wifi: 'Wi-Fi Network',
+      text: 'Plain Text',
+      email: 'Email Message',
+      phone: 'Phone Call'
     };
 
     const typeEl = document.getElementById(targetContext === 'mobile' ? 'mobile-qr-info-type' : 'qr-info-type');
@@ -228,7 +514,7 @@ const QRCodeGenerator = (() => {
     const previewTextEl = document.getElementById(targetContext === 'mobile' ? 'mobile-qr-info-content' : 'qr-info-content');
     const warnEl = document.getElementById(targetContext === 'mobile' ? 'mobile-qr-contrast-warn' : 'qr-contrast-warn');
 
-    if (typeEl) typeEl.textContent = typeLabels[state.inputType] || 'Custom';
+    if (typeEl) typeEl.textContent = typeLabels[state.qrType] || 'Custom';
     if (bytesEl) bytesEl.textContent = `${data.length} chars (${byteLength} bytes)`;
     if (previewTextEl) {
       previewTextEl.textContent = data.length > 60 ? data.substring(0, 57) + '...' : data;
@@ -267,6 +553,49 @@ const QRCodeGenerator = (() => {
   }
 
   /**
+   * Fallback inline SVG generator for preset thumbnails to ensure previews NEVER fail
+   */
+  function generatePresetThumbnailFallback(preset) {
+    const fg = preset.fgColor || '#121214';
+    const bg = preset.bgColor || '#ffffff';
+    const eye = preset.eyeColor || fg;
+    return `<svg viewBox="0 0 48 48" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="border-radius: 6px; background: ${bg};">
+      <rect width="48" height="48" fill="${bg}" rx="6"/>
+      <rect x="5" y="5" width="12" height="12" rx="3" fill="none" stroke="${eye}" stroke-width="2.5"/>
+      <circle cx="11" cy="11" r="2.8" fill="${eye}"/>
+      <rect x="31" y="5" width="12" height="12" rx="3" fill="none" stroke="${eye}" stroke-width="2.5"/>
+      <circle cx="37" cy="11" r="2.8" fill="${eye}"/>
+      <rect x="5" y="31" width="12" height="12" rx="3" fill="none" stroke="${eye}" stroke-width="2.5"/>
+      <circle cx="11" cy="37" r="2.8" fill="${eye}"/>
+      <rect x="20" y="8" width="2.4" height="2.4" fill="${fg}"/> <rect x="24" y="8" width="2.4" height="2.4" fill="${fg}"/>
+      <rect x="20" y="20" width="2.4" height="2.4" fill="${fg}"/> <rect x="24" y="20" width="2.4" height="2.4" fill="${fg}"/>
+      <rect x="28" y="20" width="2.4" height="2.4" fill="${fg}"/> <rect x="32" y="20" width="2.4" height="2.4" fill="${fg}"/>
+      <rect x="20" y="32" width="2.4" height="2.4" fill="${fg}"/> <rect x="24" y="32" width="2.4" height="2.4" fill="${fg}"/>
+    </svg>`;
+  }
+
+  /**
+   * Fallback inline SVG generator for frame thumbnails
+   */
+  function generateFrameThumbnailFallback(frame) {
+    const text = (frame.defaultText || 'SCAN').toUpperCase();
+    return `<svg viewBox="0 0 48 48" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="3" width="40" height="42" rx="5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2"/>
+      <rect x="12" y="35" width="24" height="6.5" rx="3" fill="#1E293B"/>
+      <text x="24" y="39.5" fill="#FFFFFF" font-size="3.5" font-weight="bold" font-family="sans-serif" text-anchor="middle">${text}</text>
+      <g transform="translate(14, 9) scale(0.42)">
+        <rect x="0" y="0" width="14" height="14" rx="2" fill="none" stroke="#334155" stroke-width="2.6"/>
+        <rect x="4" y="4" width="6" height="6" fill="#334155"/>
+        <rect x="34" y="0" width="14" height="14" rx="2" fill="none" stroke="#334155" stroke-width="2.6"/>
+        <rect x="38" y="4" width="6" height="6" fill="#334155"/>
+        <rect x="0" y="34" width="14" height="14" rx="2" fill="none" stroke="#334155" stroke-width="2.6"/>
+        <rect x="4" y="38" width="6" height="6" fill="#334155"/>
+        <rect x="18" y="16" width="12" height="12" fill="#334155"/>
+      </g>
+    </svg>`;
+  }
+
+  /**
    * Render 45 Style Preset Cards
    */
   function renderStylePresetsGallery(targetContext = 'desktop', filterTheme = 'all') {
@@ -286,9 +615,13 @@ const QRCodeGenerator = (() => {
       card.setAttribute('data-preset-id', preset.id);
       card.setAttribute('title', `${preset.name} (${preset.theme})`);
 
-      const thumbSvg = (renderer && typeof renderer.generateStyleThumbnailSvg === 'function')
-        ? renderer.generateStyleThumbnailSvg(preset)
-        : '';
+      let thumbSvg = '';
+      if (renderer && typeof renderer.generateStyleThumbnailSvg === 'function') {
+        thumbSvg = renderer.generateStyleThumbnailSvg(preset);
+      }
+      if (!thumbSvg) {
+        thumbSvg = generatePresetThumbnailFallback(preset);
+      }
 
       card.innerHTML = `
         <div class="qr-gallery-thumb">
@@ -317,8 +650,14 @@ const QRCodeGenerator = (() => {
     state.colorBg = preset.bgColor;
     state.colorEye = preset.eyeColor || preset.fgColor;
     state.customEyeColor = (preset.eyeColor !== preset.fgColor);
+    state.gradientEnabled = false;
+    state.bgTransparent = false;
+    state.isFineTuneModified = false;
 
-    // Sync Custom Style inputs
+    // Update modified indicator
+    updateModifiedBadge(targetContext);
+
+    // Sync fine-tune inputs
     syncUIWithState(targetContext);
 
     // Update active highlight in gallery
@@ -352,9 +691,13 @@ const QRCodeGenerator = (() => {
       card.setAttribute('data-frame-id', frame.id);
       card.setAttribute('title', `${frame.name} (${frame.theme})`);
 
-      const thumbSvg = (renderer && typeof renderer.generateFrameThumbnailSvg === 'function')
-        ? renderer.generateFrameThumbnailSvg(frame)
-        : '';
+      let thumbSvg = '';
+      if (renderer && typeof renderer.generateFrameThumbnailSvg === 'function') {
+        thumbSvg = renderer.generateFrameThumbnailSvg(frame);
+      }
+      if (!thumbSvg) {
+        thumbSvg = generateFrameThumbnailFallback(frame);
+      }
 
       card.innerHTML = `
         <div class="qr-gallery-thumb">
@@ -409,8 +752,30 @@ const QRCodeGenerator = (() => {
       });
     }
 
-    // Instantly recomposite preview without recreating base QR
     updateCompositePreview(targetContext);
+  }
+
+  function markFineTuneModified(targetContext = 'desktop') {
+    state.isFineTuneModified = true;
+    updateModifiedBadge(targetContext);
+  }
+
+  function updateModifiedBadge(targetContext = 'desktop') {
+    const badge = document.getElementById(targetContext === 'mobile' ? 'mqr-custom-modified-badge' : 'qr-custom-modified-badge');
+    if (badge) {
+      badge.classList.toggle('hidden', !state.isFineTuneModified);
+    }
+  }
+
+  function resetToPreset(targetContext = 'desktop') {
+    const presetsData = getPresetsData();
+    if (!presetsData) return;
+
+    const preset = presetsData.STYLE_PRESETS.find(p => p.id === state.activePresetId);
+    if (preset) {
+      applyStylePreset(preset, targetContext);
+      showToast('Fine-tuned design reset to ' + preset.name, 'info');
+    }
   }
 
   /**
@@ -422,14 +787,26 @@ const QRCodeGenerator = (() => {
     syncColorPair(`${prefix}color-fg`, `${prefix}color-fg-hex`, state.colorFg);
     syncColorPair(`${prefix}color-bg`, `${prefix}color-bg-hex`, state.colorBg);
     syncColorPair(`${prefix}color-eye`, `${prefix}color-eye-hex`, state.colorEye);
+    syncColorPair(`${prefix}color-fg2`, `${prefix}color-fg2-hex`, state.colorFg2 || '#9333ea');
     updateSwatchDisplay(`${prefix}fg-swatch`, state.colorFg);
     updateSwatchDisplay(`${prefix}bg-swatch`, state.colorBg);
     updateSwatchDisplay(`${prefix}eye-swatch`, state.colorEye);
+    updateSwatchDisplay(`${prefix}fg2-swatch`, state.colorFg2 || '#9333ea');
 
     const eyeCheck = document.getElementById(`${prefix}eye-custom-check`);
     const eyeRow = document.getElementById(`${prefix}eye-color-wrap`);
     if (eyeCheck) eyeCheck.checked = state.customEyeColor;
     if (eyeRow) eyeRow.classList.toggle('disabled-control', !state.customEyeColor);
+
+    const gradCheck = document.getElementById(`${prefix}gradient-check`);
+    const gradRow = document.getElementById(`${prefix}gradient-color-wrap`);
+    if (gradCheck) gradCheck.checked = state.gradientEnabled;
+    if (gradRow) gradRow.classList.toggle('disabled-control', !state.gradientEnabled);
+
+    const bgTransCheck = document.getElementById(`${prefix}bg-trans-check`);
+    const bgRow = document.getElementById(`${prefix}bg-color-wrap`);
+    if (bgTransCheck) bgTransCheck.checked = state.bgTransparent;
+    if (bgRow) bgRow.classList.toggle('disabled-control', state.bgTransparent);
 
     // Visual cards
     document.querySelectorAll(`#${prefix}pattern-group [data-pattern]`).forEach(c => {
@@ -444,33 +821,56 @@ const QRCodeGenerator = (() => {
     document.querySelectorAll(`#${prefix}corner-dot-group [data-corner-dot]`).forEach(c => {
       c.classList.toggle('active', c.getAttribute('data-corner-dot') === state.cornerDotStyle);
     });
+
+    updateModifiedBadge(targetContext);
   }
 
   function bindDesktopEvents() {
-    // 1. Content Tabs (URL / Text)
-    const tabs = document.querySelectorAll('.qr-input-tab');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        const targetType = tab.getAttribute('data-type');
-        state.inputType = targetType;
-
-        document.querySelectorAll('.qr-tab-content').forEach(c => c.classList.add('hidden'));
-        const activeContent = document.getElementById(`qr-tab-${targetType}`);
-        if (activeContent) activeContent.classList.remove('hidden');
-
-        scheduleUpdate('desktop');
+    // 1. Choose QR Type Cards Selection
+    const typeCards = document.querySelectorAll('#qr-type-selector .qr-type-card');
+    typeCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const type = card.getAttribute('data-type');
+        switchQRType(type, 'desktop');
       });
     });
 
-    // Content inputs
-    ['qr-url-input', 'qr-text-input'].forEach(id => {
+    // Content inputs live sync
+    const inputIds = [
+      'qr-url-input',
+      'qr-upi-pa', 'qr-upi-pn', 'qr-upi-am', 'qr-upi-tn',
+      'qr-wifi-ssid', 'qr-wifi-pass',
+      'qr-text-input',
+      'qr-email-addr', 'qr-email-sub', 'qr-email-body',
+      'qr-phone-number'
+    ];
+
+    inputIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.addEventListener('input', () => scheduleUpdate('desktop'));
+        el.addEventListener('input', () => {
+          if (id === 'qr-upi-pa') updateUpiValidationUI('desktop');
+          scheduleUpdate('desktop');
+        });
       }
     });
+
+    // Wi-Fi security selector toggle
+    const wifiAuth = document.getElementById('qr-wifi-auth');
+    if (wifiAuth) {
+      wifiAuth.addEventListener('change', () => {
+        const passGroup = document.getElementById('qr-wifi-pass-group');
+        if (passGroup) {
+          passGroup.style.display = wifiAuth.value === 'nopass' ? 'none' : '';
+        }
+        scheduleUpdate('desktop');
+      });
+    }
+
+    const wifiHidden = document.getElementById('qr-wifi-hidden');
+    if (wifiHidden) {
+      wifiHidden.addEventListener('change', () => scheduleUpdate('desktop'));
+    }
 
     const textInput = document.getElementById('qr-text-input');
     const textCounter = document.getElementById('qr-text-counter');
@@ -640,10 +1040,16 @@ const QRCodeGenerator = (() => {
       });
     }
 
-    // 6. Custom Style Panel Controls
+    // 6. Fine-tune Design Controls
+    const resetPresetBtn = document.getElementById('qr-reset-preset-btn');
+    if (resetPresetBtn) {
+      resetPresetBtn.addEventListener('click', () => resetToPreset('desktop'));
+    }
+
     bindSwatchTrigger('qr-fg-swatch', 'qr-color-fg');
     bindSwatchTrigger('qr-bg-swatch', 'qr-color-bg');
     bindSwatchTrigger('qr-eye-swatch', 'qr-color-eye');
+    bindSwatchTrigger('qr-fg2-swatch', 'qr-color-fg2');
 
     bindColorPair('qr-color-fg', 'qr-color-fg-hex', (c) => {
       state.colorFg = c;
@@ -652,12 +1058,14 @@ const QRCodeGenerator = (() => {
         state.colorEye = c;
         updateSwatchDisplay('qr-eye-swatch', c);
       }
+      markFineTuneModified('desktop');
       scheduleUpdate('desktop');
     });
 
     bindColorPair('qr-color-bg', 'qr-color-bg-hex', (c) => {
       state.colorBg = c;
       updateSwatchDisplay('qr-bg-swatch', c);
+      markFineTuneModified('desktop');
       scheduleUpdate('desktop');
     });
 
@@ -669,6 +1077,7 @@ const QRCodeGenerator = (() => {
       if (eyeCheck) eyeCheck.checked = true;
       const eyeRow = document.getElementById('qr-eye-color-wrap');
       if (eyeRow) eyeRow.classList.remove('disabled-control');
+      markFineTuneModified('desktop');
       scheduleUpdate('desktop');
     });
 
@@ -683,33 +1092,41 @@ const QRCodeGenerator = (() => {
           syncColorPair('qr-color-eye', 'qr-color-eye-hex', state.colorFg);
           updateSwatchDisplay('qr-eye-swatch', state.colorFg);
         }
+        markFineTuneModified('desktop');
         scheduleUpdate('desktop');
       });
     }
 
-    // Palette buttons
-    document.querySelectorAll('.qr-palette-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const fg = btn.getAttribute('data-fg');
-        const bg = btn.getAttribute('data-bg');
-        if (fg && bg) {
-          document.querySelectorAll('.qr-palette-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          state.colorFg = fg;
-          state.colorBg = bg;
-          syncColorPair('qr-color-fg', 'qr-color-fg-hex', fg);
-          syncColorPair('qr-color-bg', 'qr-color-bg-hex', bg);
-          updateSwatchDisplay('qr-fg-swatch', fg);
-          updateSwatchDisplay('qr-bg-swatch', bg);
-          if (!state.customEyeColor) {
-            state.colorEye = fg;
-            syncColorPair('qr-color-eye', 'qr-color-eye-hex', fg);
-            updateSwatchDisplay('qr-eye-swatch', fg);
-          }
-          scheduleUpdate('desktop');
-        }
+    // Gradient toggle & color
+    const gradCheck = document.getElementById('qr-gradient-check');
+    const gradRow = document.getElementById('qr-gradient-color-wrap');
+    if (gradCheck) {
+      gradCheck.addEventListener('change', () => {
+        state.gradientEnabled = gradCheck.checked;
+        if (gradRow) gradRow.classList.toggle('disabled-control', !gradCheck.checked);
+        markFineTuneModified('desktop');
+        scheduleUpdate('desktop');
       });
+    }
+
+    bindColorPair('qr-color-fg2', 'qr-color-fg2-hex', (c) => {
+      state.colorFg2 = c;
+      updateSwatchDisplay('qr-fg2-swatch', c);
+      markFineTuneModified('desktop');
+      scheduleUpdate('desktop');
     });
+
+    // Background transparency toggle
+    const bgTransCheck = document.getElementById('qr-bg-trans-check');
+    const bgRow = document.getElementById('qr-bg-color-wrap');
+    if (bgTransCheck) {
+      bgTransCheck.addEventListener('change', () => {
+        state.bgTransparent = bgTransCheck.checked;
+        if (bgRow) bgRow.classList.toggle('disabled-control', bgTransCheck.checked);
+        markFineTuneModified('desktop');
+        scheduleUpdate('desktop');
+      });
+    }
 
     // Pattern style selector
     const patternCards = document.querySelectorAll('#qr-pattern-group [data-pattern]');
@@ -721,6 +1138,7 @@ const QRCodeGenerator = (() => {
         const pat = card.getAttribute('data-pattern');
         state.patternStyle = pat;
         if (patternLabel) patternLabel.textContent = pat.toUpperCase();
+        markFineTuneModified('desktop');
         scheduleUpdate('desktop');
       });
     });
@@ -732,6 +1150,7 @@ const QRCodeGenerator = (() => {
         cornerSqCards.forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         state.cornerSquareStyle = card.getAttribute('data-corner-sq');
+        markFineTuneModified('desktop');
         scheduleUpdate('desktop');
       });
     });
@@ -743,6 +1162,7 @@ const QRCodeGenerator = (() => {
         cornerDotCards.forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         state.cornerDotStyle = card.getAttribute('data-corner-dot');
+        markFineTuneModified('desktop');
         scheduleUpdate('desktop');
       });
     });
@@ -798,6 +1218,16 @@ const QRCodeGenerator = (() => {
       dlSvgBtn.addEventListener('click', () => downloadExport('svg', 'desktop'));
     }
 
+    const dlPdfBtn = document.getElementById('qr-dl-pdf');
+    if (dlPdfBtn) {
+      dlPdfBtn.addEventListener('click', () => downloadExport('pdf', 'desktop'));
+    }
+
+    const printBtn = document.getElementById('qr-btn-print');
+    if (printBtn) {
+      printBtn.addEventListener('click', () => printCurrentQR(currentCompositeCanvas));
+    }
+
     const copyImgBtn = document.getElementById('qr-copy-img');
     if (copyImgBtn) {
       copyImgBtn.addEventListener('click', async () => {
@@ -808,7 +1238,7 @@ const QRCodeGenerator = (() => {
               await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
               showToast('Customized QR Code copied to clipboard!', 'success');
             } else {
-              showToast('Direct image clipboard copy not supported', 'info');
+              showToast('Direct image clipboard copy not supported in this browser', 'info');
             }
           });
         } catch (e) {
@@ -828,6 +1258,127 @@ const QRCodeGenerator = (() => {
           });
         }
       });
+    }
+  }
+
+  /**
+   * High-resolution synchronous Canvas to Blob
+   */
+  function canvasToBlobSync(canvas, mimeType = 'image/png') {
+    try {
+      const dataUrl = canvas.toDataURL(mimeType);
+      const parts = dataUrl.split(';base64,');
+      const contentType = parts[0].split(':')[1] || mimeType;
+      const raw = atob(parts[1]);
+      const rawLength = raw.length;
+      const uInt8Array = new Uint8Array(rawLength);
+      for (let i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+      }
+      return new Blob([uInt8Array], { type: contentType });
+    } catch (e) {
+      console.warn('Sync canvas-to-blob fallback:', e);
+      return null;
+    }
+  }
+
+  /**
+   * PDF Export using PDFLib (A4 Page, High-Res Composite QR centered)
+   */
+  async function exportToPDF(finalCanvas, filename = 'FileForge-QR-Code.pdf') {
+    if (!finalCanvas) return;
+    try {
+      const PDFLib = window.PDFLib;
+      if (!PDFLib || !PDFLib.PDFDocument) {
+        showToast('PDF library not loaded', 'error');
+        return;
+      }
+
+      const dataUrl = finalCanvas.toDataURL('image/png');
+      const base64Data = dataUrl.split(',')[1];
+      const binaryStr = atob(base64Data);
+      const len = binaryStr.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+
+      const pdfDoc = await PDFLib.PDFDocument.create();
+      // Standard A4 portrait: 595.28 x 841.89 points
+      const page = pdfDoc.addPage([595.28, 841.89]);
+      const pngImage = await pdfDoc.embedPng(bytes);
+
+      const displaySize = 340;
+      const x = (595.28 - displaySize) / 2;
+      const y = (841.89 - displaySize) / 2 + 20;
+
+      page.drawImage(pngImage, {
+        x: x,
+        y: y,
+        width: displaySize,
+        height: displaySize
+      });
+
+      page.drawText('Generated by FileForge — Client-Side Private QR Generator', {
+        x: 140,
+        y: 40,
+        size: 9,
+        color: PDFLib.rgb(0.4, 0.4, 0.4)
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      saveExportBlob(blob, filename, 'application/pdf', 'desktop');
+      showToast('Downloaded PDF successfully!', 'success');
+    } catch (e) {
+      console.error('PDF Export Error:', e);
+      showToast('Failed to generate PDF: ' + e.message, 'error');
+    }
+  }
+
+  /**
+   * Print current QR Code
+   */
+  function printCurrentQR(finalCanvas) {
+    if (!finalCanvas) return;
+    try {
+      const dataUrl = finalCanvas.toDataURL('image/png');
+      const win = window.open('', '_blank');
+      if (!win) {
+        showToast('Popup blocked by browser. Please allow popups to print.', 'warning');
+        return;
+      }
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Print QR Code - FileForge</title>
+          <style>
+            body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; background: #fff; }
+            img { max-width: 480px; height: auto; display: block; margin: 0 auto; }
+            .print-footer { margin-top: 16px; font-size: 12px; color: #64748b; }
+            @media print {
+              body { min-height: auto; padding: 20px 0; }
+              @page { margin: 15mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <img src="${dataUrl}" alt="FileForge QR Code">
+          <div class="print-footer">Generated by FileForge QR Code Studio</div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+        </html>
+      `);
+      win.document.close();
+    } catch (e) {
+      console.error('Print Error:', e);
+      showToast('Print failed: ' + e.message, 'error');
     }
   }
 
@@ -869,6 +1420,11 @@ const QRCodeGenerator = (() => {
         ? renderer.renderComposite(exportCanvas, framePreset, frameOptions, labelOptions)
         : exportCanvas;
 
+      if (format === 'pdf') {
+        await exportToPDF(finalCanvas, 'FileForge-QR-Code.pdf');
+        return;
+      }
+
       const ext = format === 'svg' ? 'svg' : 'png';
       const filename = `FileForge-QR-Code.${ext}`;
 
@@ -886,11 +1442,16 @@ const QRCodeGenerator = (() => {
         const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
         saveExportBlob(blob, filename, 'image/svg+xml', targetContext);
       } else {
-        finalCanvas.toBlob(blob => {
-          if (blob) {
-            saveExportBlob(blob, filename, 'image/png', targetContext);
-          }
-        }, 'image/png');
+        const syncBlob = canvasToBlobSync(finalCanvas, 'image/png');
+        if (syncBlob) {
+          saveExportBlob(syncBlob, filename, 'image/png', targetContext);
+        } else {
+          finalCanvas.toBlob(blob => {
+            if (blob) {
+              saveExportBlob(blob, filename, 'image/png', targetContext);
+            }
+          }, 'image/png');
+        }
       }
     } catch (e) {
       console.error('Download QR error:', e);
@@ -900,7 +1461,7 @@ const QRCodeGenerator = (() => {
 
   function saveExportBlob(blob, filename, mimeType, targetContext) {
     if (targetContext === 'mobile' && window.MobileUtils && typeof window.MobileUtils.downloadBlob === 'function') {
-      window.MobileUtils.downloadBlob(blob, filename);
+      window.MobileUtils.downloadBlob(blob, filename, mimeType);
     } else if (window.Utils && typeof window.Utils.downloadBlob === 'function') {
       window.Utils.downloadBlob(blob, filename, mimeType);
     } else {
@@ -957,10 +1518,10 @@ const QRCodeGenerator = (() => {
   }
 
   function showToast(msg, type = 'info') {
-    if (window.Utils && typeof window.Utils.showToast === 'function') {
-      window.Utils.showToast(msg, type);
-    } else if (window.MobileUtils && typeof window.MobileUtils.showToast === 'function') {
+    if (window.MobileUtils && typeof window.MobileUtils.showToast === 'function') {
       window.MobileUtils.showToast(msg, type);
+    } else if (window.Utils && typeof window.Utils.showToast === 'function') {
+      window.Utils.showToast(msg, type);
     } else {
       console.log(`[Toast ${type}]: ${msg}`);
     }
@@ -989,24 +1550,56 @@ const QRCodeGenerator = (() => {
       });
     } catch (e) {}
 
-    // Input fields & content tabs
+    // Reset input fields
     const urlInput = document.getElementById('qr-url-input');
-    if (urlInput) urlInput.value = DEFAULT_OPTIONS.data;
+    if (urlInput) urlInput.value = DEFAULT_OPTIONS.typeData.url.url;
+
+    const upiPa = document.getElementById('qr-upi-pa');
+    if (upiPa) upiPa.value = '';
+    const upiPn = document.getElementById('qr-upi-pn');
+    if (upiPn) upiPn.value = '';
+    const upiAm = document.getElementById('qr-upi-am');
+    if (upiAm) upiAm.value = '';
+    const upiTn = document.getElementById('qr-upi-tn');
+    if (upiTn) upiTn.value = '';
+    updateUpiValidationUI('desktop');
+
+    const wifiSsid = document.getElementById('qr-wifi-ssid');
+    if (wifiSsid) wifiSsid.value = '';
+    const wifiAuth = document.getElementById('qr-wifi-auth');
+    if (wifiAuth) wifiAuth.value = 'WPA';
+    const wifiPass = document.getElementById('qr-wifi-pass');
+    if (wifiPass) wifiPass.value = '';
+    const wifiHidden = document.getElementById('qr-wifi-hidden');
+    if (wifiHidden) wifiHidden.checked = false;
+    const wifiPassGroup = document.getElementById('qr-wifi-pass-group');
+    if (wifiPassGroup) wifiPassGroup.style.display = '';
 
     const textInput = document.getElementById('qr-text-input');
-    if (textInput) textInput.value = 'Welcome to FileForge!';
+    if (textInput) textInput.value = DEFAULT_OPTIONS.typeData.text.text;
 
     const textCounter = document.getElementById('qr-text-counter');
     if (textCounter) textCounter.textContent = '22 characters';
 
-    const inputTabs = document.querySelectorAll('#qr-input-tabs .qr-input-tab');
-    inputTabs.forEach(t => t.classList.toggle('active', t.getAttribute('data-type') === 'url'));
+    const emailAddr = document.getElementById('qr-email-addr');
+    if (emailAddr) emailAddr.value = '';
+    const emailSub = document.getElementById('qr-email-sub');
+    if (emailSub) emailSub.value = '';
+    const emailBody = document.getElementById('qr-email-body');
+    if (emailBody) emailBody.value = '';
 
-    const tabUrl = document.getElementById('qr-tab-url');
-    if (tabUrl) tabUrl.classList.remove('hidden');
+    const phoneNum = document.getElementById('qr-phone-number');
+    if (phoneNum) phoneNum.value = '';
 
-    const tabText = document.getElementById('qr-tab-text');
-    if (tabText) tabText.classList.add('hidden');
+    // Reset type cards
+    const typeCards = document.querySelectorAll('#qr-type-selector .qr-type-card');
+    typeCards.forEach(c => c.classList.toggle('active', c.getAttribute('data-type') === 'url'));
+
+    const types = ['url', 'upi', 'wifi', 'text', 'email', 'phone'];
+    types.forEach(t => {
+      const pane = document.getElementById(`qr-tab-${t}`);
+      if (pane) pane.classList.toggle('hidden', t !== 'url');
+    });
 
     // Sub-navigation tabs (presets panel active)
     const customizerTabs = document.querySelectorAll('#qr-studio-tabs .qr-customizer-tab');
@@ -1100,6 +1693,10 @@ const QRCodeGenerator = (() => {
     renderLiveQR,
     scheduleUpdate,
     downloadExport,
+    switchQRType,
+    applyStylePreset,
+    applyFramePreset,
+    resetToPreset,
     getState: () => state,
     setState: (newState) => { state = { ...state, ...newState }; }
   };
@@ -1112,4 +1709,10 @@ if (typeof document !== 'undefined') {
     QRCodeGenerator.init();
   }
 }
-window.QRCodeGenerator = QRCodeGenerator;
+
+if (typeof window !== 'undefined') {
+  window.QRCodeGenerator = QRCodeGenerator;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = QRCodeGenerator;
+}
