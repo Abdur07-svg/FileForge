@@ -1229,7 +1229,6 @@ const MobileQRCodeGenerator = (() => {
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       saveExportBlob(blob, filename, 'application/pdf');
-      showToast('PDF downloaded successfully!', 'success');
     } catch (e) {
       console.error('PDF Export Error:', e);
       showToast('Failed to generate PDF: ' + e.message, 'error');
@@ -1383,8 +1382,20 @@ const MobileQRCodeGenerator = (() => {
   }
 
   function saveExportBlob(blob, filename, mimeType = 'image/png') {
-    if (window.MobileUtils && typeof window.MobileUtils.downloadBlob === 'function') {
-      window.MobileUtils.downloadBlob(blob, filename, mimeType);
+    const downloadFn = (typeof MobileUtils !== 'undefined' && typeof MobileUtils.downloadBlob === 'function')
+      ? MobileUtils.downloadBlob
+      : (window.MobileUtils && typeof window.MobileUtils.downloadBlob === 'function')
+        ? window.MobileUtils.downloadBlob
+        : null;
+
+    if (downloadFn) {
+      downloadFn(blob, filename, mimeType);
+    } else if (window.FileForgeDownloadManager && typeof window.FileForgeDownloadManager.save === 'function') {
+      window.FileForgeDownloadManager.save({
+        blob: blob,
+        filename: filename,
+        mimeType: mimeType || (blob ? blob.type : 'application/octet-stream')
+      });
     } else {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1439,7 +1450,9 @@ const MobileQRCodeGenerator = (() => {
   }
 
   function showToast(msg, type = 'info') {
-    if (window.MobileUtils && typeof window.MobileUtils.showToast === 'function') {
+    if (typeof MobileUtils !== 'undefined' && typeof MobileUtils.showToast === 'function') {
+      MobileUtils.showToast(msg, type);
+    } else if (window.MobileUtils && typeof window.MobileUtils.showToast === 'function') {
       window.MobileUtils.showToast(msg, type);
     } else {
       console.log(`[Toast ${type}]: ${msg}`);

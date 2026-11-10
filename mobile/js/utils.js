@@ -224,6 +224,7 @@ const MobileUtils = (() => {
         if (pendingDownload.mimeType.includes('pdf')) ext = '.pdf';
         else if (pendingDownload.mimeType.includes('jpeg') || pendingDownload.mimeType.includes('jpg')) ext = '.jpg';
         else if (pendingDownload.mimeType.includes('png')) ext = '.png';
+        else if (pendingDownload.mimeType.includes('svg')) ext = '.svg';
         else if (pendingDownload.mimeType.includes('webp')) ext = '.webp';
         else if (pendingDownload.mimeType.includes('zip')) ext = '.zip';
         else if (pendingDownload.mimeType.includes('text')) ext = '.txt';
@@ -441,7 +442,7 @@ const MobileUtils = (() => {
 
       const parsed = parseFilename(filename || 'fileforge-file');
       const safeBase = sanitizeBase(parsed.base);
-      const ext = parsed.ext || (mimeType.includes('pdf') ? '.pdf' : (mimeType.includes('png') ? '.png' : '.jpg'));
+      const ext = parsed.ext || (mimeType.includes('pdf') ? '.pdf' : (mimeType.includes('png') ? '.png' : (mimeType.includes('svg') ? '.svg' : '.jpg')));
 
       pendingDownload = {
         blob: blob,
@@ -656,3 +657,8 @@ const MobileUtils = (() => {
     loadImageFromSrc
   };
 })();
+
+// Explicitly attach to window so it is accessible via window.MobileUtils everywhere
+if (typeof window !== 'undefined') {
+  window.MobileUtils = MobileUtils;
+}
