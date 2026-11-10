@@ -2267,6 +2267,21 @@ body.is-native-app #apk-download-btn {
   scroll-behavior: auto;
 }
 
+.modal-container:not(.hidden) .modal-card {
+  animation: modalCardPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalCardPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .modal-header {
   display: flex;
   align-items: center;

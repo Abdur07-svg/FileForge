@@ -1,0 +1,178 @@
+name: Build and Release Android APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag Name (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build, Sign & Release FileForge APK
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install Pillow
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Configure Android SDK
+        shell: pwsh
+        run: |
+          $androidHome = $env:ANDROID_HOME
+          if (-not $androidHome -or -not (Test-Path $androidHome)) {
+            $androidHome = "C:\Android\android-sdk"
+          }
+          Write-Host "ANDROID_HOME: $androidHome"
+          "ANDROID_HOME=$androidHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "ANDROID_SDK_ROOT=$androidHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          $sdkManager = Join-Path $androidHome "cmdline-tools\latest\bin\sdkmanager.bat"
+          if (-not (Test-Path $sdkManager)) {
+            $candidates = Get-ChildItem -Path $androidHome -Filter "sdkmanager.bat" -Recurse -ErrorAction SilentlyContinue
+            if ($candidates.Count -gt 0) {
+              $sdkManager = $candidates[0].FullName
+            }
+          }
+          Write-Host "Using sdkmanager: $sdkManager"
+
+          # Accept SDK licenses
+          $yesInput = "y`ny`ny`ny`ny`ny`ny`ny`n"
+          $yesInput | & $sdkManager --licenses 2>$null
+
+          # Install Platform 34 and Build Tools 34.0.0
+          Write-Host "Installing android-34 and build-tools 34.0.0..."
+          & $sdkManager "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Determine Version Name and Version Code
+        id: version
+        shell: pwsh
+        run: |
+          $refName = "${{ github.ref_name }}"
+          if (-not $refName -or $refName -notlike "v*") {
+            $refName = "${{ github.event.inputs.tag_name }}"
+            if (-not $refName) { $refName = "v1.0.0" }
+          }
+          $vName = $refName.TrimStart('v')
+
+          $parts = $vName.Split('.')
+          $major = if ($parts.Length -gt 0 -and [int]::TryParse($parts[0], [ref]$null)) { [int]$parts[0] } else { 1 }
+          $minor = if ($parts.Length -gt 1 -and [int]::TryParse($parts[1], [ref]$null)) { [int]$parts[1] } else { 0 }
+          $patch = if ($parts.Length -gt 2 -and [int]::TryParse($parts[2], [ref]$null)) { [int]$parts[2] } else { 0 }
+
+          # Strictly monotonic Android versionCode: (MAJOR * 10000) + (MINOR * 100) + PATCH
+          $vCode = ($major * 10000) + ($minor * 100) + $patch
+          if ($vCode -lt 1) { $vCode = 1 }
+
+          Write-Host "Extracted Version Name: $vName"
+          Write-Host "Calculated Version Code: $vCode"
+          Write-Host "Release Tag: $refName"
+
+          "version_name=$vName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "version_code=$vCode" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "tag_name=$refName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Restore Keystore from GitHub Secrets
+        shell: pwsh
+        env:
+          KEYSTORE_BASE64: ${{ secrets.FILEFORGE_KEYSTORE_BASE64 }}
+        run: |
+          if (-not $env:KEYSTORE_BASE64) {
+            Write-Error "Secret 'FILEFORGE_KEYSTORE_BASE64' is missing! Please configure your base64-encoded release keystore in Repository Secrets."
+            exit 1
+          }
+          $keystoreDir = "android-mobile\.keystore"
+          if (-not (Test-Path $keystoreDir)) {
+            New-Item -ItemType Directory -Path $keystoreDir -Force | Out-Null
+          }
+          $keystorePath = Join-Path $keystoreDir "fileforge_mobile_release.keystore"
+          $bytes = [System.Convert]::FromBase64String($env:KEYSTORE_BASE64)
+          [System.IO.File]::WriteAllBytes($keystorePath, $bytes)
+          Write-Host "Keystore successfully restored at $keystorePath"
+
+      - name: Build and Sign Release APK
+        shell: pwsh
+        env:
+          FILEFORGE_KEYSTORE_PATH: android-mobile\.keystore\fileforge_mobile_release.keystore
+          FILEFORGE_KEYSTORE_PASS: ${{ secrets.FILEFORGE_KEYSTORE_PASS }}
+          FILEFORGE_KEY_ALIAS: ${{ secrets.FILEFORGE_KEY_ALIAS }}
+          FILEFORGE_VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          FILEFORGE_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+        run: |
+          if (-not $env:FILEFORGE_KEYSTORE_PASS) {
+            Write-Error "Secret 'FILEFORGE_KEYSTORE_PASS' is missing! Please configure the keystore password in Repository Secrets."
+            exit 1
+          }
+          if (-not $env:FILEFORGE_KEY_ALIAS) {
+            $env:FILEFORGE_KEY_ALIAS = "fileforge_mobile"
+          }
+          python build_mobile_apk.py
+
+      - name: Verify Generated APK and Signature
+        shell: pwsh
+        run: |
+          $apkPath = "dist\FileForge-Mobile.apk"
+          if (-not (Test-Path $apkPath)) {
+            Write-Error "Build verification failed: $apkPath was not generated!"
+            exit 1
+          }
+          $apkSize = (Get-Item $apkPath).Length
+          Write-Host "Verified $apkPath exists (Size: $([math]::Round($apkSize / 1MB, 2)) MB)"
+
+          $buildToolsDir = Join-Path $env:ANDROID_HOME "build-tools\34.0.0"
+          $apksigner = Join-Path $buildToolsDir "apksigner.bat"
+          if (-not (Test-Path $apksigner)) {
+            $apksignerCandidates = Get-ChildItem -Path (Join-Path $env:ANDROID_HOME "build-tools") -Filter "apksigner.bat" -Recurse -ErrorAction SilentlyContinue
+            if ($apksignerCandidates.Count -gt 0) {
+              $apksigner = $apksignerCandidates[0].FullName
+            }
+          }
+
+          if (Test-Path $apksigner) {
+            Write-Host "Verifying APK Signature with apksigner ($apksigner)..."
+            & $apksigner verify --verbose $apkPath
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "APK signature verification failed!"
+              exit 1
+            }
+            Write-Host "APK signature verification PASSED!"
+          }
+
+      - name: Create GitHub Release and Upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag_name }}
+          name: FileForge Mobile ${{ steps.version.outputs.tag_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            dist/FileForge-Mobile.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

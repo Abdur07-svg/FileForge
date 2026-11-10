@@ -6,14 +6,44 @@ import zipfile
 from PIL import Image, ImageDraw
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ANDROID_HOME = os.environ.get('ANDROID_HOME', os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Android', 'Sdk'))
-BUILD_TOOLS_DIR = os.path.join(ANDROID_HOME, 'build-tools', '34.0.0')
-PLATFORM_JAR = os.path.join(ANDROID_HOME, 'platforms', 'android-34', 'android.jar')
 
-AAPT2 = os.path.join(BUILD_TOOLS_DIR, 'aapt2.exe')
-D8 = os.path.join(BUILD_TOOLS_DIR, 'd8.bat')
-ZIPALIGN = os.path.join(BUILD_TOOLS_DIR, 'zipalign.exe')
-APKSIGNER = os.path.join(BUILD_TOOLS_DIR, 'apksigner.bat')
+def find_android_sdk():
+    candidates = [
+        os.environ.get('ANDROID_HOME'),
+        os.environ.get('ANDROID_SDK_ROOT'),
+        os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Android', 'Sdk'),
+        r'C:\Android\android-sdk',
+        os.path.expanduser('~/Android/Sdk')
+    ]
+    for c in candidates:
+        if c and os.path.exists(c):
+            return os.path.abspath(c)
+    return os.path.abspath(candidates[2])
+
+ANDROID_HOME = find_android_sdk()
+
+build_tools_root = os.path.join(ANDROID_HOME, 'build-tools')
+if os.path.exists(build_tools_root):
+    if os.path.exists(os.path.join(build_tools_root, '34.0.0')):
+        BUILD_TOOLS_DIR = os.path.join(build_tools_root, '34.0.0')
+    else:
+        dirs = sorted(os.listdir(build_tools_root))
+        BUILD_TOOLS_DIR = os.path.join(build_tools_root, dirs[-1]) if dirs else os.path.join(build_tools_root, '34.0.0')
+else:
+    BUILD_TOOLS_DIR = os.path.join(ANDROID_HOME, 'build-tools', '34.0.0')
+
+platforms_root = os.path.join(ANDROID_HOME, 'platforms')
+PLATFORM_JAR = os.path.join(platforms_root, 'android-34', 'android.jar')
+if not os.path.exists(PLATFORM_JAR) and os.path.exists(platforms_root):
+    p_dirs = sorted(os.listdir(platforms_root))
+    if p_dirs:
+        PLATFORM_JAR = os.path.join(platforms_root, p_dirs[-1], 'android.jar')
+
+is_win = sys.platform.startswith('win')
+AAPT2 = os.path.join(BUILD_TOOLS_DIR, 'aapt2.exe' if is_win else 'aapt2')
+D8 = os.path.join(BUILD_TOOLS_DIR, 'd8.bat' if is_win else 'd8')
+ZIPALIGN = os.path.join(BUILD_TOOLS_DIR, 'zipalign.exe' if is_win else 'zipalign')
+APKSIGNER = os.path.join(BUILD_TOOLS_DIR, 'apksigner.bat' if is_win else 'apksigner')
 
 MOBILE_DIR = os.path.join(BASE_DIR, 'mobile')
 ANDROID_DIR = os.path.join(BASE_DIR, 'android-mobile')
@@ -32,9 +62,32 @@ CLASSES_DIR = os.path.join(INTERMEDIATES, 'classes')
 DEX_DIR = os.path.join(INTERMEDIATES, 'dex')
 OUTPUT_DIR = os.path.join(BASE_DIR, 'dist')
 
+# Secure signing configuration from environment
 RELEASE_KEYSTORE = os.environ.get('FILEFORGE_KEYSTORE_PATH', os.path.join(ANDROID_DIR, '.keystore', 'fileforge_mobile_release.keystore'))
-KEYSTORE_PASS = os.environ.get('FILEFORGE_KEYSTORE_PASS', 'fileforge2026')
+KEYSTORE_PASS = os.environ.get('FILEFORGE_KEYSTORE_PASS')
 KEY_ALIAS = os.environ.get('FILEFORGE_KEY_ALIAS', 'fileforge_mobile')
+
+# Dynamic version management from environment
+raw_vname = os.environ.get('FILEFORGE_VERSION_NAME')
+raw_vcode = os.environ.get('FILEFORGE_VERSION_CODE')
+
+if raw_vname:
+    VERSION_NAME = raw_vname.lstrip('v').strip()
+else:
+    VERSION_NAME = '1.9.1'
+
+if raw_vcode and raw_vcode.strip().isdigit():
+    VERSION_CODE = int(raw_vcode.strip())
+else:
+    try:
+        parts = [int(p) for p in VERSION_NAME.split('.')[:3]]
+        while len(parts) < 3:
+            parts.append(0)
+        VERSION_CODE = parts[0] * 10000 + parts[1] * 100 + parts[2]
+        if VERSION_CODE < 1:
+            VERSION_CODE = 9
+    except Exception:
+        VERSION_CODE = 1
 
 def run_cmd(cmd, cwd=BASE_DIR):
     if isinstance(cmd, list):
@@ -724,8 +777,20 @@ def sync_mobile_assets():
 
 def build_mobile_apk():
     print("==================================================")
-    print("   FILEFORGE MOBILE RELEASE APK BUILD")
+    print(f"   FILEFORGE MOBILE RELEASE APK BUILD (v{VERSION_NAME} - code {VERSION_CODE})")
     print("==================================================")
+
+    # Validate release keystore and password
+    if not os.path.exists(RELEASE_KEYSTORE):
+        print(f"\n[ERROR] Production release keystore not found at: {RELEASE_KEYSTORE}")
+        print("[ERROR] A valid production keystore is required to build FileForge release APK.")
+        print("[ERROR] Please provide the keystore file or configure FILEFORGE_KEYSTORE_PATH / FILEFORGE_KEYSTORE_BASE64.")
+        print("[ERROR] Automatically generating a new key is disabled to preserve update compatibility.")
+        sys.exit(1)
+
+    if not KEYSTORE_PASS:
+        print("\n[ERROR] Keystore password is required! Set the FILEFORGE_KEYSTORE_PASS environment variable.")
+        sys.exit(1)
 
     # 1. Setup Android wrapper files
     setup_android_source_files()
@@ -753,7 +818,7 @@ def build_mobile_apk():
     flat_files = [os.path.join(COMPILED_RES, f) for f in os.listdir(COMPILED_RES) if f.endswith('.flat')]
 
     # 5. Link resources and generate R.java
-    print("\nStep 2: Linking resources with aapt2 (minSdk 21, targetSdk 34)...")
+    print(f"\nStep 2: Linking resources with aapt2 (minSdk 21, targetSdk 34, version {VERSION_NAME} [{VERSION_CODE}])...")
     proto_apk = os.path.join(INTERMEDIATES, 'linked_res.apk')
     link_cmd = [
         AAPT2, 'link',
@@ -761,8 +826,8 @@ def build_mobile_apk():
         '--manifest', MANIFEST,
         '--min-sdk-version', '21',
         '--target-sdk-version', '34',
-        '--version-code', '1',
-        '--version-name', '1.0.0',
+        '--version-code', str(VERSION_CODE),
+        '--version-name', str(VERSION_NAME),
         '--java', GEN_DIR,
         '-o', proto_apk,
         '--auto-add-overlay'
@@ -829,25 +894,9 @@ def build_mobile_apk():
     ]
     run_cmd(zipalign_cmd)
 
-    # 10. Generate persistent production release keystore if not present
-    if not os.path.exists(RELEASE_KEYSTORE):
-        os.makedirs(os.path.dirname(RELEASE_KEYSTORE), exist_ok=True)
-        print("\nGenerating Production Release keystore...")
-        keytool_cmd = [
-            'keytool', '-genkeypair',
-            '-keystore', RELEASE_KEYSTORE,
-            '-storepass', KEYSTORE_PASS,
-            '-keypass', KEYSTORE_PASS,
-            '-alias', KEY_ALIAS,
-            '-dname', 'CN=FileForge Mobile,OU=Mobile,O=FileForge,C=US',
-            '-validity', '10000',
-            '-keyalg', 'RSA',
-            '-keysize', '2048'
-        ]
-        run_cmd(keytool_cmd)
-
-    # 11. Sign APK with apksigner (v1, v2, v3 schemes)
+    # 10. Sign APK with apksigner (v1, v2, v3 schemes) using existing production keystore
     print("\nStep 7: Signing Release APK with apksigner...")
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     final_apk = os.path.join(OUTPUT_DIR, 'FileForge-Mobile.apk')
 
     apksigner_cmd = [
@@ -864,12 +913,12 @@ def build_mobile_apk():
     ]
     run_cmd(apksigner_cmd)
 
-    # 12. Verify APK signature
+    # 11. Verify APK signature
     print("\nStep 8: Verifying APK signature...")
     verify_cmd = [APKSIGNER, 'verify', '--verbose', final_apk]
     run_cmd(verify_cmd)
 
-    # 13. Inspect APK badging
+    # 12. Inspect APK badging
     print("\nStep 9: Inspecting APK badging & compatibility metadata...")
     badging_cmd = [AAPT2, 'dump', 'badging', final_apk]
     run_cmd(badging_cmd)
@@ -892,7 +941,7 @@ def build_mobile_apk():
     print(f"Package ID:          com.fileforge.mobile")
     print(f"minSdkVersion:       21 (Android 5.0+)")
     print(f"targetSdkVersion:    34 (Android 14+)")
-    print(f"versionName:         1.0.0 (versionCode 1)")
+    print(f"versionName:         {VERSION_NAME} (versionCode {VERSION_CODE})")
     print(f"Signing:             Release Keystore (v1 + v2 + v3 Schemes)")
     print("==================================================")
 

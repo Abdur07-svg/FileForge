@@ -1011,70 +1011,123 @@ const App = (() => {
 
     const apkDownloadBtn = document.getElementById('apk-download-btn');
     const mobileApkDownloadBtn = document.getElementById('mobile-apk-download-btn');
-    const modalDownloadBtn = document.getElementById('apk-modal-disabled-download-btn');
     if (apkDownloadBtn) {
       apkDownloadBtn.addEventListener('click', handleGetApkClick);
     }
     if (mobileApkDownloadBtn) {
       mobileApkDownloadBtn.addEventListener('click', handleGetApkClick);
     }
-    if (modalDownloadBtn) {
-      modalDownloadBtn.removeAttribute('disabled');
-      modalDownloadBtn.removeAttribute('aria-disabled');
-      modalDownloadBtn.style.opacity = '1';
-      modalDownloadBtn.style.cursor = 'pointer';
-      modalDownloadBtn.style.pointerEvents = 'auto';
-      modalDownloadBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        triggerApkDownload();
-      });
-    }
   }
 
-  function getApkDownloadUrl() {
-    try {
-      if (window.location && window.location.href) {
-        return new URL('FileForge-Mobile.apk', window.location.href).href;
-      }
-    } catch (e) {}
-    return 'https://raw.githubusercontent.com/Abdur07-svg/FileForge/main/FileForge-Mobile.apk';
-  }
+  // Centralized FileForge Mobile Android APK Release Asset Configuration
+  const GITHUB_REPO_OWNER = 'Abdur07-svg';
+  const GITHUB_REPO_NAME = 'FileForge';
+  const GITHUB_APK_FILENAME = 'FileForge-Mobile.apk';
+  const LATEST_RELEASE_APK_URL = `https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/latest/download/${GITHUB_APK_FILENAME}`;
+  const GITHUB_RELEASES_PAGE_URL = `https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases`;
 
-  function triggerApkDownload() {
-    if (window.Utils && typeof window.Utils.showToast === 'function') {
-      window.Utils.showToast('Starting FileForge-Mobile.apk download...', 'info', 3000);
-    }
-    const apkUrl = getApkDownloadUrl();
-    const link = document.createElement('a');
-    link.href = apkUrl;
-    link.setAttribute('download', 'FileForge-Mobile.apk');
-    link.setAttribute('target', '_blank');
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => {
-      if (link.parentElement) link.parentElement.removeChild(link);
-    }, 1000);
-  }
+  let isTriggeringApkDownload = false;
 
-  function getDeviceType() {
+  /**
+   * Device Detection Utility
+   * Accurately differentiates Android, iOS (iPhone/iPad), and Desktop/Laptop browsers
+   * Avoids relying solely on screen width so desktop resized windows are correctly identified as desktop.
+   */
+  function detectDeviceType() {
     const ua = navigator.userAgent || '';
-    const platform = navigator.userAgentData?.platform || navigator.platform || '';
+    const platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
     const maxTouchPoints = navigator.maxTouchPoints || 0;
 
+    // 1. Android Detection (phones, tablets, Android Chrome, Samsung Internet, Firefox Mobile)
     if (/Android/i.test(ua) || /Android/i.test(platform)) {
       return 'android';
     }
 
+    // 2. iOS / iPadOS Detection (iPhone, iPod, iPad, and iPadOS reporting MacIntel with multi-touch)
     if (/iPad|iPhone|iPod/.test(ua) || (/MacIntel/i.test(platform) && maxTouchPoints > 1)) {
       return 'ios';
     }
 
+    // 3. Desktop / Laptop (Windows, macOS, Linux, ChromeOS)
     return 'desktop';
   }
 
+  /**
+   * Smart Get APK Handler
+   * - Mobile Android: Directly triggers latest GitHub Release FileForge-Mobile.apk download without popups
+   * - Mobile iOS: Informs user that APK is for Android only (no broken download)
+   * - Desktop: Displays clean, responsive popup informing user APK is designed for Android phones
+   */
   function handleGetApkClick(e) {
     if (e) e.preventDefault();
-    triggerApkDownload();
+
+    const device = detectDeviceType();
+
+    if (device === 'android') {
+      // ANDROID MOBILE BROWSER:
+      // Prevent multiple rapid clicks from triggering duplicate downloads
+      if (isTriggeringApkDownload) return;
+      isTriggeringApkDownload = true;
+      setTimeout(() => { isTriggeringApkDownload = false; }, 3000);
+
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        if (window.Utils && typeof window.Utils.showToast === 'function') {
+          window.Utils.showToast('You are offline. Connect to the internet to download the APK.', 'warning', 4000);
+        }
+        return;
+      }
+
+      if (window.Utils && typeof window.Utils.showToast === 'function') {
+        window.Utils.showToast('Starting FileForge-Mobile.apk download...', 'info', 3500);
+      }
+
+      // Directly trigger download for the latest published GitHub Release APK
+      const link = document.createElement('a');
+      link.href = LATEST_RELEASE_APK_URL;
+      link.setAttribute('download', GITHUB_APK_FILENAME);
+      link.setAttribute('rel', 'noopener noreferrer');
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        if (link.parentElement) link.parentElement.removeChild(link);
+      }, 1500);
+
+    } else if (device === 'ios') {
+      // iOS / iPadOS:
+      // Show Android-only compatibility message
+      const msg1 = document.getElementById('apk-modal-message-1');
+      const msg2 = document.getElementById('apk-modal-message-2');
+      const tag = document.getElementById('apk-modal-device-tag');
+      const title = document.getElementById('apk-modal-title');
+
+      if (title) {
+        const span = title.querySelector('span');
+        if (span) span.textContent = 'Android Application';
+      }
+      if (msg1) msg1.textContent = 'The FileForge APK is designed for Android devices only.';
+      if (msg2) msg2.textContent = 'iOS does not support installing APK packages. You can continue using all 52 tools directly in Safari on this iPhone or iPad.';
+      if (tag) tag.textContent = 'Android devices only • 100% Client-Side Privacy';
+
+      openModal('apk-info-modal');
+
+    } else {
+      // DESKTOP / LAPTOP BROWSER:
+      // Do NOT start downloading the APK. Show custom desktop popup.
+      const msg1 = document.getElementById('apk-modal-message-1');
+      const msg2 = document.getElementById('apk-modal-message-2');
+      const tag = document.getElementById('apk-modal-device-tag');
+      const title = document.getElementById('apk-modal-title');
+
+      if (title) {
+        const span = title.querySelector('span');
+        if (span) span.textContent = 'FileForge Android App';
+      }
+      if (msg1) msg1.textContent = 'This APK is designed for Android mobile devices only.';
+      if (msg2) msg2.textContent = 'Please open this website on your Android phone to download and install the app.';
+      if (tag) tag.textContent = 'Android 5.0+ (APK) • 100% Client-Side Privacy';
+
+      openModal('apk-info-modal');
+    }
   }
 
   function openModal(id) {
