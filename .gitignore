@@ -12,3 +12,9 @@ __pycache__/
 *.pyc
 .tempmediaStorage/
 
+
+# Ignore FileForge APK files
+/FileForge-Mobile.apk
+/assets/FileForge-Mobile.apk
+/dist/FileForge-Mobile.apk
+/dist/FileForge-Mobile.apk.idsig

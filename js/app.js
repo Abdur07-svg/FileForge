@@ -1033,17 +1033,11 @@ const App = (() => {
 
   function getApkDownloadUrl() {
     try {
-      const loc = window.location;
-      if (loc && loc.origin) {
-        if (loc.protocol === 'file:') {
-          return 'FileForge-Mobile.apk';
-        }
-        const pathParts = loc.pathname.split('/').filter(Boolean);
-        const repoBase = (pathParts.length > 0 && pathParts[0].toLowerCase() === 'fileforge') ? '/FileForge/' : '/';
-        return loc.origin + repoBase + 'FileForge-Mobile.apk';
+      if (window.location && window.location.href) {
+        return new URL('FileForge-Mobile.apk', window.location.href).href;
       }
     } catch (e) {}
-    return 'FileForge-Mobile.apk';
+    return 'https://raw.githubusercontent.com/Abdur07-svg/FileForge/main/FileForge-Mobile.apk';
   }
 
   function triggerApkDownload() {
