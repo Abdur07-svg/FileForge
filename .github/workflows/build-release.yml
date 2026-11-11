@@ -53,22 +53,29 @@ jobs:
           "ANDROID_HOME=$androidHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "ANDROID_SDK_ROOT=$androidHome" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-          $sdkManager = Join-Path $androidHome "cmdline-tools\latest\bin\sdkmanager.bat"
-          if (-not (Test-Path $sdkManager)) {
-            $candidates = Get-ChildItem -Path $androidHome -Filter "sdkmanager.bat" -Recurse -ErrorAction SilentlyContinue
-            if ($candidates.Count -gt 0) {
-              $sdkManager = $candidates[0].FullName
+          $platformJar = Join-Path $androidHome "platforms\android-34\android.jar"
+          $buildToolsDir = Join-Path $androidHome "build-tools\34.0.0"
+
+          if ((Test-Path $platformJar) -and (Test-Path $buildToolsDir)) {
+            Write-Host "Android Platform 34 and Build Tools 34.0.0 are already present!"
+          } else {
+            $sdkManager = Join-Path $androidHome "cmdline-tools\latest\bin\sdkmanager.bat"
+            if (-not (Test-Path $sdkManager)) {
+              $candidates = Get-ChildItem -Path $androidHome -Filter "sdkmanager.bat" -Recurse -ErrorAction SilentlyContinue
+              if ($candidates.Count -gt 0) {
+                $sdkManager = $candidates[0].FullName
+              }
             }
+            Write-Host "Using sdkmanager: $sdkManager"
+
+            # Accept SDK licenses
+            $yesInput = "y`ny`ny`ny`ny`ny`ny`ny`n"
+            $yesInput | & $sdkManager --licenses 2>$null
+
+            # Install Platform 34 and Build Tools 34.0.0
+            Write-Host "Installing android-34 and build-tools 34.0.0..."
+            & $sdkManager "platforms;android-34" "build-tools;34.0.0"
           }
-          Write-Host "Using sdkmanager: $sdkManager"
-
-          # Accept SDK licenses
-          $yesInput = "y`ny`ny`ny`ny`ny`ny`ny`n"
-          $yesInput | & $sdkManager --licenses 2>$null
-
-          # Install Platform 34 and Build Tools 34.0.0
-          Write-Host "Installing android-34 and build-tools 34.0.0..."
-          & $sdkManager "platforms;android-34" "build-tools;34.0.0"
 
       - name: Determine Version Name and Version Code
         id: version
@@ -86,10 +93,11 @@ jobs:
           $minor = if ($parts.Length -gt 1 -and [int]::TryParse($parts[1], [ref]$null)) { [int]$parts[1] } else { 9 }
           $patch = if ($parts.Length -gt 2 -and [int]::TryParse($parts[2], [ref]$null)) { [int]$parts[2] } else { 1 }
 
-          # Strictly monotonic Android versionCode: (MAJOR * 10000) + (MINOR * 100) + PATCH
-          # For v1.9.1 -> (1 * 10000) + (9 * 100) + 1 = 10901 (strictly higher than existing versionCode 1)
-          $vCode = ($major * 10000) + ($minor * 100) + $patch
-          if ($vCode -le 1) { $vCode = 10901 }
+          # Future-proof SemVer to Android versionCode mapping:
+          # (MAJOR * 1,000,000) + (MINOR * 1,000) + PATCH
+          # For v1.9.1 -> (1 * 1,000,000) + (9 * 1,000) + 1 = 1,009,001 (strictly higher than existing versionCode 1)
+          $vCode = ($major * 1000000) + ($minor * 1000) + $patch
+          if ($vCode -le 1) { $vCode = 1009001 }
 
           Write-Host "Extracted Version Name: $vName"
           Write-Host "Calculated Version Code: $vCode"

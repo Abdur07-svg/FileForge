@@ -83,11 +83,13 @@ else:
         parts = [int(p) for p in VERSION_NAME.split('.')[:3]]
         while len(parts) < 3:
             parts.append(0)
-        VERSION_CODE = parts[0] * 10000 + parts[1] * 100 + parts[2]
+        # Future-proof SemVer mapping: (MAJOR * 1,000,000) + (MINOR * 1,000) + PATCH
+        # For v1.9.1: (1 * 1,000,000) + (9 * 1,000) + 1 = 1,009,001 (strictly > existing versionCode 1)
+        VERSION_CODE = parts[0] * 1000000 + parts[1] * 1000 + parts[2]
         if VERSION_CODE <= 1:
-            VERSION_CODE = 10901
+            VERSION_CODE = 1009001
     except Exception:
-        VERSION_CODE = 10901
+        VERSION_CODE = 1009001
 
 def run_cmd(cmd, cwd=BASE_DIR):
     if isinstance(cmd, list):
