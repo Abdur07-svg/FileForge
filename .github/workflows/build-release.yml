@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release Tag Name (e.g. v1.0.0)'
+        description: 'Release Tag Name (e.g. v1.9.1)'
         required: false
-        default: 'v1.0.0'
+        default: 'v1.9.1'
 
 permissions:
   contents: write
@@ -77,18 +77,19 @@ jobs:
           $refName = "${{ github.ref_name }}"
           if (-not $refName -or $refName -notlike "v*") {
             $refName = "${{ github.event.inputs.tag_name }}"
-            if (-not $refName) { $refName = "v1.0.0" }
+            if (-not $refName) { $refName = "v1.9.1" }
           }
           $vName = $refName.TrimStart('v')
 
           $parts = $vName.Split('.')
           $major = if ($parts.Length -gt 0 -and [int]::TryParse($parts[0], [ref]$null)) { [int]$parts[0] } else { 1 }
-          $minor = if ($parts.Length -gt 1 -and [int]::TryParse($parts[1], [ref]$null)) { [int]$parts[1] } else { 0 }
-          $patch = if ($parts.Length -gt 2 -and [int]::TryParse($parts[2], [ref]$null)) { [int]$parts[2] } else { 0 }
+          $minor = if ($parts.Length -gt 1 -and [int]::TryParse($parts[1], [ref]$null)) { [int]$parts[1] } else { 9 }
+          $patch = if ($parts.Length -gt 2 -and [int]::TryParse($parts[2], [ref]$null)) { [int]$parts[2] } else { 1 }
 
           # Strictly monotonic Android versionCode: (MAJOR * 10000) + (MINOR * 100) + PATCH
+          # For v1.9.1 -> (1 * 10000) + (9 * 100) + 1 = 10901 (strictly higher than existing versionCode 1)
           $vCode = ($major * 10000) + ($minor * 100) + $patch
-          if ($vCode -lt 1) { $vCode = 1 }
+          if ($vCode -le 1) { $vCode = 10901 }
 
           Write-Host "Extracted Version Name: $vName"
           Write-Host "Calculated Version Code: $vCode"
