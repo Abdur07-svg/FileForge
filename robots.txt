@@ -1,0 +1,12 @@
+# robots.txt for FileForge (https://abdur07-svg.github.io/FileForge/)
+User-agent: *
+Allow: /
+
+# Ensure search engine crawlers can fetch styling, scripts, and media for full rendering
+Allow: /js/
+Allow: /style.css
+Allow: /assets/
+Allow: /vendor/
+
+# Sitemap location
+Sitemap: https://abdur07-svg.github.io/FileForge/sitemap.xml
