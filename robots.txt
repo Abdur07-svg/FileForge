@@ -10,3 +10,4 @@ Allow: /vendor/
 
 # Sitemap location
 Sitemap: https://abdur07-svg.github.io/FileForge/sitemap.xml
+
